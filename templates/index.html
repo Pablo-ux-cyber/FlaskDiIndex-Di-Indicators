@@ -135,26 +135,38 @@
                     coin.data.forEach(row => {
                         const date = row.time;
                         if (!dateStats.has(date)) {
-                            dateStats.set(date, { total: 0, bulls: 0 });
+                            dateStats.set(date, { total: 0, bulls: 0, coins: [] });
                         }
                         const stats = dateStats.get(date);
-                        stats.total++;
-                        if (row.trend === 'bull') {
-                            stats.bulls++;
+                        if (row.trend) {  // Только учитываем монеты с определенным трендом
+                            stats.total++;
+                            if (row.trend === 'bull') {
+                                stats.bulls++;
+                            }
+                            stats.coins.push({
+                                symbol: coin.symbol,
+                                trend: row.trend
+                            });
                         }
                     });
                 }
             });
 
-            // Сортируем даты
-            const sortedDates = Array.from(dateStats.keys()).sort();
+            // Сортируем даты в обратном порядке (сначала новые)
+            const sortedDates = Array.from(dateStats.keys()).sort().reverse();
 
             // Формируем статистику
             const statsContent = document.getElementById("statsContent");
             statsContent.innerHTML = sortedDates.map(date => {
                 const stats = dateStats.get(date);
-                const bullPercent = (stats.bulls / stats.total * 100).toFixed(1);
-                return `<div>${date}: ${stats.bulls} bull из ${stats.total} (${bullPercent}%)</div>`;
+                const bullPercent = stats.total > 0 ? (stats.bulls / stats.total * 100).toFixed(1) : "0.0";
+                const details = stats.coins.map(c => 
+                    `${c.symbol}: <span style="color:${c.trend === 'bull' ? 'green' : 'red'}">${c.trend}</span>`
+                ).join(', ');
+                return `<div>
+                    <strong>${date}</strong>: ${stats.bulls} bull из ${stats.total} (${bullPercent}%)
+                    <div style="font-size: 0.9em; margin-left: 20px;">${details}</div>
+                </div>`;
             }).join('');
 
             marketStats.style.display = "block";
