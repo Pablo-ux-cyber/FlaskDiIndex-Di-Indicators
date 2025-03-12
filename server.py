@@ -6,7 +6,7 @@ import pandas as pd
 from flask import Blueprint, jsonify, request
 from datetime import datetime
 from utils.validation import validate_symbol
-from config import CRYPTOCOMPARE_API_KEY, TA_PARAMS
+from config import CRYPTOCOMPARE_API_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +85,44 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
         logger.error(f"Error in get_daily_data: {str(e)}")
         raise
 
+def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
+    """Get 4-hour OHLCV data"""
+    try:
+        url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={CRYPTOCOMPARE_API_KEY}"
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+
+        if data.get("Response") != "Success":
+            logger.error(f"API Error: {data.get('Message')}")
+            raise Exception(f"Error getting 4h data: {data}")
+
+        df = pd.DataFrame(data['Data']['Data'])
+        df['time'] = pd.to_datetime(df['time'], unit='s')
+        return df
+    except Exception as e:
+        logger.error(f"Error in get_4h_data: {str(e)}")
+        raise
+
+def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
+    """Get weekly OHLCV data"""
+    try:
+        df_daily = get_daily_data(symbol, tsym, limit)
+        df_daily.set_index('time', inplace=True)
+        df_weekly = df_daily.resample('W').agg({
+            'open': 'first',
+            'high': 'max',
+            'low': 'min',
+            'close': 'last',
+            'volumefrom': 'sum',
+            'volumeto': 'sum'
+        }).dropna()
+        df_weekly.reset_index(inplace=True)
+        return df_weekly
+    except Exception as e:
+        logger.error(f"Error in get_weekly_data: {str(e)}")
+        raise
+
 def calculate_di_index(df):
     """Calculate DI index"""
     try:
@@ -95,22 +133,93 @@ def calculate_di_index(df):
 
         df["DI_index"] = (df["MA_index"] + df["Willy_index"] + 
                          df["macd_index"] + df["OBV_index"])
-
-        df["DI_index_EMA"] = ema(df["DI_index"], 13)
-        df["DI_index_SMA"] = df["DI_index"].rolling(window=30).mean()
-
-        result = []
-        for _, row in df.iterrows():
-            result.append({
-                "time": row["time"].strftime("%Y-%m-%d"),
-                "DI_index": None if pd.isna(row["DI_index"]) else float(row["DI_index"]),
-                "DI_index_EMA": None if pd.isna(row["DI_index_EMA"]) else float(row["DI_index_EMA"]),
-                "DI_index_SMA": None if pd.isna(row["DI_index_SMA"]) else float(row["DI_index_SMA"]),
-                "close": None if pd.isna(row["close"]) else float(row["close"])
-            })
-        return result
+        return df
     except Exception as e:
         logger.error(f"Error in calculate_di_index: {str(e)}")
+        raise
+
+def calculate_combined_indices(symbol="BTC"):
+    """Calculate and combine indices from different timeframes"""
+    try:
+        # Get data for all timeframes
+        df_daily = get_daily_data(symbol=symbol)
+        df_4h = get_4h_data(symbol=symbol)
+        df_weekly = get_weekly_data(symbol=symbol)
+
+        # Calculate DI Index for each timeframe
+        df_daily = calculate_di_index(df_daily)
+        df_4h = calculate_di_index(df_4h)
+        df_weekly = calculate_di_index(df_weekly)
+
+        # Create date-indexed dictionaries
+        results_by_date = {}
+
+        # Process daily data
+        for _, row in df_daily.iterrows():
+            date = row["time"].strftime("%Y-%m-%d")
+            results_by_date[date] = {
+                "time": date,
+                "daily_di": row["DI_index"],
+                "4h_di": None,
+                "weekly_di": None,
+                "close": row["close"]
+            }
+
+        # Process 4h data
+        for _, row in df_4h.iterrows():
+            date = row["time"].strftime("%Y-%m-%d")
+            if date in results_by_date:
+                results_by_date[date]["4h_di"] = row["DI_index"]
+
+        # Process weekly data
+        for _, row in df_weekly.iterrows():
+            date = row["time"].strftime("%Y-%m-%d")
+            if date in results_by_date:
+                results_by_date[date]["weekly_di"] = row["DI_index"]
+
+        # Convert to DataFrame for calculations
+        df = pd.DataFrame(results_by_date.values())
+
+        # Calculate Total DI
+        df["total_di"] = df[["daily_di", "4h_di", "weekly_di"]].mean(axis=1)
+
+        # Calculate trend indicators
+        df["di_ema_13"] = ema(df["total_di"], 13)
+        df["di_sma_30"] = df["total_di"].rolling(window=30).mean()
+
+        # Calculate trend
+        df["trend"] = np.where(
+            (df["di_ema_13"].notna() & df["di_sma_30"].notna()),
+            np.where(df["di_ema_13"] > df["di_sma_30"], "bull", "bear"),
+            None
+        )
+
+        # Convert NaN to None for JSON serialization
+        def clean_value(val):
+            if pd.isna(val) or (isinstance(val, float) and math.isnan(val)):
+                return None
+            return float(val) if isinstance(val, (float, np.float64)) else val
+
+        # Convert to list of dictionaries
+        result = []
+        for _, row in df.iterrows():
+            entry = {
+                "time": row["time"],
+                "weekly_di": clean_value(row["weekly_di"]),
+                "daily_di": clean_value(row["daily_di"]),
+                "4h_di": clean_value(row["4h_di"]),
+                "total_di": clean_value(row["total_di"]),
+                "di_ema_13": clean_value(row["di_ema_13"]),
+                "di_sma_30": clean_value(row["di_sma_30"]),
+                "trend": row["trend"],
+                "close": clean_value(row["close"])
+            }
+            result.append(entry)
+
+        return sorted(result, key=lambda x: x["time"])
+
+    except Exception as e:
+        logger.error(f"Error in calculate_combined_indices: {str(e)}")
         return []
 
 @di_index_blueprint.route('/')
@@ -127,8 +236,7 @@ def di_index():
         if not validate_symbol(symbol):
             return jsonify({"error": f"Invalid cryptocurrency symbol: {symbol}"}), 400
 
-        df = get_daily_data(symbol=symbol)
-        results = calculate_di_index(df)
+        results = calculate_combined_indices(symbol=symbol)
 
         return jsonify({
             "symbol": symbol,
