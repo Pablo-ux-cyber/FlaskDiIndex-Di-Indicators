@@ -1,16 +1,22 @@
 import math
 import requests
 import numpy as np
+import time
+import logging
 
-# Monkey-patch for numpy's NaN compatibility with pandas-ta 
+# Monkey-patch for numpy's NaN compatibility with pandas-ta
 if not hasattr(np, "NaN"):
     np.NaN = np.nan
 
 import pandas as pd
 import pandas_ta as ta
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template
 import os
 from datetime import datetime
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Create blueprint for DI index routes
 di_index_blueprint = Blueprint('di_index', __name__)
@@ -18,51 +24,121 @@ di_index_blueprint = Blueprint('di_index', __name__)
 # Get API key from environment variable with fallback
 API_KEY = os.getenv("CRYPTOCOMPARE_API_KEY", "2193d3ce789e90e474570058a3a96caa0d585ca0d0d0e62687a295c8402d29e9")
 
+# Define available cryptocurrencies
+AVAILABLE_CRYPTOCURRENCIES = [
+    {"symbol": "BTC", "name": "Bitcoin"},
+    {"symbol": "ETH", "name": "Ethereum"},
+    {"symbol": "XRP", "name": "XRP"},
+    {"symbol": "BNB", "name": "BNB"},
+    {"symbol": "SOL", "name": "Solana"},
+    {"symbol": "ADA", "name": "Cardano"},
+    {"symbol": "DOGE", "name": "Dogecoin"},
+    {"symbol": "TRX", "name": "TRON"},
+    {"symbol": "PI", "name": "Pi Network"},
+    {"symbol": "LEO", "name": "LEO Token"},
+    {"symbol": "HBAR", "name": "Hedera"},
+    {"symbol": "LINK", "name": "Chainlink"},
+    {"symbol": "XLM", "name": "Stellar"},
+    {"symbol": "AVAX", "name": "Avalanche"},
+    {"symbol": "SUI", "name": "Sui"},
+    {"symbol": "SHIB", "name": "Shiba Inu"},
+    {"symbol": "LTC", "name": "Litecoin"},
+    {"symbol": "BCH", "name": "Bitcoin Cash"},
+    {"symbol": "TON", "name": "Toncoin"},
+    {"symbol": "OM", "name": "MANTRA OM"},
+    {"symbol": "DOT", "name": "Polkadot"},
+    {"symbol": "BGB", "name": "Bitget Token"},
+    {"symbol": "HYPE", "name": "Hyperliquid"},
+    {"symbol": "WBT", "name": "WhiteBIT Coin"},
+    {"symbol": "XMR", "name": "Monero"},
+    {"symbol": "UNI", "name": "Uniswap"},
+    {"symbol": "APT", "name": "Aptos"},
+    {"symbol": "NEAR", "name": "NEAR Protocol"},
+    {"symbol": "AAVE", "name": "Aave"},
+    {"symbol": "ETC", "name": "Ethereum Classic"}
+]
+
 def validate_symbol(symbol):
     """Validate if the cryptocurrency symbol exists on CryptoCompare"""
-    url = f"https://min-api.cryptocompare.com/data/price?fsym={symbol}&tsyms=USD&api_key={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    if "Response" in data and data["Response"] == "Error":
+    try:
+        url = f"https://min-api.cryptocompare.com/data/price?fsym={symbol}&tsyms=USD&api_key={API_KEY}"
+        response = requests.get(url)
+        data = response.json()
+        if "Response" in data and data["Response"] == "Error":
+            logger.warning(f"Invalid symbol {symbol}: {data.get('Message')}")
+            return False
+        return True
+    except Exception as e:
+        logger.error(f"Error validating symbol {symbol}: {str(e)}")
         return False
-    return True
 
 def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     """Get daily OHLCV data for given cryptocurrency"""
-    url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={symbol}&tsym={tsym}&limit={limit}&api_key={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    if data.get("Response") != "Success":
-        raise Exception(f"Error getting daily data: {data}")
-    df = pd.DataFrame(data['Data']['Data'])
-    df['time'] = pd.to_datetime(df['time'], unit='s')
-    return df
+    try:
+        url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={symbol}&tsym={tsym}&limit={limit}&api_key={API_KEY}"
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+
+        if data.get("Response") != "Success":
+            logger.error(f"API Error for {symbol}: {data.get('Message', 'Unknown error')}")
+            return pd.DataFrame()
+
+        df = pd.DataFrame(data['Data']['Data'])
+        if df.empty:
+            logger.warning(f"No data returned for {symbol}")
+            return df
+
+        df['time'] = pd.to_datetime(df['time'], unit='s')
+        return df
+    except Exception as e:
+        logger.error(f"Error getting daily data for {symbol}: {str(e)}")
+        return pd.DataFrame()
 
 def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     """Get 4-hour OHLCV data for given cryptocurrency"""
-    url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    if data.get("Response") != "Success":
-        raise Exception(f"Error getting 4-hour data: {data}")
-    df = pd.DataFrame(data['Data']['Data'])
-    df['time'] = pd.to_datetime(df['time'], unit='s')
-    return df
+    try:
+        url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+
+        if data.get("Response") != "Success":
+            logger.error(f"API Error for {symbol}: {data.get('Message', 'Unknown error')}")
+            return pd.DataFrame()
+
+        df = pd.DataFrame(data['Data']['Data'])
+        if df.empty:
+            logger.warning(f"No data returned for {symbol}")
+            return df
+
+        df['time'] = pd.to_datetime(df['time'], unit='s')
+        return df
+    except Exception as e:
+        logger.error(f"Error getting 4h data for {symbol}: {str(e)}")
+        return pd.DataFrame()
 
 def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     """Get weekly OHLCV data for given cryptocurrency"""
-    df_daily = get_daily_data(symbol, tsym, limit)
-    df_daily.set_index('time', inplace=True)
-    df_weekly = df_daily.resample('W').agg({
-        'open': 'first',
-        'high': 'max',
-        'low': 'min',
-        'close': 'last',
-        'volumefrom': 'sum',
-        'volumeto': 'sum'
-    }).dropna()
-    df_weekly.reset_index(inplace=True)
-    return df_weekly
+    try:
+        df_daily = get_daily_data(symbol, tsym, limit)
+        if df_daily.empty:
+            return pd.DataFrame()
+
+        df_daily.set_index('time', inplace=True)
+        df_weekly = df_daily.resample('W').agg({
+            'open': 'first',
+            'high': 'max',
+            'low': 'min',
+            'close': 'last',
+            'volumefrom': 'sum',
+            'volumeto': 'sum'
+        }).dropna()
+        df_weekly.reset_index(inplace=True)
+        return df_weekly
+    except Exception as e:
+        logger.error(f"Error getting weekly data for {symbol}: {str(e)}")
+        return pd.DataFrame()
 
 def calculate_ma_index(df):
     df["micro"] = ta.ema(df["close"], length=6)
@@ -305,9 +381,34 @@ def calculate_combined_indices(symbol="BTC", debug=False):
         print(f"Error in calculate_combined_indices: {str(e)}")
         return []
 
+def process_coins_in_batches(coins, batch_size=3):
+    """Process coins in smaller batches to avoid API rate limits"""
+    results = []
+    for i in range(0, len(coins), batch_size):
+        batch = coins[i:i + batch_size]
+        logger.info(f"Processing batch of {len(batch)} coins")
+        for coin in batch:
+            try:
+                logger.info(f"Processing {coin['symbol']}")
+                if validate_symbol(coin["symbol"]):
+                    coin_data = calculate_combined_indices(symbol=coin["symbol"])
+                    if coin_data:  # Check if data was received
+                        results.append({
+                            "symbol": coin["symbol"],
+                            "name": coin["name"],
+                            "data": coin_data
+                        })
+                        logger.info(f"Successfully processed {coin['symbol']}")
+                time.sleep(2)  # Delay between coins
+            except Exception as coin_error:
+                logger.error(f"Error processing {coin['symbol']}: {str(coin_error)}")
+                continue
+        time.sleep(3)  # Delay between batches
+    return results
+
 @di_index_blueprint.route('/')
 def index():
-    return "DI Index API is running! Use /api/di_index endpoint with optional parameters: symbol, debug"
+    return render_template('index.html', cryptocurrencies=AVAILABLE_CRYPTOCURRENCIES)
 
 @di_index_blueprint.route('/api/di_index')
 def di_index():
@@ -315,16 +416,45 @@ def di_index():
         symbol = request.args.get("symbol", "BTC").upper()
         debug_mode = request.args.get("debug", "false").lower() == "true"
 
-        # Validate cryptocurrency symbol
-        if not validate_symbol(symbol):
-            return jsonify({"error": f"Invalid cryptocurrency symbol: {symbol}"}), 400
+        if symbol == "ALL":
+            try:
+                logger.info("Processing ALL request")
 
-        # Calculate combined indices
-        results = calculate_combined_indices(symbol=symbol, debug=debug_mode)
+                # Start with just first 3 cryptocurrencies for testing
+                test_coins = AVAILABLE_CRYPTOCURRENCIES[:30]
+                logger.info(f"Processing test set of {len(test_coins)} coins")
 
-        return jsonify({
-            "symbol": symbol,
-            "data": results
-        })
+                results = process_coins_in_batches(test_coins)
+
+                if not results:
+                    return jsonify({"error": "No valid data received for any cryptocurrency"}), 500
+
+                return jsonify({
+                    "coins": results
+                })
+
+            except Exception as e:
+                logger.error(f"Error processing ALL request: {str(e)}")
+                return jsonify({"error": str(e)}), 500
+        else:
+            # Single coin request
+            if not validate_symbol(symbol):
+                return jsonify({"error": f"Invalid cryptocurrency symbol: {symbol}"}), 400
+
+            coin_data = calculate_combined_indices(symbol=symbol, debug=debug_mode)
+
+            if not coin_data:
+                return jsonify({"error": f"No data available for {symbol}"}), 404
+
+            # Make response format consistent with ALL endpoint
+            return jsonify({
+                "coins": [{
+                    "symbol": symbol,
+                    "name": next((c["name"] for c in AVAILABLE_CRYPTOCURRENCIES if c["symbol"] == symbol), symbol),
+                    "data": coin_data
+                }]
+            })
+
     except Exception as e:
+        logger.error(f"Error in di_index endpoint: {str(e)}")
         return jsonify({"error": str(e)}), 500
