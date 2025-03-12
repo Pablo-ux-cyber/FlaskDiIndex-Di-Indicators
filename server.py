@@ -24,11 +24,38 @@ di_index_blueprint = Blueprint('di_index', __name__)
 # Get API key from environment variable with fallback
 API_KEY = os.getenv("CRYPTOCOMPARE_API_KEY", "2193d3ce789e90e474570058a3a96caa0d585ca0d0d0e62687a295c8402d29e9")
 
-# Define available cryptocurrencies for testing
-TEST_CRYPTOCURRENCIES = [
+# Define available cryptocurrencies
+AVAILABLE_CRYPTOCURRENCIES = [
     {"symbol": "BTC", "name": "Bitcoin"},
     {"symbol": "ETH", "name": "Ethereum"},
-    {"symbol": "BNB", "name": "BNB"}
+    {"symbol": "XRP", "name": "XRP"},
+    {"symbol": "BNB", "name": "BNB"},
+    {"symbol": "SOL", "name": "Solana"},
+    {"symbol": "ADA", "name": "Cardano"},
+    {"symbol": "DOGE", "name": "Dogecoin"},
+    {"symbol": "TRX", "name": "TRON"},
+    {"symbol": "PI", "name": "Pi Network"},
+    {"symbol": "LEO", "name": "LEO Token"},
+    {"symbol": "HBAR", "name": "Hedera"},
+    {"symbol": "LINK", "name": "Chainlink"},
+    {"symbol": "XLM", "name": "Stellar"},
+    {"symbol": "AVAX", "name": "Avalanche"},
+    {"symbol": "SUI", "name": "Sui"},
+    {"symbol": "SHIB", "name": "Shiba Inu"},
+    {"symbol": "LTC", "name": "Litecoin"},
+    {"symbol": "BCH", "name": "Bitcoin Cash"},
+    {"symbol": "TON", "name": "Toncoin"},
+    {"symbol": "OM", "name": "MANTRA OM"},
+    {"symbol": "DOT", "name": "Polkadot"},
+    {"symbol": "BGB", "name": "Bitget Token"},
+    {"symbol": "HYPE", "name": "Hyperliquid"},
+    {"symbol": "WBT", "name": "WhiteBIT Coin"},
+    {"symbol": "XMR", "name": "Monero"},
+    {"symbol": "UNI", "name": "Uniswap"},
+    {"symbol": "APT", "name": "Aptos"},
+    {"symbol": "NEAR", "name": "NEAR Protocol"},
+    {"symbol": "AAVE", "name": "Aave"},
+    {"symbol": "ETC", "name": "Ethereum Classic"}
 ]
 
 def validate_symbol(symbol):
@@ -130,14 +157,12 @@ def calculate_ma_index(df):
 
 def calculate_willy_index(df):
     """Calculate Willy Index based on PineScript logic"""
-    length = 21
-    df["upper"] = df["high"].rolling(window=length, min_periods=length).max()
-    df["lower"] = df["low"].rolling(window=length, min_periods=length).min()
+    df["upper"] = df["high"].rolling(window=21, min_periods=21).max()
+    df["lower"] = df["low"].rolling(window=21, min_periods=21).min()
     df["range"] = df["upper"] - df["lower"]
     df["range"].replace(0, 1e-10, inplace=True)
     df["out"] = 100 * (df["close"] - df["upper"]) / df["range"]
     df["out2"] = ta.ema(df["out"], length=13)
-
     df["Willy_stupid_os"] = (df["out2"] < -80).astype(int)
     df["Willy_stupid_ob"] = (df["out2"] > -20).astype(int)
     df["Willy_bullbear"] = (df["out"] > df["out2"]).astype(int)
@@ -147,15 +172,10 @@ def calculate_willy_index(df):
 
 def calculate_macd_index(df):
     """Calculate MACD Index based on PineScript logic"""
-    fastLength = 12
-    slowLength = 26
-    signalLength = 9
-
-    df["fastMA"] = ta.ema(df["close"], length=fastLength)
-    df["slowMA"] = ta.ema(df["close"], length=slowLength)
+    df["fastMA"] = ta.ema(df["close"], length=12)
+    df["slowMA"] = ta.ema(df["close"], length=26)
     df["macd"] = df["fastMA"] - df["slowMA"]
-    df["signal"] = ta.sma(df["macd"], length=signalLength)
-
+    df["signal"] = ta.sma(df["macd"], length=9)
     df["macd_bullbear"] = (df["macd"] > df["signal"]).astype(int)
     df["macd_bias"] = (df["macd"] > 0).astype(int)
     df["macd_index"] = df["macd_bullbear"] + df["macd_bias"]
@@ -169,7 +189,6 @@ def calculate_obv_index(df):
     df.loc[df["change"] < 0, "direction"] = -1
     df["obv"] = (df["volumefrom"] * df["direction"]).fillna(0).cumsum()
     df["obv_ema"] = ta.ema(df["obv"], length=13)
-
     df["OBV_bullbear"] = (df["obv"] > df["obv_ema"]).astype(int)
     df["OBV_bias"] = (df["obv"] > 0).astype(int)
     df["OBV_index"] = df["OBV_bullbear"] + df["OBV_bias"]
@@ -218,7 +237,6 @@ def calculate_ad_index(df):
     ad2 = ta.ema(df["ad"], length=13)
     ad3 = df["ad"].rolling(window=30, min_periods=30).mean()
     ad4 = df["ad"].rolling(window=200, min_periods=200).mean()
-
     df["AD_bullbear_short"] = (df["ad"] > ad2).astype(int)
     df["AD_bullbear_med"] = (df["ad"] > ad3).astype(int)
     df["AD_bullbear_long"] = (ad2 > ad3).astype(int)
@@ -267,12 +285,17 @@ def calculate_di_index(df, debug=False):
             None
         )
 
+        if debug:
+            trend_counts = df["trend"].value_counts()
+            logger.debug(f"Trend distribution: {trend_counts.to_dict()}")
+
         result = []
         for _, row in df.iterrows():
             entry = {
                 "time": row["time"].strftime("%Y-%m-%d"),
                 "DI_index": nan_to_none(row["DI_index"]),
-                "close": nan_to_none(row["close"])
+                "close": nan_to_none(row["close"]),
+                "trend": row["trend"]
             }
             result.append(entry)
         return result
@@ -285,6 +308,33 @@ def nan_to_none(val):
     if isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
         return None
     return val
+
+def process_coins_in_batches(coins, batch_size=3):
+    """Process coins in smaller batches to avoid API rate limits"""
+    results = []
+    for i in range(0, len(coins), batch_size):
+        batch = coins[i:i + batch_size]
+        logger.info(f"Processing batch of {len(batch)} coins: {', '.join([c['symbol'] for c in batch])}")
+
+        for coin in batch:
+            try:
+                logger.info(f"Processing {coin['symbol']}")
+                if validate_symbol(coin["symbol"]):
+                    coin_data = calculate_combined_indices(symbol=coin["symbol"])
+                    if coin_data:
+                        results.append({
+                            "symbol": coin["symbol"],
+                            "name": coin["name"],
+                            "data": coin_data
+                        })
+                        logger.info(f"Successfully processed {coin['symbol']}")
+                time.sleep(2)  # Delay between coins
+            except Exception as coin_error:
+                logger.error(f"Error processing {coin['symbol']}: {str(coin_error)}")
+                continue
+
+        time.sleep(3)  # Delay between batches
+    return results
 
 def calculate_combined_indices(symbol="BTC", debug=False):
     """Calculate and combine indices from different timeframes"""
@@ -301,51 +351,67 @@ def calculate_combined_indices(symbol="BTC", debug=False):
             return []
 
         # Calculate DI Index for each timeframe
-        daily_data = calculate_di_index(df_daily, debug)
-        fourh_data = calculate_di_index(df_4h, debug)
-        weekly_data = calculate_di_index(df_weekly, debug)
+        daily_di = calculate_di_index(df_daily, debug)
+        fourh_di = calculate_di_index(df_4h, debug)
+        weekly_di = calculate_di_index(df_weekly, debug)
 
-        # Create DataFrame with all timeframes
-        results = []
-        for entry in daily_data:
+        # Create date-indexed dictionaries
+        results_by_date = {}
+
+        # First process daily data
+        for entry in daily_di:
             date = entry["time"]
-            daily_di = entry["DI_index"]
+            if date not in results_by_date:
+                results_by_date[date] = {
+                    "time": date,
+                    "daily_di": None,
+                    "4h_di": None,
+                    "weekly_di": None,
+                    "total_di": None,
+                    "di_ema_13": None,
+                    "di_sma_30": None,
+                    "trend": None,
+                    "close": entry["close"]
+                }
+            results_by_date[date]["daily_di"] = entry["DI_index"]
+            results_by_date[date]["trend"] = entry["trend"]
 
-            # Find matching 4h and weekly data
-            fourh_di = next((x["DI_index"] for x in fourh_data if x["time"] == date), None)
-            weekly_di = next((x["DI_index"] for x in weekly_data if x["time"] == date), None)
+        # Then process 4h data
+        for entry in fourh_di:
+            date = entry["time"]
+            if date in results_by_date:
+                results_by_date[date]["4h_di"] = entry["DI_index"]
 
-            if all(v is not None for v in [daily_di, fourh_di, weekly_di]):
-                total_di = daily_di + fourh_di + weekly_di
-            else:
-                total_di = None
+        # Finally process weekly data
+        for entry in weekly_di:
+            date = entry["time"]
+            if date in results_by_date:
+                results_by_date[date]["weekly_di"] = entry["DI_index"]
 
-            results.append({
-                "time": date,
-                "daily_di": daily_di,
-                "4h_di": fourh_di,
-                "weekly_di": weekly_di,
-                "total_di": total_di,
-                "close": entry["close"]
-            })
+        # Convert to list and sort by date
+        results_list = list(results_by_date.values())
+        results_list.sort(key=lambda x: x["time"], reverse=True)
 
-        # Convert to DataFrame for final calculations
-        df_results = pd.DataFrame(results)
+        # Calculate additional metrics
+        df = pd.DataFrame(results_list)
 
-        # Calculate final indicators
-        df_results["di_ema_13"] = ta.ema(df_results["total_di"], length=13)
-        df_results["di_sma_30"] = df_results["total_di"].rolling(window=30, min_periods=30).mean()
-
-        # Calculate trend
-        df_results["trend"] = np.where(
-            (df_results["di_ema_13"].notna() & df_results["di_sma_30"].notna()),
-            np.where(df_results["di_ema_13"] > df_results["di_sma_30"], "bull", "bear"),
-            None
+        # Calculate Total DI
+        df["total_di"] = df.apply(
+            lambda row: (
+                sum(filter(None, [row["daily_di"], row["4h_di"], row["weekly_di"]]))
+                if any(filter(None, [row["daily_di"], row["4h_di"], row["weekly_di"]]))
+                else None
+            ),
+            axis=1
         )
+
+        # Calculate EMA and SMA
+        df["di_ema_13"] = ta.ema(df["total_di"], length=13)
+        df["di_sma_30"] = df["total_di"].rolling(window=30, min_periods=30).mean()
 
         # Convert back to list format
         final_results = []
-        for _, row in df_results.iterrows():
+        for _, row in df.iterrows():
             entry = row.to_dict()
             # Convert NaN to None
             for key, value in entry.items():
@@ -353,7 +419,7 @@ def calculate_combined_indices(symbol="BTC", debug=False):
                     entry[key] = None
             final_results.append(entry)
 
-        logger.info(f"Successfully calculated indices for {symbol}")
+        logger.info(f"Successfully processed {symbol}")
         return final_results
 
     except Exception as e:
@@ -362,7 +428,7 @@ def calculate_combined_indices(symbol="BTC", debug=False):
 
 @di_index_blueprint.route('/')
 def index():
-    return render_template('index.html', cryptocurrencies=TEST_CRYPTOCURRENCIES)
+    return render_template('index.html', cryptocurrencies=AVAILABLE_CRYPTOCURRENCIES)
 
 @di_index_blueprint.route('/api/di_index')
 def di_index():
@@ -372,25 +438,8 @@ def di_index():
 
         if symbol == "ALL":
             try:
-                logger.info(f"Processing test set of {len(TEST_CRYPTOCURRENCIES)} coins")
-                results = []
-
-                for coin in TEST_CRYPTOCURRENCIES:
-                    try:
-                        logger.info(f"Processing {coin['symbol']}")
-                        if validate_symbol(coin["symbol"]):
-                            coin_data = calculate_combined_indices(symbol=coin["symbol"], debug=debug_mode)
-                            if coin_data:
-                                results.append({
-                                    "symbol": coin["symbol"],
-                                    "name": coin["name"],
-                                    "data": coin_data
-                                })
-                                logger.info(f"Successfully processed {coin['symbol']}")
-                        time.sleep(2)
-                    except Exception as coin_error:
-                        logger.error(f"Error processing {coin['symbol']}: {str(coin_error)}")
-                        continue
+                logger.info(f"Processing test set of {len(AVAILABLE_CRYPTOCURRENCIES)} coins")
+                results = process_coins_in_batches(AVAILABLE_CRYPTOCURRENCIES[:30])  # Process first 30 coins
 
                 if not results:
                     logger.error("No valid data received for any cryptocurrency")
@@ -417,7 +466,7 @@ def di_index():
             return jsonify({
                 "coins": [{
                     "symbol": symbol,
-                    "name": next((c["name"] for c in TEST_CRYPTOCURRENCIES if c["symbol"] == symbol), symbol),
+                    "name": next((c["name"] for c in AVAILABLE_CRYPTOCURRENCIES if c["symbol"] == symbol), symbol),
                     "data": coin_data
                 }]
             })
