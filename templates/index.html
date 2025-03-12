@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>DI Index – Объединённые данные</title>
+  <title>DI Index – Анализ криптовалют</title>
   <style>
     body { font-family: Arial, sans-serif; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
@@ -14,13 +14,24 @@
     .controls { margin: 20px 0; }
     select { padding: 8px; font-size: 16px; }
     #loading { display: none; margin: 20px 0; font-weight: bold; }
+    .stats { 
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+    }
+    .stats-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
-  <h1>DI Index – Объединённые данные по датам</h1>
+  <h1>DI Index – Анализ криптовалют</h1>
 
   <div class="controls">
-    <select id="cryptoSelect" onchange="loadData()">
+    <select id="cryptoSelect" onchange="loadSingleCoinData()">
+      <option value="ALL">Все монеты</option>
       {% for crypto in cryptocurrencies %}
       <option value="{{ crypto.symbol }}">{{ crypto.name }} ({{ crypto.symbol }})</option>
       {% endfor %}
@@ -29,6 +40,11 @@
 
   <div id="loading">Загрузка данных...</div>
   <div id="error"></div>
+
+  <div id="marketStats" class="stats" style="display: none;">
+    <div class="stats-title">Статистика рынка</div>
+    <div id="statsContent"></div>
+  </div>
 
   <table id="dataTable">
     <caption>Weekly, Daily, 4h DI Index, Total, 13 EMA (Total), 30 SMA (Total) и Trend</caption>
@@ -46,7 +62,6 @@
       </tr>
     </thead>
     <tbody id="tableBody">
-      <!-- Строки будут созданы через JavaScript -->
     </tbody>
   </table>
 
@@ -55,7 +70,6 @@
       return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
     }
 
-    // Функция для расчета EMA
     function calculateEMA(data, period) {
       const k = 2 / (period + 1);
       let ema = data[0];
@@ -72,7 +86,6 @@
       return emaData;
     }
 
-    // Функция для расчета SMA
     function calculateSMA(data, period) {
       const smaData = [];
       for (let i = 0; i < data.length; i++) {
@@ -92,10 +105,79 @@
       return smaData;
     }
 
-    async function loadData() {
+    async function loadAllCoinsData() {
       const loadingDiv = document.getElementById("loading");
       const errorDiv = document.getElementById("error");
+      const marketStats = document.getElementById("marketStats");
+
+      try {
+        loadingDiv.style.display = "block";
+        errorDiv.textContent = "";
+
+        const response = await fetch('/api/di_index?symbol=ALL');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const json = await response.json();
+
+        if (!json.coins || !Array.isArray(json.coins)) {
+          throw new Error('Invalid data format received from server');
+        }
+
+        // Создаем map для хранения статистики по датам
+        const dateStats = new Map();
+
+        // Обрабатываем данные каждой монеты
+        json.coins.forEach(coin => {
+          if (coin.data) {
+            coin.data.forEach(row => {
+              const date = row.time;
+              if (!dateStats.has(date)) {
+                dateStats.set(date, { total: 0, bulls: 0 });
+              }
+              const stats = dateStats.get(date);
+              stats.total++;
+              if (row.trend === 'bull') {
+                stats.bulls++;
+              }
+            });
+          }
+        });
+
+        // Сортируем даты
+        const sortedDates = Array.from(dateStats.keys()).sort();
+
+        // Формируем статистику
+        const statsContent = document.getElementById("statsContent");
+        statsContent.innerHTML = sortedDates.map(date => {
+          const stats = dateStats.get(date);
+          const bullPercent = (stats.bulls / stats.total * 100).toFixed(1);
+          return `<div>${date}: ${stats.bulls} bull из ${stats.total} (${bullPercent}%)</div>`;
+        }).join('');
+
+        marketStats.style.display = "block";
+
+      } catch (error) {
+        console.error("Ошибка загрузки данных:", error);
+        errorDiv.textContent = `Ошибка загрузки данных: ${error.message}`;
+      } finally {
+        loadingDiv.style.display = "none";
+      }
+    }
+
+    async function loadSingleCoinData() {
       const selectedSymbol = document.getElementById("cryptoSelect").value;
+      const marketStats = document.getElementById("marketStats");
+
+      if (selectedSymbol === "ALL") {
+        await loadAllCoinsData();
+        return;
+      }
+
+      marketStats.style.display = "none";
+      const loadingDiv = document.getElementById("loading");
+      const errorDiv = document.getElementById("error");
+      const tableBody = document.getElementById("tableBody");
 
       try {
         loadingDiv.style.display = "block";
@@ -111,21 +193,16 @@
           throw new Error('Invalid data format received from server');
         }
 
-        const tableBody = document.getElementById("tableBody");
         tableBody.innerHTML = "";
 
-        let lastWeeklyValue = null; // Сохраняем последнее известное значение Weekly DI Index
-
-        // Предварительная обработка данных
+        let lastWeeklyValue = null;
         const processedData = json.data.map(row => {
-          // Если Weekly DI Index пустой, используем последнее известное значение
           if (row.weekly_di === null || isNaN(row.weekly_di)) {
             row.weekly_di = lastWeeklyValue;
           } else {
             lastWeeklyValue = row.weekly_di;
           }
 
-          // Пересчитываем total с учетом обновленного Weekly DI Index
           if (row.weekly_di !== null && row.daily_di !== null && row['4h_di'] !== null) {
             row.total_di = row.weekly_di + row.daily_di + row['4h_di'];
           }
@@ -133,19 +210,14 @@
           return row;
         });
 
-        // Получаем массив total_di для расчета EMA и SMA
         const totalValues = processedData.map(row => row.total_di);
-
-        // Рассчитываем 13 EMA и 30 SMA
         const ema13Values = calculateEMA(totalValues, 13);
         const sma30Values = calculateSMA(totalValues, 30);
 
-        // Отображаем данные
         processedData.forEach((row, index) => {
           const ema13 = ema13Values[index];
           const sma30 = sma30Values[index];
 
-          // Определяем тренд
           let trend = '-';
           if (ema13 !== null && sma30 !== null) {
             trend = ema13 > sma30 ? 
@@ -175,8 +247,7 @@
       }
     }
 
-    // Загружаем данные при загрузке страницы
-    window.onload = loadData;
+    window.onload = loadSingleCoinData;
   </script>
 </body>
 </html>
