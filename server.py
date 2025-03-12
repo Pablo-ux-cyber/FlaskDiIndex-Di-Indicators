@@ -352,35 +352,31 @@ def index():
 def di_index():
     try:
         symbol = request.args.get("symbol", "BTC").upper()
-        page = int(request.args.get("page", "1"))
-        per_page = int(request.args.get("per_page", "10"))
         debug_mode = request.args.get("debug", "false").lower() == "true"
 
         if symbol == "ALL":
-            start_idx = (page - 1) * per_page
-            end_idx = start_idx + per_page
-            selected_coins = AVAILABLE_CRYPTOCURRENCIES[start_idx:end_idx]
+            try:
+                results = []
+                for coin in AVAILABLE_CRYPTOCURRENCIES:
+                    try:
+                        if validate_symbol(coin["symbol"]):
+                            coin_data = calculate_combined_indices(symbol=coin["symbol"], debug=debug_mode)
+                            if coin_data:  # Проверяем, что данные получены
+                                results.append({
+                                    "symbol": coin["symbol"],
+                                    "name": coin["name"],
+                                    "data": coin_data
+                                })
+                    except Exception as coin_error:
+                        print(f"Error processing {coin['symbol']}: {str(coin_error)}")
+                        continue
 
-            results = []
-            for coin in selected_coins:
-                try:
-                    coin_data = calculate_combined_indices(symbol=coin["symbol"], debug=debug_mode)
-                    results.append({
-                        "symbol": coin["symbol"],
-                        "name": coin["name"],
-                        "data": coin_data
-                    })
-                except Exception as e:
-                    print(f"Error processing {coin['symbol']}: {str(e)}")
-                    continue
-
-            return jsonify({
-                "page": page,
-                "per_page": per_page,
-                "total_pages": math.ceil(len(AVAILABLE_CRYPTOCURRENCIES) / per_page),
-                "total_coins": len(AVAILABLE_CRYPTOCURRENCIES),
-                "coins": results
-            })
+                return jsonify({
+                    "coins": results
+                })
+            except Exception as e:
+                print(f"Error processing ALL request: {str(e)}")
+                return jsonify({"error": str(e)}), 500
         else:
             # Single coin request
             if not validate_symbol(symbol):
@@ -393,4 +389,5 @@ def di_index():
             })
 
     except Exception as e:
+        print(f"Error in di_index endpoint: {str(e)}")
         return jsonify({"error": str(e)}), 500

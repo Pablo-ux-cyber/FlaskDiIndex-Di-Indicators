@@ -65,189 +65,191 @@
     </tbody>
   </table>
 
-  <script>
+<script>
     function formatValue(val) {
-      return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
+        return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
     }
 
     function calculateEMA(data, period) {
-      const k = 2 / (period + 1);
-      let ema = data[0];
-      const emaData = [ema];
+        const k = 2 / (period + 1);
+        let ema = data[0];
+        const emaData = [ema];
 
-      for (let i = 1; i < data.length; i++) {
-        if (data[i] === null || isNaN(data[i])) {
-          emaData.push(null);
-        } else {
-          ema = data[i] * k + ema * (1 - k);
-          emaData.push(ema);
+        for (let i = 1; i < data.length; i++) {
+            if (data[i] === null || isNaN(data[i])) {
+                emaData.push(null);
+            } else {
+                ema = data[i] * k + ema * (1 - k);
+                emaData.push(ema);
+            }
         }
-      }
-      return emaData;
+        return emaData;
     }
 
     function calculateSMA(data, period) {
-      const smaData = [];
-      for (let i = 0; i < data.length; i++) {
-        if (i < period - 1) {
-          smaData.push(null);
-          continue;
-        }
+        const smaData = [];
+        for (let i = 0; i < data.length; i++) {
+            if (i < period - 1) {
+                smaData.push(null);
+                continue;
+            }
 
-        const window = data.slice(i - period + 1, i + 1);
-        const validValues = window.filter(val => val !== null && !isNaN(val));
-        if (validValues.length === period) {
-          smaData.push(validValues.reduce((a, b) => a + b) / period);
-        } else {
-          smaData.push(null);
+            const window = data.slice(i - period + 1, i + 1);
+            const validValues = window.filter(val => val !== null && !isNaN(val));
+            if (validValues.length === period) {
+                smaData.push(validValues.reduce((a, b) => a + b) / period);
+            } else {
+                smaData.push(null);
+            }
         }
-      }
-      return smaData;
+        return smaData;
     }
 
     async function loadAllCoinsData() {
-      const loadingDiv = document.getElementById("loading");
-      const errorDiv = document.getElementById("error");
-      const marketStats = document.getElementById("marketStats");
+        const loadingDiv = document.getElementById("loading");
+        const errorDiv = document.getElementById("error");
+        const marketStats = document.getElementById("marketStats");
+        const tableBody = document.getElementById("tableBody");
 
-      try {
-        loadingDiv.style.display = "block";
-        errorDiv.textContent = "";
+        try {
+            loadingDiv.style.display = "block";
+            errorDiv.textContent = "";
+            tableBody.innerHTML = "";
 
-        const response = await fetch('/api/di_index?symbol=ALL');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const json = await response.json();
+            const response = await fetch('/api/di_index?symbol=ALL');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const json = await response.json();
 
-        if (!json.coins || !Array.isArray(json.coins)) {
-          throw new Error('Invalid data format received from server');
-        }
+            if (!json.coins || !Array.isArray(json.coins)) {
+                throw new Error('Invalid data format received from server');
+            }
 
-        // Создаем map для хранения статистики по датам
-        const dateStats = new Map();
+            // Создаем map для хранения статистики по датам
+            const dateStats = new Map();
 
-        // Обрабатываем данные каждой монеты
-        json.coins.forEach(coin => {
-          if (coin.data) {
-            coin.data.forEach(row => {
-              const date = row.time;
-              if (!dateStats.has(date)) {
-                dateStats.set(date, { total: 0, bulls: 0 });
-              }
-              const stats = dateStats.get(date);
-              stats.total++;
-              if (row.trend === 'bull') {
-                stats.bulls++;
-              }
+            // Обрабатываем данные каждой монеты
+            json.coins.forEach(coin => {
+                if (coin.data) {
+                    coin.data.forEach(row => {
+                        const date = row.time;
+                        if (!dateStats.has(date)) {
+                            dateStats.set(date, { total: 0, bulls: 0 });
+                        }
+                        const stats = dateStats.get(date);
+                        stats.total++;
+                        if (row.trend === 'bull') {
+                            stats.bulls++;
+                        }
+                    });
+                }
             });
-          }
-        });
 
-        // Сортируем даты
-        const sortedDates = Array.from(dateStats.keys()).sort();
+            // Сортируем даты
+            const sortedDates = Array.from(dateStats.keys()).sort();
 
-        // Формируем статистику
-        const statsContent = document.getElementById("statsContent");
-        statsContent.innerHTML = sortedDates.map(date => {
-          const stats = dateStats.get(date);
-          const bullPercent = (stats.bulls / stats.total * 100).toFixed(1);
-          return `<div>${date}: ${stats.bulls} bull из ${stats.total} (${bullPercent}%)</div>`;
-        }).join('');
+            // Формируем статистику
+            const statsContent = document.getElementById("statsContent");
+            statsContent.innerHTML = sortedDates.map(date => {
+                const stats = dateStats.get(date);
+                const bullPercent = (stats.bulls / stats.total * 100).toFixed(1);
+                return `<div>${date}: ${stats.bulls} bull из ${stats.total} (${bullPercent}%)</div>`;
+            }).join('');
 
-        marketStats.style.display = "block";
+            marketStats.style.display = "block";
 
-      } catch (error) {
-        console.error("Ошибка загрузки данных:", error);
-        errorDiv.textContent = `Ошибка загрузки данных: ${error.message}`;
-      } finally {
-        loadingDiv.style.display = "none";
-      }
+        } catch (error) {
+            console.error("Ошибка загрузки данных:", error);
+            errorDiv.textContent = `Ошибка загрузки данных: ${error.message}`;
+        } finally {
+            loadingDiv.style.display = "none";
+        }
     }
 
     async function loadSingleCoinData() {
-      const selectedSymbol = document.getElementById("cryptoSelect").value;
-      const marketStats = document.getElementById("marketStats");
+        const selectedSymbol = document.getElementById("cryptoSelect").value;
+        const marketStats = document.getElementById("marketStats");
 
-      if (selectedSymbol === "ALL") {
-        await loadAllCoinsData();
-        return;
-      }
-
-      marketStats.style.display = "none";
-      const loadingDiv = document.getElementById("loading");
-      const errorDiv = document.getElementById("error");
-      const tableBody = document.getElementById("tableBody");
-
-      try {
-        loadingDiv.style.display = "block";
-        errorDiv.textContent = "";
-
-        const response = await fetch(`/api/di_index?symbol=${selectedSymbol}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const json = await response.json();
-
-        if (!json.data || !Array.isArray(json.data)) {
-          throw new Error('Invalid data format received from server');
+        if (selectedSymbol === "ALL") {
+            await loadAllCoinsData();
+            return;
         }
 
-        tableBody.innerHTML = "";
+        marketStats.style.display = "none";
+        const loadingDiv = document.getElementById("loading");
+        const errorDiv = document.getElementById("error");
+        const tableBody = document.getElementById("tableBody");
 
-        let lastWeeklyValue = null;
-        const processedData = json.data.map(row => {
-          if (row.weekly_di === null || isNaN(row.weekly_di)) {
-            row.weekly_di = lastWeeklyValue;
-          } else {
-            lastWeeklyValue = row.weekly_di;
-          }
+        try {
+            loadingDiv.style.display = "block";
+            errorDiv.textContent = "";
 
-          if (row.weekly_di !== null && row.daily_di !== null && row['4h_di'] !== null) {
-            row.total_di = row.weekly_di + row.daily_di + row['4h_di'];
-          }
+            const response = await fetch(`/api/di_index?symbol=${selectedSymbol}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const json = await response.json();
 
-          return row;
-        });
+            if (!json.data || !Array.isArray(json.data)) {
+                throw new Error('Invalid data format received from server');
+            }
 
-        const totalValues = processedData.map(row => row.total_di);
-        const ema13Values = calculateEMA(totalValues, 13);
-        const sma30Values = calculateSMA(totalValues, 30);
+            tableBody.innerHTML = "";
 
-        processedData.forEach((row, index) => {
-          const ema13 = ema13Values[index];
-          const sma30 = sma30Values[index];
+            let lastWeeklyValue = null;
+            const processedData = json.data.map(row => {
+                if (row.weekly_di === null || isNaN(row.weekly_di)) {
+                    row.weekly_di = lastWeeklyValue;
+                } else {
+                    lastWeeklyValue = row.weekly_di;
+                }
 
-          let trend = '-';
-          if (ema13 !== null && sma30 !== null) {
-            trend = ema13 > sma30 ? 
-              '<span style="color:green;">bull</span>' : 
-              '<span style="color:red;">bear</span>';
-          }
+                if (row.weekly_di !== null && row.daily_di !== null && row['4h_di'] !== null) {
+                    row.total_di = row.weekly_di + row.daily_di + row['4h_di'];
+                }
 
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${row.time}</td>
-            <td>${formatValue(row.weekly_di)}</td>
-            <td>${formatValue(row.daily_di)}</td>
-            <td>${formatValue(row['4h_di'])}</td>
-            <td>${formatValue(row.total_di)}</td>
-            <td>${formatValue(ema13)}</td>
-            <td>${formatValue(sma30)}</td>
-            <td>${trend}</td>
-            <td>${formatValue(row.close)}</td>
-          `;
-          tableBody.appendChild(tr);
-        });
-      } catch (error) {
-        console.error("Ошибка загрузки данных:", error);
-        errorDiv.textContent = `Ошибка загрузки данных: ${error.message}`;
-      } finally {
-        loadingDiv.style.display = "none";
-      }
+                return row;
+            });
+
+            const totalValues = processedData.map(row => row.total_di);
+            const ema13Values = calculateEMA(totalValues, 13);
+            const sma30Values = calculateSMA(totalValues, 30);
+
+            processedData.forEach((row, index) => {
+                const ema13 = ema13Values[index];
+                const sma30 = sma30Values[index];
+
+                let trend = '-';
+                if (ema13 !== null && sma30 !== null) {
+                    trend = ema13 > sma30 ? 
+                        '<span style="color:green;">bull</span>' : 
+                        '<span style="color:red;">bear</span>';
+                }
+
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${row.time}</td>
+                    <td>${formatValue(row.weekly_di)}</td>
+                    <td>${formatValue(row.daily_di)}</td>
+                    <td>${formatValue(row['4h_di'])}</td>
+                    <td>${formatValue(row.total_di)}</td>
+                    <td>${formatValue(ema13)}</td>
+                    <td>${formatValue(sma30)}</td>
+                    <td>${trend}</td>
+                    <td>${formatValue(row.close)}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        } catch (error) {
+            console.error("Ошибка загрузки данных:", error);
+            errorDiv.textContent = `Ошибка загрузки данных: ${error.message}`;
+        } finally {
+            loadingDiv.style.display = "none";
+        }
     }
 
     window.onload = loadSingleCoinData;
-  </script>
+</script>
 </body>
 </html>
