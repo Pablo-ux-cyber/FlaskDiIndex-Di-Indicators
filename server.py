@@ -355,6 +355,31 @@ def calculate_combined_indices(symbol="BTC", debug=False):
         print(f"Error in calculate_combined_indices: {str(e)}")
         return []
 
+def process_coins_in_batches(coins, batch_size=5):
+    """Process coins in smaller batches to avoid API rate limits"""
+    results = []
+    for i in range(0, len(coins), batch_size):
+        batch = coins[i:i + batch_size]
+        logger.info(f"Processing batch of {len(batch)} coins")
+        for coin in batch:
+            try:
+                logger.info(f"Processing {coin['symbol']}")
+                if validate_symbol(coin["symbol"]):
+                    coin_data = calculate_combined_indices(symbol=coin["symbol"])
+                    if coin_data:  # Проверяем, что данные получены
+                        results.append({
+                            "symbol": coin["symbol"],
+                            "name": coin["name"],
+                            "data": coin_data
+                        })
+                        logger.info(f"Successfully processed {coin['symbol']}")
+                time.sleep(0.5)  # Задержка между запросами в пакете
+            except Exception as coin_error:
+                logger.error(f"Error processing {coin['symbol']}: {str(coin_error)}")
+                continue
+        time.sleep(1)  # Задержка между пакетами
+    return results
+
 @di_index_blueprint.route('/')
 def index():
     return render_template('index.html', cryptocurrencies=AVAILABLE_CRYPTOCURRENCIES)
@@ -367,27 +392,13 @@ def di_index():
 
         if symbol == "ALL":
             try:
-                results = []
-                for coin in AVAILABLE_CRYPTOCURRENCIES:
-                    try:
-                        logger.info(f"Processing {coin['symbol']}")
-                        if validate_symbol(coin["symbol"]):
-                            coin_data = calculate_combined_indices(symbol=coin["symbol"], debug=debug_mode)
-                            if coin_data:  # Проверяем, что данные получены
-                                results.append({
-                                    "symbol": coin["symbol"],
-                                    "name": coin["name"],
-                                    "data": coin_data
-                                })
-                                logger.info(f"Successfully processed {coin['symbol']}")
-                        time.sleep(0.5)  # Добавляем задержку между запросами
-                    except Exception as coin_error:
-                        logger.error(f"Error processing {coin['symbol']}: {str(coin_error)}")
-                        continue
+                results = process_coins_in_batches(AVAILABLE_CRYPTOCURRENCIES)
 
                 if not results:
+                    logger.error("No valid data received for any cryptocurrency")
                     return jsonify({"error": "No valid data received for any cryptocurrency"}), 500
 
+                logger.info(f"Successfully processed {len(results)} coins")
                 return jsonify({
                     "coins": results
                 })
