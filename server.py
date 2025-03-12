@@ -1,6 +1,8 @@
 import math
 import requests
 import numpy as np
+import time
+import logging
 
 # Monkey-patch for numpy's NaN compatibility with pandas-ta
 if not hasattr(np, "NaN"):
@@ -14,6 +16,10 @@ from datetime import datetime
 from functools import lru_cache
 import asyncio
 import concurrent.futures
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Create blueprint for DI index routes
 di_index_blueprint = Blueprint('di_index', __name__)
@@ -57,12 +63,17 @@ AVAILABLE_CRYPTOCURRENCIES = [
 
 def validate_symbol(symbol):
     """Validate if the cryptocurrency symbol exists on CryptoCompare"""
-    url = f"https://min-api.cryptocompare.com/data/price?fsym={symbol}&tsyms=USD&api_key={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    if "Response" in data and data["Response"] == "Error":
+    try:
+        url = f"https://min-api.cryptocompare.com/data/price?fsym={symbol}&tsyms=USD&api_key={API_KEY}"
+        response = requests.get(url)
+        data = response.json()
+        if "Response" in data and data["Response"] == "Error":
+            logger.warning(f"Invalid symbol {symbol}: {data.get('Message')}")
+            return False
+        return True
+    except Exception as e:
+        logger.error(f"Error validating symbol {symbol}: {str(e)}")
         return False
-    return True
 
 def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     """Get daily OHLCV data for given cryptocurrency"""
@@ -359,6 +370,7 @@ def di_index():
                 results = []
                 for coin in AVAILABLE_CRYPTOCURRENCIES:
                     try:
+                        logger.info(f"Processing {coin['symbol']}")
                         if validate_symbol(coin["symbol"]):
                             coin_data = calculate_combined_indices(symbol=coin["symbol"], debug=debug_mode)
                             if coin_data:  # Проверяем, что данные получены
@@ -367,15 +379,20 @@ def di_index():
                                     "name": coin["name"],
                                     "data": coin_data
                                 })
+                                logger.info(f"Successfully processed {coin['symbol']}")
+                        time.sleep(0.5)  # Добавляем задержку между запросами
                     except Exception as coin_error:
-                        print(f"Error processing {coin['symbol']}: {str(coin_error)}")
+                        logger.error(f"Error processing {coin['symbol']}: {str(coin_error)}")
                         continue
+
+                if not results:
+                    return jsonify({"error": "No valid data received for any cryptocurrency"}), 500
 
                 return jsonify({
                     "coins": results
                 })
             except Exception as e:
-                print(f"Error processing ALL request: {str(e)}")
+                logger.error(f"Error processing ALL request: {str(e)}")
                 return jsonify({"error": str(e)}), 500
         else:
             # Single coin request
@@ -389,5 +406,5 @@ def di_index():
             })
 
     except Exception as e:
-        print(f"Error in di_index endpoint: {str(e)}")
+        logger.error(f"Error in di_index endpoint: {str(e)}")
         return jsonify({"error": str(e)}), 500
