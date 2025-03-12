@@ -34,28 +34,28 @@ AVAILABLE_CRYPTOCURRENCIES = [
     {"symbol": "ADA", "name": "Cardano"},
     {"symbol": "DOGE", "name": "Dogecoin"},
     {"symbol": "TRX", "name": "TRON"},
-    {"symbol": "PI", "name": "Pi Network"},
-    {"symbol": "LEO", "name": "LEO Token"},
     {"symbol": "HBAR", "name": "Hedera"},
     {"symbol": "LINK", "name": "Chainlink"},
     {"symbol": "XLM", "name": "Stellar"},
     {"symbol": "AVAX", "name": "Avalanche"},
-    {"symbol": "SUI", "name": "Sui"},
-    {"symbol": "SHIB", "name": "Shiba Inu"},
     {"symbol": "LTC", "name": "Litecoin"},
-    {"symbol": "BCH", "name": "Bitcoin Cash"},
-    {"symbol": "TON", "name": "Toncoin"},
-    {"symbol": "OM", "name": "MANTRA OM"},
     {"symbol": "DOT", "name": "Polkadot"},
-    {"symbol": "BGB", "name": "Bitget Token"},
-    {"symbol": "HYPE", "name": "Hyperliquid"},
-    {"symbol": "WBT", "name": "WhiteBIT Coin"},
-    {"symbol": "XMR", "name": "Monero"},
     {"symbol": "UNI", "name": "Uniswap"},
+    {"symbol": "ATOM", "name": "Cosmos"},
+    {"symbol": "ETC", "name": "Ethereum Classic"},
+    {"symbol": "BCH", "name": "Bitcoin Cash"},
+    {"symbol": "ALGO", "name": "Algorand"},
+    {"symbol": "XMR", "name": "Monero"},
+    {"symbol": "FIL", "name": "Filecoin"},
+    {"symbol": "EOS", "name": "EOS"},
     {"symbol": "APT", "name": "Aptos"},
     {"symbol": "NEAR", "name": "NEAR Protocol"},
     {"symbol": "AAVE", "name": "Aave"},
-    {"symbol": "ETC", "name": "Ethereum Classic"}
+    {"symbol": "GRT", "name": "The Graph"},
+    {"symbol": "SNX", "name": "Synthetix"},
+    {"symbol": "MKR", "name": "Maker"},
+    {"symbol": "CRV", "name": "Curve DAO Token"},
+    {"symbol": "COMP", "name": "Compound"}
 ]
 
 def validate_symbol(symbol):
@@ -267,12 +267,17 @@ def calculate_di_index(df, debug=False):
                       df["OBV_index"] + df["mfi_index"] + df["AD_index"])
     df["DI_index_EMA"] = ta.ema(df["DI_index"], length=13)
     df["DI_index_SMA"] = df["DI_index"].rolling(window=30, min_periods=30).mean()
-    df["weekly_DI_index"] = df["DI_index"].rolling(window=7, min_periods=7).mean()
 
-    def nan_to_none(val):
-        if isinstance(val, float) and math.isnan(val):
-            return None
-        return val
+    # Calculate trend
+    df["trend"] = np.where(
+        (df["DI_index_EMA"].notna() & df["DI_index_SMA"].notna()),
+        np.where(df["DI_index_EMA"] > df["DI_index_SMA"], "bull", "bear"),
+        None
+    )
+
+    if debug:
+        trend_counts = df["trend"].value_counts()
+        logger.debug(f"Trend distribution: {trend_counts.to_dict()}")
 
     result = []
     for _, row in df.iterrows():
@@ -281,10 +286,40 @@ def calculate_di_index(df, debug=False):
             "DI_index": nan_to_none(row["DI_index"]),
             "DI_index_EMA": nan_to_none(row["DI_index_EMA"]),
             "DI_index_SMA": nan_to_none(row["DI_index_SMA"]),
-            "weekly_DI_index": nan_to_none(row["weekly_DI_index"]),
-            "close": nan_to_none(row["close"])
+            "close": nan_to_none(row["close"]),
+            "trend": row["trend"]
         })
     return result
+
+def nan_to_none(val):
+    if isinstance(val, float) and math.isnan(val):
+        return None
+    return val
+
+def process_coins_in_batches(coins, batch_size=3):
+    """Process coins in smaller batches to avoid API rate limits"""
+    results = []
+    for i in range(0, len(coins), batch_size):
+        batch = coins[i:i + batch_size]
+        logger.info(f"Processing batch of {len(batch)} coins")
+        for coin in batch:
+            try:
+                logger.info(f"Processing {coin['symbol']}")
+                if validate_symbol(coin["symbol"]):
+                    coin_data = calculate_combined_indices(symbol=coin["symbol"])
+                    if coin_data:  # Check if data was received
+                        results.append({
+                            "symbol": coin["symbol"],
+                            "name": coin["name"],
+                            "data": coin_data
+                        })
+                        logger.info(f"Successfully processed {coin['symbol']}")
+                time.sleep(2)  # Delay between requests
+            except Exception as coin_error:
+                logger.error(f"Error processing {coin['symbol']}: {str(coin_error)}")
+                continue
+        time.sleep(3)  # Delay between batches
+    return results
 
 def calculate_combined_indices(symbol="BTC", debug=False):
     """Calculate and combine indices from different timeframes"""
@@ -293,6 +328,10 @@ def calculate_combined_indices(symbol="BTC", debug=False):
         df_daily = get_daily_data(symbol=symbol)
         df_4h = get_4h_data(symbol=symbol)
         df_weekly = get_weekly_data(symbol=symbol)
+
+        if df_daily.empty or df_4h.empty or df_weekly.empty:
+            logger.error(f"Empty data received for {symbol}")
+            return []
 
         # Calculate DI Index for each timeframe
         daily_di = calculate_di_index(df_daily, debug)
@@ -322,6 +361,7 @@ def calculate_combined_indices(symbol="BTC", debug=False):
                 # Determine which timeframe this entry belongs to
                 if entry in daily_di:
                     results_by_date[date]["daily_di"] = entry["DI_index"]
+                    results_by_date[date]["trend"] = entry["trend"]
                 elif entry in fourh_di:
                     results_by_date[date]["4h_di"] = entry["DI_index"]
                 elif entry in weekly_di:
@@ -329,7 +369,7 @@ def calculate_combined_indices(symbol="BTC", debug=False):
 
         # Convert to list and sort by date
         results_list = list(results_by_date.values())
-        results_list.sort(key=lambda x: x["time"])
+        results_list.sort(key=lambda x: x["time"], reverse=True)
 
         # Calculate additional metrics
         df = pd.DataFrame(results_list)
@@ -344,67 +384,26 @@ def calculate_combined_indices(symbol="BTC", debug=False):
             axis=1
         )
 
-        # Calculate EMA and SMA on total_di
+        # Calculate EMA and SMA
         df["di_ema_13"] = ta.ema(df["total_di"], length=13)
         df["di_sma_30"] = df["total_di"].rolling(window=30, min_periods=30).mean()
 
-        # Calculate trend
-        df["trend"] = np.where(
-            (df["di_ema_13"].notna() & df["di_sma_30"].notna()),
-            np.where(df["di_ema_13"] > df["di_sma_30"], "bull", "bear"),
-            None
-        )
-
-        # Convert back to dictionary format
+        # Convert back to list format
         final_results = []
         for _, row in df.iterrows():
-            entry = {
-                "time": row["time"],
-                "daily_di": row["daily_di"],
-                "4h_di": row["4h_di"],
-                "weekly_di": row["weekly_di"],
-                "total_di": row["total_di"],
-                "di_ema_13": row["di_ema_13"],
-                "di_sma_30": row["di_sma_30"],
-                "trend": row["trend"],
-                "close": row["close"]
-            }
+            entry = row.to_dict()
             # Convert NaN to None
             for key, value in entry.items():
                 if isinstance(value, float) and math.isnan(value):
                     entry[key] = None
             final_results.append(entry)
 
+        logger.info(f"Successfully processed {symbol}")
         return final_results
 
     except Exception as e:
-        print(f"Error in calculate_combined_indices: {str(e)}")
+        logger.error(f"Error in calculate_combined_indices for {symbol}: {str(e)}")
         return []
-
-def process_coins_in_batches(coins, batch_size=3):
-    """Process coins in smaller batches to avoid API rate limits"""
-    results = []
-    for i in range(0, len(coins), batch_size):
-        batch = coins[i:i + batch_size]
-        logger.info(f"Processing batch of {len(batch)} coins")
-        for coin in batch:
-            try:
-                logger.info(f"Processing {coin['symbol']}")
-                if validate_symbol(coin["symbol"]):
-                    coin_data = calculate_combined_indices(symbol=coin["symbol"])
-                    if coin_data:  # Check if data was received
-                        results.append({
-                            "symbol": coin["symbol"],
-                            "name": coin["name"],
-                            "data": coin_data
-                        })
-                        logger.info(f"Successfully processed {coin['symbol']}")
-                time.sleep(2)  # Delay between coins
-            except Exception as coin_error:
-                logger.error(f"Error processing {coin['symbol']}: {str(coin_error)}")
-                continue
-        time.sleep(3)  # Delay between batches
-    return results
 
 @di_index_blueprint.route('/')
 def index():
@@ -420,7 +419,7 @@ def di_index():
             try:
                 logger.info("Processing ALL request")
 
-                # Start with just first 3 cryptocurrencies for testing
+                # Process first 30 cryptocurrencies
                 test_coins = AVAILABLE_CRYPTOCURRENCIES[:30]
                 logger.info(f"Processing test set of {len(test_coins)} coins")
 
