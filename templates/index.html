@@ -41,6 +41,43 @@
       return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
     }
 
+    // Функция для расчета EMA
+    function calculateEMA(data, period) {
+      const k = 2 / (period + 1);
+      let ema = data[0];
+      const emaData = [ema];
+
+      for (let i = 1; i < data.length; i++) {
+        if (data[i] === null || isNaN(data[i])) {
+          emaData.push(null);
+        } else {
+          ema = data[i] * k + ema * (1 - k);
+          emaData.push(ema);
+        }
+      }
+      return emaData;
+    }
+
+    // Функция для расчета SMA
+    function calculateSMA(data, period) {
+      const smaData = [];
+      for (let i = 0; i < data.length; i++) {
+        if (i < period - 1) {
+          smaData.push(null);
+          continue;
+        }
+
+        const window = data.slice(i - period + 1, i + 1);
+        const validValues = window.filter(val => val !== null && !isNaN(val));
+        if (validValues.length === period) {
+          smaData.push(validValues.reduce((a, b) => a + b) / period);
+        } else {
+          smaData.push(null);
+        }
+      }
+      return smaData;
+    }
+
     async function loadData() {
       try {
         const response = await fetch('/api/di_index?symbol=BTC');
@@ -58,7 +95,8 @@
 
         let lastWeeklyValue = null; // Сохраняем последнее известное значение Weekly DI Index
 
-        json.data.forEach(row => {
+        // Предварительная обработка данных
+        const processedData = json.data.map(row => {
           // Если Weekly DI Index пустой, используем последнее известное значение
           if (row.weekly_di === null || isNaN(row.weekly_di)) {
             row.weekly_di = lastWeeklyValue;
@@ -71,6 +109,29 @@
             row.total_di = row.weekly_di + row.daily_di + row['4h_di'];
           }
 
+          return row;
+        });
+
+        // Получаем массив total_di для расчета EMA и SMA
+        const totalValues = processedData.map(row => row.total_di);
+
+        // Рассчитываем 13 EMA и 30 SMA
+        const ema13Values = calculateEMA(totalValues, 13);
+        const sma30Values = calculateSMA(totalValues, 30);
+
+        // Отображаем данные
+        processedData.forEach((row, index) => {
+          const ema13 = ema13Values[index];
+          const sma30 = sma30Values[index];
+
+          // Определяем тренд
+          let trend = '-';
+          if (ema13 !== null && sma30 !== null) {
+            trend = ema13 > sma30 ? 
+              '<span style="color:green;">bull</span>' : 
+              '<span style="color:red;">bear</span>';
+          }
+
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td>${row.time}</td>
@@ -78,9 +139,9 @@
             <td>${formatValue(row.daily_di)}</td>
             <td>${formatValue(row['4h_di'])}</td>
             <td>${formatValue(row.total_di)}</td>
-            <td>${formatValue(row.di_ema_13)}</td>
-            <td>${formatValue(row.di_sma_30)}</td>
-            <td>${row.trend ? (row.trend === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
+            <td>${formatValue(ema13)}</td>
+            <td>${formatValue(sma30)}</td>
+            <td>${trend}</td>
             <td>${formatValue(row.close)}</td>
           `;
           tableBody.appendChild(tr);
