@@ -8,7 +8,7 @@
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
     th { background-color: #f2f2f2; position: sticky; top: 0; z-index: 1; }
-    tr:hover { background-color: #e0f7fa; }
+    tr:hover { background-color: #e0f7fa; } /* Измените цвет по своему вкусу */
     caption { margin-bottom: 10px; font-size: 1.4em; font-weight: bold; }
     #error { color: red; font-weight: bold; margin-top: 20px; white-space: pre-wrap; }
   </style>
@@ -47,7 +47,7 @@
     function computeEMA_segments(values, windowSize) {
       const emaArr = [];
       const alpha = 2 / (windowSize + 1);
-      let segment = [];
+      let segment = []; // накопленные валидные значения для текущего сегмента
       for (let i = 0; i < values.length; i++) {
         const val = values[i];
         if (val === null || isNaN(val)) {
@@ -149,9 +149,9 @@
           }
 
           const dailyValue = (daily.DI_index !== undefined && daily.DI_index !== null && !isNaN(daily.DI_index))
-                              ? Number(daily.DI_index) : null;
+                               ? Number(daily.DI_index) : null;
           const fourHValue = (fourH.DI_index !== undefined && fourH.DI_index !== null && !isNaN(fourH.DI_index))
-                              ? Number(fourH.DI_index) : null;
+                               ? Number(fourH.DI_index) : null;
           let total = null;
           if (weeklyValue !== null && dailyValue !== null && fourHValue !== null) {
             total = weeklyValue + dailyValue + fourHValue;
@@ -163,7 +163,7 @@
             fourH: fourHValue,
             total: total,
             close: (daily.close !== undefined && daily.close !== null && !isNaN(daily.close))
-                    ? Number(daily.close) : null
+                     ? Number(daily.close) : null
           };
         });
 

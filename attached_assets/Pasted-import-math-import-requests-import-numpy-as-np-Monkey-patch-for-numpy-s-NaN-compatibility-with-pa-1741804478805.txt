@@ -8,7 +8,7 @@ if not hasattr(np, "NaN"):
 
 import pandas as pd
 import pandas_ta as ta
-from flask import Blueprint, jsonify, request, render_template
+from flask import Blueprint, jsonify, request
 import os
 from datetime import datetime
 
@@ -65,15 +65,14 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     return df_weekly
 
 def calculate_ma_index(df):
-    df["micro"] = ta.ema(df["close"], length=6)
-    df["short"] = ta.ema(df["close"], length=13)
+    df["micro"]  = ta.ema(df["close"], length=6)
+    df["short"]  = ta.ema(df["close"], length=13)
     df["medium"] = ta.sma(df["close"], length=30)
-    df["long"] = ta.sma(df["close"], length=200)
-
-    MA_bull = (df["micro"] > df["short"]).astype(int)
-    MA_bull1 = (df["short"] > df["medium"]).astype(int)
-    MA_bull2 = (df["short"] > df["long"]).astype(int)
-    MA_bull3 = (df["medium"] > df["long"]).astype(int)
+    df["long"]   = ta.sma(df["close"], length=200)
+    MA_bull   = (df["micro"] > df["short"]).astype(int)
+    MA_bull1  = (df["short"] > df["medium"]).astype(int)
+    MA_bull2  = (df["short"] > df["long"]).astype(int)
+    MA_bull3  = (df["medium"] > df["long"]).astype(int)
     df["MA_index"] = MA_bull + MA_bull1 + MA_bull2 + MA_bull3
     return df
 
@@ -82,23 +81,23 @@ def calculate_willy_index(df):
     df["lower"] = df["low"].rolling(window=21, min_periods=21).min()
     df["range"] = df["upper"] - df["lower"]
     df["range"].replace(0, 1e-10, inplace=True)
-    df["out"] = 100 * (df["close"] - df["upper"]) / df["range"]
+    df["out"]  = 100 * (df["close"] - df["upper"]) / df["range"]
     df["out2"] = ta.ema(df["out"], length=13)
     df["Willy_stupid_os"] = (df["out2"] < -80).astype(int)
     df["Willy_stupid_ob"] = (df["out2"] > -20).astype(int)
-    df["Willy_bullbear"] = (df["out"] > df["out2"]).astype(int)
-    df["Willy_bias"] = (df["out"] > -50).astype(int)
-    df["Willy_index"] = df["Willy_stupid_os"] + df["Willy_bullbear"] + df["Willy_bias"] - df["Willy_stupid_ob"]
+    df["Willy_bullbear"]  = (df["out"] > df["out2"]).astype(int)
+    df["Willy_bias"]      = (df["out"] > -50).astype(int)
+    df["Willy_index"]     = df["Willy_stupid_os"] + df["Willy_bullbear"] + df["Willy_bias"] - df["Willy_stupid_ob"]
     return df
 
 def calculate_macd_index(df):
     df["fastMA"] = ta.ema(df["close"], length=12)
     df["slowMA"] = ta.ema(df["close"], length=26)
-    df["macd"] = df["fastMA"] - df["slowMA"]
+    df["macd"]   = df["fastMA"] - df["slowMA"]
     df["signal"] = ta.sma(df["macd"], length=9)
     df["macd_bullbear"] = (df["macd"] > df["signal"]).astype(int)
-    df["macd_bias"] = (df["macd"] > 0).astype(int)
-    df["macd_index"] = df["macd_bullbear"] + df["macd_bias"]
+    df["macd_bias"]     = (df["macd"] > 0).astype(int)
+    df["macd_index"]    = df["macd_bullbear"] + df["macd_bias"]
     return df
 
 def calculate_obv_index(df):
@@ -109,8 +108,8 @@ def calculate_obv_index(df):
     df["obv"] = (df["volumefrom"] * df["direction"]).fillna(0).cumsum()
     df["obv_ema"] = ta.ema(df["obv"], length=13)
     df["OBV_bullbear"] = (df["obv"] > df["obv_ema"]).astype(int)
-    df["OBV_bias"] = (df["obv"] > 0).astype(int)
-    df["OBV_index"] = df["OBV_bullbear"] + df["OBV_bias"]
+    df["OBV_bias"]     = (df["obv"] > 0).astype(int)
+    df["OBV_index"]    = df["OBV_bullbear"] + df["OBV_bias"]
     return df
 
 def calculate_mfi_index(df):
@@ -142,8 +141,8 @@ def calculate_mfi_index(df):
 
     df["mfi_stupid_os"] = df["mfi_mf"].fillna(0).lt(20).astype(int)
     df["mfi_stupid_ob"] = df["mfi_mf"].fillna(0).gt(80).astype(int)
-    df["mfi_bullbear"] = (df["mfi_mf"].fillna(0) > df["mfi_mf2"].fillna(0)).astype(int)
-    df["mfi_bias"] = df["mfi_mf"].fillna(0).gt(50).astype(int)
+    df["mfi_bullbear"]  = (df["mfi_mf"].fillna(0) > df["mfi_mf2"].fillna(0)).astype(int)
+    df["mfi_bias"]      = df["mfi_mf"].fillna(0).gt(50).astype(int)
     df["mfi_index"] = df["mfi_bullbear"] + df["mfi_bias"] + df["mfi_stupid_os"] - df["mfi_stupid_ob"]
     return df
 
@@ -155,10 +154,10 @@ def calculate_ad_index(df):
     ad3 = df["ad"].rolling(window=30, min_periods=30).mean()
     ad4 = df["ad"].rolling(window=200, min_periods=200).mean()
     df["AD_bullbear_short"] = (df["ad"] > ad2).astype(int)
-    df["AD_bullbear_med"] = (df["ad"] > ad3).astype(int)
-    df["AD_bullbear_long"] = (ad2 > ad3).astype(int)
-    df["AD_bias"] = (df["ad"] > 0).astype(int)
-    df["AD_bias_long"] = (ad3 > ad4).astype(int)
+    df["AD_bullbear_med"]   = (df["ad"] > ad3).astype(int)
+    df["AD_bullbear_long"]  = (ad2 > ad3).astype(int)
+    df["AD_bias"]           = (df["ad"] > 0).astype(int)
+    df["AD_bias_long"]      = (ad3 > ad4).astype(int)
     df["AD_index"] = df["AD_bullbear_short"] + df["AD_bullbear_med"] + df["AD_bullbear_long"] + df["AD_bias"] + df["AD_bias_long"]
     return df
 
@@ -308,7 +307,7 @@ def calculate_combined_indices(symbol="BTC", debug=False):
 
 @di_index_blueprint.route('/')
 def index():
-    return render_template('index.html')
+    return "DI Index API is running! Use /api/di_index endpoint with optional parameters: symbol, debug"
 
 @di_index_blueprint.route('/api/di_index')
 def di_index():
