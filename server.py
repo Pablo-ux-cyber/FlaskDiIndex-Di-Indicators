@@ -171,35 +171,17 @@ def calculate_combined_indices(symbol="BTC"):
             if date in results_by_date:
                 results_by_date[date]["4h_di"] = row["DI_index"]
 
-        # Process weekly data and handle None values
-        previous_weekly = None
-        dates = sorted(results_by_date.keys())
-
+        # Process weekly data
         for _, row in df_weekly.iterrows():
             date = row["time"].strftime("%Y-%m-%d")
             if date in results_by_date:
-                current_weekly = row["DI_index"]
-                if pd.notna(current_weekly):
-                    previous_weekly = current_weekly
-                results_by_date[date]["weekly_di"] = current_weekly
-
-        # Fill None weekly values with previous values
-        for date in dates:
-            if results_by_date[date]["weekly_di"] is None or pd.isna(results_by_date[date]["weekly_di"]):
-                results_by_date[date]["weekly_di"] = previous_weekly
+                results_by_date[date]["weekly_di"] = row["DI_index"]
 
         # Convert to DataFrame for calculations
         df = pd.DataFrame(results_by_date.values())
 
-        # Calculate Total DI - only using non-null values
-        df["total_di"] = df.apply(
-            lambda row: (
-                sum(filter(None, [row["daily_di"], row["4h_di"], row["weekly_di"]]))
-                if any(filter(None, [row["daily_di"], row["4h_di"], row["weekly_di"]]))
-                else None
-            ),
-            axis=1
-        )
+        # Calculate Total DI using mean
+        df["total_di"] = df[["daily_di", "4h_di", "weekly_di"]].mean(axis=1)
 
         # Calculate trend indicators
         df["di_ema_13"] = ema(df["total_di"], 13)
