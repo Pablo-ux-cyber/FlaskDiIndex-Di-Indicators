@@ -12,7 +12,7 @@ logger.info("Starting application initialization...")
 # Create Flask app
 try:
     app = Flask(__name__)
-    app.secret_key = os.environ.get("SESSION_SECRET")
+    app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
     logger.info("Flask app created successfully")
 
     # Import routes and register them
