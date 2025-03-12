@@ -56,7 +56,21 @@
         const tableBody = document.getElementById("tableBody");
         tableBody.innerHTML = "";
 
+        let lastWeeklyValue = null; // Сохраняем последнее известное значение Weekly DI Index
+
         json.data.forEach(row => {
+          // Если Weekly DI Index пустой, используем последнее известное значение
+          if (row.weekly_di === null || isNaN(row.weekly_di)) {
+            row.weekly_di = lastWeeklyValue;
+          } else {
+            lastWeeklyValue = row.weekly_di;
+          }
+
+          // Пересчитываем total с учетом обновленного Weekly DI Index
+          if (row.weekly_di !== null && row.daily_di !== null && row['4h_di'] !== null) {
+            row.total_di = row.weekly_di + row.daily_di + row['4h_di'];
+          }
+
           const tr = document.createElement("tr");
           tr.innerHTML = `
             <td>${row.time}</td>
