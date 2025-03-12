@@ -11,12 +11,49 @@ import pandas_ta as ta
 from flask import Blueprint, jsonify, request, render_template
 import os
 from datetime import datetime
+from functools import lru_cache
+import asyncio
+import concurrent.futures
 
 # Create blueprint for DI index routes
 di_index_blueprint = Blueprint('di_index', __name__)
 
 # Get API key from environment variable with fallback
 API_KEY = os.getenv("CRYPTOCOMPARE_API_KEY", "2193d3ce789e90e474570058a3a96caa0d585ca0d0d0e62687a295c8402d29e9")
+
+# Define available cryptocurrencies
+AVAILABLE_CRYPTOCURRENCIES = [
+    {"symbol": "BTC", "name": "Bitcoin"},
+    {"symbol": "ETH", "name": "Ethereum"},
+    {"symbol": "XRP", "name": "XRP"},
+    {"symbol": "BNB", "name": "BNB"},
+    {"symbol": "SOL", "name": "Solana"},
+    {"symbol": "ADA", "name": "Cardano"},
+    {"symbol": "DOGE", "name": "Dogecoin"},
+    {"symbol": "TRX", "name": "TRON"},
+    {"symbol": "PI", "name": "Pi Network"},
+    {"symbol": "LEO", "name": "LEO Token"},
+    {"symbol": "HBAR", "name": "Hedera"},
+    {"symbol": "LINK", "name": "Chainlink"},
+    {"symbol": "XLM", "name": "Stellar"},
+    {"symbol": "AVAX", "name": "Avalanche"},
+    {"symbol": "SUI", "name": "Sui"},
+    {"symbol": "SHIB", "name": "Shiba Inu"},
+    {"symbol": "LTC", "name": "Litecoin"},
+    {"symbol": "BCH", "name": "Bitcoin Cash"},
+    {"symbol": "TON", "name": "Toncoin"},
+    {"symbol": "OM", "name": "MANTRA OM"},
+    {"symbol": "DOT", "name": "Polkadot"},
+    {"symbol": "BGB", "name": "Bitget Token"},
+    {"symbol": "HYPE", "name": "Hyperliquid"},
+    {"symbol": "WBT", "name": "WhiteBIT Coin"},
+    {"symbol": "XMR", "name": "Monero"},
+    {"symbol": "UNI", "name": "Uniswap"},
+    {"symbol": "APT", "name": "Aptos"},
+    {"symbol": "NEAR", "name": "NEAR Protocol"},
+    {"symbol": "AAVE", "name": "Aave"},
+    {"symbol": "ETC", "name": "Ethereum Classic"}
+]
 
 def validate_symbol(symbol):
     """Validate if the cryptocurrency symbol exists on CryptoCompare"""
@@ -211,6 +248,7 @@ def calculate_di_index(df, debug=False):
         })
     return result
 
+@lru_cache(maxsize=128) # Add caching
 def calculate_combined_indices(symbol="BTC", debug=False):
     """Calculate and combine indices from different timeframes"""
     try:
@@ -308,24 +346,51 @@ def calculate_combined_indices(symbol="BTC", debug=False):
 
 @di_index_blueprint.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', cryptocurrencies=AVAILABLE_CRYPTOCURRENCIES)
 
 @di_index_blueprint.route('/api/di_index')
 def di_index():
     try:
         symbol = request.args.get("symbol", "BTC").upper()
+        page = int(request.args.get("page", "1"))
+        per_page = int(request.args.get("per_page", "10"))
         debug_mode = request.args.get("debug", "false").lower() == "true"
 
-        # Validate cryptocurrency symbol
-        if not validate_symbol(symbol):
-            return jsonify({"error": f"Invalid cryptocurrency symbol: {symbol}"}), 400
+        if symbol == "ALL":
+            start_idx = (page - 1) * per_page
+            end_idx = start_idx + per_page
+            selected_coins = AVAILABLE_CRYPTOCURRENCIES[start_idx:end_idx]
 
-        # Calculate combined indices
-        results = calculate_combined_indices(symbol=symbol, debug=debug_mode)
+            results = []
+            for coin in selected_coins:
+                try:
+                    coin_data = calculate_combined_indices(symbol=coin["symbol"], debug=debug_mode)
+                    results.append({
+                        "symbol": coin["symbol"],
+                        "name": coin["name"],
+                        "data": coin_data
+                    })
+                except Exception as e:
+                    print(f"Error processing {coin['symbol']}: {str(e)}")
+                    continue
 
-        return jsonify({
-            "symbol": symbol,
-            "data": results
-        })
+            return jsonify({
+                "page": page,
+                "per_page": per_page,
+                "total_pages": math.ceil(len(AVAILABLE_CRYPTOCURRENCIES) / per_page),
+                "total_coins": len(AVAILABLE_CRYPTOCURRENCIES),
+                "coins": results
+            })
+        else:
+            # Single coin request
+            if not validate_symbol(symbol):
+                return jsonify({"error": f"Invalid cryptocurrency symbol: {symbol}"}), 400
+
+            results = calculate_combined_indices(symbol=symbol, debug=debug_mode)
+            return jsonify({
+                "symbol": symbol,
+                "data": results
+            })
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500

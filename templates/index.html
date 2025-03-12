@@ -11,11 +11,25 @@
     tr:hover { background-color: #e0f7fa; }
     caption { margin-bottom: 10px; font-size: 1.4em; font-weight: bold; }
     #error { color: red; font-weight: bold; margin-top: 20px; white-space: pre-wrap; }
+    .controls { margin: 20px 0; }
+    select { padding: 8px; font-size: 16px; }
+    #loading { display: none; margin: 20px 0; font-weight: bold; }
   </style>
 </head>
 <body>
   <h1>DI Index – Объединённые данные по датам</h1>
+
+  <div class="controls">
+    <select id="cryptoSelect" onchange="loadData()">
+      {% for crypto in cryptocurrencies %}
+      <option value="{{ crypto.symbol }}">{{ crypto.name }} ({{ crypto.symbol }})</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div id="loading">Загрузка данных...</div>
   <div id="error"></div>
+
   <table id="dataTable">
     <caption>Weekly, Daily, 4h DI Index, Total, 13 EMA (Total), 30 SMA (Total) и Trend</caption>
     <thead>
@@ -79,8 +93,15 @@
     }
 
     async function loadData() {
+      const loadingDiv = document.getElementById("loading");
+      const errorDiv = document.getElementById("error");
+      const selectedSymbol = document.getElementById("cryptoSelect").value;
+
       try {
-        const response = await fetch('/api/di_index?symbol=BTC');
+        loadingDiv.style.display = "block";
+        errorDiv.textContent = "";
+
+        const response = await fetch(`/api/di_index?symbol=${selectedSymbol}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -148,10 +169,13 @@
         });
       } catch (error) {
         console.error("Ошибка загрузки данных:", error);
-        document.getElementById("error").textContent = `Ошибка загрузки данных: ${error.message}`;
+        errorDiv.textContent = `Ошибка загрузки данных: ${error.message}`;
+      } finally {
+        loadingDiv.style.display = "none";
       }
     }
 
+    // Загружаем данные при загрузке страницы
     window.onload = loadData;
   </script>
 </body>
