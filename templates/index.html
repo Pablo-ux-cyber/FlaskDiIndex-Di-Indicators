@@ -37,173 +37,43 @@
   </table>
 
   <script>
-    // Функция для форматирования значений – если значение отсутствует, выводим дефис
     function formatValue(val) {
       return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
     }
 
-    // Функция computeEMA_segments рассчитывает EMA для каждого непрерывного сегмента валидных значений.
-    // Если в сегменте накоплено меньше windowSize значений, EMA для этих строк возвращается как null.
-    function computeEMA_segments(values, windowSize) {
-      const emaArr = [];
-      const alpha = 2 / (windowSize + 1);
-      let segment = [];
-      for (let i = 0; i < values.length; i++) {
-        const val = values[i];
-        if (val === null || isNaN(val)) {
-          emaArr.push(null);
-          segment = [];
-        } else {
-          segment.push(val);
-          if (segment.length < windowSize) {
-            emaArr.push(null);
-          } else if (segment.length === windowSize) {
-            const sum = segment.reduce((acc, v) => acc + v, 0);
-            emaArr.push(sum / windowSize);
-          } else {
-            const prevEMA = emaArr[i - 1];
-            emaArr.push(val * alpha + prevEMA * (1 - alpha));
-          }
-        }
-      }
-      return emaArr;
-    }
-
-    // Функция computeSMA вычисляет простое скользящее среднее (SMA) для массива значений с указанным окном.
-    // Если в окне хотя бы одно значение отсутствует, возвращается null.
-    function computeSMA(values, windowSize) {
-      const smaArr = [];
-      for (let i = 0; i < values.length; i++) {
-        const windowValues = values.slice(i - windowSize + 1, i + 1);
-        if (windowValues.length < windowSize || windowValues.some(v => v === null || isNaN(v))) {
-          smaArr.push(null);
-        } else {
-          const sum = windowValues.reduce((acc, val) => acc + val, 0);
-          smaArr.push(sum / windowSize);
-        }
-      }
-      return smaArr;
-    }
-
     async function loadData() {
       try {
-        const [dailyResp, weeklyResp, fourHResp] = await Promise.all([
-          fetch('/api/di_index?tf=daily'),
-          fetch('/api/di_index?tf=weekly'),
-          fetch('/api/di_index?tf=4h')
-        ]);
+        const response = await fetch('/api/di_index?symbol=BTC');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const json = await response.json();
 
-        const dailyJson = await dailyResp.json();
-        const weeklyJson = await weeklyResp.json();
-        const fourHJson = await fourHResp.json();
+        if (!json.data || !Array.isArray(json.data)) {
+          throw new Error('Invalid data format received from server');
+        }
 
-        console.log("Daily JSON:", dailyJson);
-        console.log("Weekly JSON:", weeklyJson);
-        console.log("4h JSON:", fourHJson);
+        const tableBody = document.getElementById("tableBody");
+        tableBody.innerHTML = "";
 
-        const dailyData = dailyJson.daily ? dailyJson.daily.values : [];
-        const weeklyData = weeklyJson.weekly ? weeklyJson.weekly.values : [];
-        const fourHData = fourHJson["4h"] ? fourHJson["4h"].values : [];
-
-        // Создаем карты по дате (формат YYYY-MM-DD)
-        const dailyMap = {};
-        dailyData.forEach(item => {
-          const date = String(item.time).substring(0, 10);
-          dailyMap[date] = item;
-        });
-        const weeklyMap = {};
-        weeklyData.forEach(item => {
-          const date = String(item.time).substring(0, 10);
-          weeklyMap[date] = item;
-        });
-        const fourHMap = {};
-        fourHData.forEach(item => {
-          const date = String(item.time).substring(0, 10);
-          fourHMap[date] = item;
-        });
-
-        // Объединяем все уникальные даты
-        const allDatesSet = new Set([
-          ...Object.keys(dailyMap),
-          ...Object.keys(weeklyMap),
-          ...Object.keys(fourHMap)
-        ]);
-        const allDates = Array.from(allDatesSet).sort();
-        console.log("Объединенные даты:", allDates);
-
-        // Для подстановки последнего известного значения для Weekly DI Index
-        let previousWeekly = null;
-
-        // Формируем массив объектов для таблицы
-        const tableData = allDates.map(date => {
-          const daily = dailyMap[date] || {};
-          const weekly = weeklyMap[date] || {};
-          const fourH = fourHMap[date] || {};
-
-          let weeklyValue = weekly.DI_index;
-          if (weeklyValue === undefined || weeklyValue === null || isNaN(weeklyValue)) {
-            weeklyValue = previousWeekly;
-          } else {
-            previousWeekly = Number(weeklyValue);
-            weeklyValue = previousWeekly;
-          }
-
-          const dailyValue = (daily.DI_index !== undefined && daily.DI_index !== null && !isNaN(daily.DI_index))
-                              ? Number(daily.DI_index) : null;
-          const fourHValue = (fourH.DI_index !== undefined && fourH.DI_index !== null && !isNaN(fourH.DI_index))
-                              ? Number(fourH.DI_index) : null;
-          let total = null;
-          if (weeklyValue !== null && dailyValue !== null && fourHValue !== null) {
-            total = weeklyValue + dailyValue + fourHValue;
-          }
-          return {
-            date: date,
-            weekly: weeklyValue,
-            daily: dailyValue,
-            fourH: fourHValue,
-            total: total,
-            close: (daily.close !== undefined && daily.close !== null && !isNaN(daily.close))
-                    ? Number(daily.close) : null
-          };
-        });
-
-        // Вычисляем 13 EMA (Total) и 30 SMA (Total) для столбца total
-        const totalValues = tableData.map(row => row.total);
-        const alpha = 2 / (13 + 1); // коэффициент для 13 EMA
-        const ema13Values = computeEMA_segments(totalValues, 13);
-        const sma30Values = computeSMA(totalValues, 30);
-
-        // Вычисляем столбец Trend:
-        // Если 13 EMA > 30 SMA, то "bull" (зеленым), иначе "bear" (красным).
-        // Если данных нет, выводим дефис.
-        const trendValues = tableData.map((row, idx) => {
-          const ema13 = ema13Values[idx];
-          const sma30 = sma30Values[idx];
-          if (ema13 === null || sma30 === null) return '-';
-          return ema13 > sma30 ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>';
-        });
-
-        // Формируем таблицу
-        const tbody = document.getElementById("tableBody");
-        tbody.innerHTML = "";
-        tableData.forEach((row, idx) => {
+        json.data.forEach(row => {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td>${row.date}</td>
-            <td>${formatValue(row.weekly)}</td>
-            <td>${formatValue(row.daily)}</td>
-            <td>${formatValue(row.fourH)}</td>
-            <td>${formatValue(row.total)}</td>
-            <td>${formatValue(ema13Values[idx])}</td>
-            <td>${formatValue(sma30Values[idx])}</td>
-            <td>${trendValues[idx]}</td>
+            <td>${row.time}</td>
+            <td>${formatValue(row.weekly_di)}</td>
+            <td>${formatValue(row.daily_di)}</td>
+            <td>${formatValue(row['4h_di'])}</td>
+            <td>${formatValue(row.total_di)}</td>
+            <td>${formatValue(row.di_ema_13)}</td>
+            <td>${formatValue(row.di_sma_30)}</td>
+            <td>${row.trend ? (row.trend === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
             <td>${formatValue(row.close)}</td>
           `;
-          tbody.appendChild(tr);
+          tableBody.appendChild(tr);
         });
       } catch (error) {
         console.error("Ошибка загрузки данных:", error);
-        document.getElementById("tableBody").innerHTML = `<tr><td colspan="9">Ошибка загрузки данных: ${error.message || error}</td></tr>`;
+        document.getElementById("error").textContent = `Ошибка загрузки данных: ${error.message}`;
       }
     }
 
