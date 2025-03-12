@@ -355,7 +355,7 @@ def calculate_combined_indices(symbol="BTC", debug=False):
         print(f"Error in calculate_combined_indices: {str(e)}")
         return []
 
-def process_coins_in_batches(coins, batch_size=5):
+def process_coins_in_batches(coins, batch_size=3):
     """Process coins in smaller batches to avoid API rate limits"""
     results = []
     for i in range(0, len(coins), batch_size):
@@ -373,11 +373,11 @@ def process_coins_in_batches(coins, batch_size=5):
                             "data": coin_data
                         })
                         logger.info(f"Successfully processed {coin['symbol']}")
-                time.sleep(0.5)  # Задержка между запросами в пакете
+                time.sleep(1)  # Увеличиваем задержку между запросами в пакете
             except Exception as coin_error:
                 logger.error(f"Error processing {coin['symbol']}: {str(coin_error)}")
                 continue
-        time.sleep(1)  # Задержка между пакетами
+        time.sleep(2)  # Увеличиваем задержку между пакетами
     return results
 
 @di_index_blueprint.route('/')
@@ -392,7 +392,7 @@ def di_index():
 
         if symbol == "ALL":
             try:
-                results = process_coins_in_batches(AVAILABLE_CRYPTOCURRENCIES)
+                results = process_coins_in_batches(AVAILABLE_CRYPTOCURRENCIES[:5])  # Начнем с 5 монет для теста
 
                 if not results:
                     logger.error("No valid data received for any cryptocurrency")
