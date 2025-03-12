@@ -3,7 +3,7 @@ import requests
 import numpy as np
 import logging
 import pandas as pd
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template
 from datetime import datetime
 from utils.validation import validate_symbol
 from config import CRYPTOCOMPARE_API_KEY
@@ -224,12 +224,12 @@ def calculate_combined_indices(symbol="BTC"):
 
 @di_index_blueprint.route('/')
 def index():
-    """Root endpoint"""
-    return "DI Index API is running! Use /api/di_index endpoint with optional parameter: symbol"
+    """Root endpoint serving the HTML page"""
+    return render_template('index.html')
 
 @di_index_blueprint.route('/api/di_index')
 def di_index():
-    """Get DI index data"""
+    """API endpoint for getting DI index data"""
     try:
         symbol = request.args.get("symbol", "BTC").upper()
 

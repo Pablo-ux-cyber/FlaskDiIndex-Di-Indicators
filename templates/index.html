@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DI Index</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .coin-table { margin-bottom: 50px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: var(--bs-dark); position: sticky; top: 0; z-index: 1; }
+        tr:hover { background-color: var(--bs-dark-rgb); }
+        caption { margin-bottom: 10px; font-size: 1.4em; font-weight: bold; }
+        #error { color: var(--bs-danger); font-weight: bold; margin-top: 20px; }
+        #loading { font-size: 1.2em; font-weight: bold; }
+    </style>
+</head>
+<body class="container p-4">
+    <h1 class="mb-4">DI Index</h1>
+    <div id="loading">Loading data...</div>
+    <div id="error"></div>
+    <div id="coinData"></div>
+
+    <script>
+        function formatValue(val) {
+            return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
+        }
+
+        function formatTrend(trend) {
+            if (!trend) return '-';
+            return trend === 'bull' 
+                ? '<span class="text-success">bull</span>' 
+                : '<span class="text-danger">bear</span>';
+        }
+
+        async function loadData() {
+            const loadingDiv = document.getElementById("loading");
+            const errorDiv = document.getElementById("error");
+            const coinDataDiv = document.getElementById("coinData");
+
+            try {
+                const symbols = ['BTC', 'ETH', 'BNB']; // Add more symbols as needed
+                for (const symbol of symbols) {
+                    const response = await fetch(`/api/di_index?symbol=${symbol}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    
+                    const table = document.createElement('table');
+                    table.className = 'table table-dark table-striped coin-table';
+                    table.innerHTML = `
+                        <caption>${symbol} DI Index Data</caption>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Weekly DI Index</th>
+                                <th>Daily DI Index</th>
+                                <th>4h DI Index</th>
+                                <th>Total</th>
+                                <th>13 EMA (Total)</th>
+                                <th>30 SMA (Total)</th>
+                                <th>Trend</th>
+                                <th>Close (Daily)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.data.map(row => `
+                                <tr>
+                                    <td>${row.time}</td>
+                                    <td>${formatValue(row.weekly_di)}</td>
+                                    <td>${formatValue(row.daily_di)}</td>
+                                    <td>${formatValue(row['4h_di'])}</td>
+                                    <td>${formatValue(row.total_di)}</td>
+                                    <td>${formatValue(row.di_ema_13)}</td>
+                                    <td>${formatValue(row.di_sma_30)}</td>
+                                    <td>${formatTrend(row.trend)}</td>
+                                    <td>${formatValue(row.close)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    `;
+                    coinDataDiv.appendChild(table);
+                }
+                loadingDiv.style.display = 'none';
+            } catch (error) {
+                console.error("Error loading data:", error);
+                errorDiv.textContent = `Error loading data: ${error.message}`;
+                loadingDiv.style.display = 'none';
+            }
+        }
+
+        window.onload = loadData;
+    </script>
+</body>
+</html>

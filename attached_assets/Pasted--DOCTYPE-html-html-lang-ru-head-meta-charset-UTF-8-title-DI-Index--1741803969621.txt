@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>DI Index – Объединённые данные для 3 монет</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .coin-table { margin-bottom: 50px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background-color: #f2f2f2; position: sticky; top: 0; z-index: 1; }
+    tr:hover { background-color: #e0f7fa; }
+    caption { margin-bottom: 10px; font-size: 1.4em; font-weight: bold; }
+    #error { color: red; font-weight: bold; margin-top: 20px; white-space: pre-wrap; }
+    #debug { margin-top: 20px; white-space: pre-wrap; background-color: #f9f9f9; border: 1px solid #ddd; padding: 10px; }
+    #loading { font-size: 1.2em; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>DI Index – Объединённые данные для 3 монет</h1>
+  <div id="loading">Загрузка данных, пожалуйста подождите...</div>
+  <div id="error"></div>
+  <div id="tablesContainer">
+    <!-- Здесь будут таблицы для каждой монеты -->
+  </div>
+  <div id="debug"></div>
+  <script>
+    // Функция для форматирования значений (если значение отсутствует – дефис)
+    function formatValue(val) {
+      return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
+    }
+    // Функция для вычисления EMA для непрерывных сегментов
+    function computeEMA_segments(values, windowSize) {
+      const emaArr = [];
+      const alpha = 2 / (windowSize + 1);
+      let segment = [];
+      for (let i = 0; i < values.length; i++) {
+        const val = values[i];
+        if (val === null || isNaN(val)) {
+          emaArr.push(null);
+          segment = [];
+        } else {
+          segment.push(val);
+          if (segment.length < windowSize) {
+            emaArr.push(null);
+          } else if (segment.length === windowSize) {
+            const sum = segment.reduce((acc, v) => acc + v, 0);
+            emaArr.push(sum / windowSize);
+          } else {
+            const prevEMA = emaArr[i - 1];
+            emaArr.push(val * alpha + prevEMA * (1 - alpha));
+          }
+        }
+      }
+      return emaArr;
+    }
+    // Функция для вычисления SMA, если хотя бы одно значение отсутствует в окне, возвращаем null
+    function computeSMA(values, windowSize) {
+      const smaArr = [];
+      for (let i = 0; i < values.length; i++) {
+        const windowValues = values.slice(i - windowSize + 1, i + 1);
+        if (windowValues.length < windowSize || windowValues.some(v => v === null || isNaN(v))) {
+          smaArr.push(null);
+        } else {
+          const sum = windowValues.reduce((acc, val) => acc + val, 0);
+          smaArr.push(sum / windowSize);
+        }
+      }
+      return smaArr;
+    }
+    // Функция для парсинга даты – если значение уже в формате "YYYY-MM-DD", возвращаем его, иначе пытаемся преобразовать
+    function parseDate(itemTime) {
+      if (!itemTime) return '-';
+      if (/^\d{4}-\d{2}-\d{2}$/.test(itemTime)) return itemTime;
+      let d;
+      const num = Number(itemTime);
+      if (!isNaN(num)) {
+        d = new Date(num * 1000);
+      } else {
+        d = new Date(itemTime);
+      }
+      if (isNaN(d.getTime())) {
+        console.error("Ошибка парсинга даты для значения:", itemTime);
+        return itemTime;
+      }
+      return d.toISOString().substring(0, 10);
+    }
+    // Основная функция загрузки данных
+    async function loadData() {
+      const loadingDiv = document.getElementById("loading");
+      const errorDiv = document.getElementById("error");
+      const debugDiv = document.getElementById("debug");
+      try {
+        // Запрашиваем данные с асинхронного endpoint (убедитесь, что он корректно зарегистрирован на сервере)
+        const resp = await fetch('/api/di_index_all_async?debug=true');
+        if (!resp.ok) {
+          throw new Error(`HTTP ошибка: ${resp.status}`);
+        }
+        const json = await resp.json();
+        // Вывод отладочного JSON для проверки
+        debugDiv.innerText = "Полученные данные:\n" + JSON.stringify(json, null, 2);
+        console.log("Full JSON:", json);
+        // Ограничиваем вывод до 3 монет для тестирования
+        const coinsData = (json.coins || []).slice(0, 3);
+        const container = document.getElementById("tablesContainer");
+        container.innerHTML = "";
+        if (coinsData.length === 0) {
+          errorDiv.innerText = "Данные не найдены (пустой массив coins).";
+          return;
+        }
+        // Для каждой монеты формируем таблицу
+        coinsData.forEach(coin => {
+          if (coin.error) {
+            console.error(`Ошибка для ${coin.symbol}:`, coin.error);
+          }
+          const dailyData = coin.data && coin.data.daily ? coin.data.daily.values : [];
+          const weeklyData = coin.data && coin.data.weekly ? coin.data.weekly.values : [];
+          const fourHData = coin.data && coin.data["4h"] ? coin.data["4h"].values : [];
+          // Создаем карты данных по датам (формат YYYY-MM-DD)
+          const dailyMap = {};
+          dailyData.forEach(item => {
+            const date = parseDate(item.time);
+            dailyMap[date] = item;
+          });
+          const weeklyMap = {};
+          weeklyData.forEach(item => {
+            const date = parseDate(item.time);
+            weeklyMap[date] = item;
+          });
+          const fourHMap = {};
+          fourHData.forEach(item => {
+            const date = parseDate(item.time);
+            fourHMap[date] = item;
+          });
+          // Объединяем все уникальные даты
+          const allDatesSet = new Set([
+            ...Object.keys(dailyMap),
+            ...Object.keys(weeklyMap),
+            ...Object.keys(fourHMap)
+          ]);
+          const allDates = Array.from(allDatesSet).sort();
+          console.log(`Объединенные даты для ${coin.symbol}:`, allDates);
+          let previousWeekly = null;
+          const tableData = allDates.map(date => {
+            const daily = dailyMap[date] || {};
+            const weekly = weeklyMap[date] || {};
+            const fourH = fourHMap[date] || {};
+            let weeklyValue = weekly.DI_index;
+            if (weeklyValue === undefined || weeklyValue === null || isNaN(weeklyValue)) {
+              weeklyValue = previousWeekly;
+            } else {
+              previousWeekly = Number(weeklyValue);
+              weeklyValue = previousWeekly;
+            }
+            const dailyValue = (daily.DI_index !== undefined && daily.DI_index !== null && !isNaN(daily.DI_index))
+                                 ? Number(daily.DI_index) : null;
+            const fourHValue = (fourH.DI_index !== undefined && fourH.DI_index !== null && !isNaN(fourH.DI_index))
+                                 ? Number(fourH.DI_index) : null;
+            let total = null;
+            if (weeklyValue !== null && dailyValue !== null && fourHValue !== null) {
+              total = weeklyValue + dailyValue + fourHValue;
+            }
+            return {
+              date: date,
+              weekly: weeklyValue,
+              daily: dailyValue,
+              fourH: fourHValue,
+              total: total,
+              close: (daily.close !== undefined && daily.close !== null && !isNaN(daily.close))
+                       ? Number(daily.close) : null
+            };
+          });
+          const totalValues = tableData.map(row => row.total);
+          const ema13Values = computeEMA_segments(totalValues, 13);
+          const sma30Values = computeSMA(totalValues, 30);
+          const trendValues = tableData.map((row, idx) => {
+            const ema13 = ema13Values[idx];
+            const sma30 = sma30Values[idx];
+            if (ema13 === null || sma30 === null) return '-';
+            return ema13 > sma30 ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>';
+          });
+          const tableHtml = `
+            <table class="coin-table">
+              <caption>${coin.name} (${coin.symbol}) – Weekly, Daily, 4h DI Index, Total, 13 EMA (Total), 30 SMA (Total) и Trend</caption>
+              <thead>
+                <tr>
+                  <th>Дата</th>
+                  <th>Weekly DI Index</th>
+                  <th>Daily DI Index</th>
+                  <th>4h DI Index</th>
+                  <th>Total</th>
+                  <th>13 EMA (Total)</th>
+                  <th>30 SMA (Total)</th>
+                  <th>Trend</th>
+                  <th>Close (Daily)</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody_${coin.symbol}">
+              </tbody>
+            </table>
+          `;
+          const div = document.createElement("div");
+          div.innerHTML = tableHtml;
+          container.appendChild(div);
+          const tbody = document.getElementById("tableBody_" + coin.symbol);
+          tableData.forEach((row, idx) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+              <td>${row.date}</td>
+              <td>${formatValue(row.weekly)}</td>
+              <td>${formatValue(row.daily)}</td>
+              <td>${formatValue(row.fourH)}</td>
+              <td>${formatValue(row.total)}</td>
+              <td>${formatValue(ema13Values[idx])}</td>
+              <td>${formatValue(sma30Values[idx])}</td>
+              <td>${trendValues[idx]}</td>
+              <td>${formatValue(row.close)}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        });
+      } catch (error) {
+        console.error("Ошибка загрузки данных:", error);
+        errorDiv.innerText = "Ошибка загрузки данных: " + (error.message || error);
+      } finally {
+        document.getElementById("loading").style.display = "none";
+      }
+    }
+    window.onload = loadData;
+  </script>
+</body>
+</html>
