@@ -77,25 +77,55 @@ def validate_symbol(symbol):
 
 def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     """Get daily OHLCV data for given cryptocurrency"""
-    url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={symbol}&tsym={tsym}&limit={limit}&api_key={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    if data.get("Response") != "Success":
-        raise Exception(f"Error getting daily data: {data}")
-    df = pd.DataFrame(data['Data']['Data'])
-    df['time'] = pd.to_datetime(df['time'], unit='s')
-    return df
+    try:
+        url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={symbol}&tsym={tsym}&limit={limit}&api_key={API_KEY}"
+        response = requests.get(url)
+        response.raise_for_status()  # Raise exception for non-200 status codes
+        data = response.json()
+
+        if data.get("Response") != "Success":
+            logger.error(f"API Error for {symbol}: {data.get('Message', 'Unknown error')}")
+            return pd.DataFrame()  # Return empty DataFrame on error
+
+        df = pd.DataFrame(data['Data']['Data'])
+        if df.empty:
+            logger.warning(f"No data returned for {symbol}")
+            return df
+
+        df['time'] = pd.to_datetime(df['time'], unit='s')
+        return df
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Network error for {symbol}: {str(e)}")
+        return pd.DataFrame()
+    except Exception as e:
+        logger.error(f"Unexpected error getting daily data for {symbol}: {str(e)}")
+        return pd.DataFrame()
 
 def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     """Get 4-hour OHLCV data for given cryptocurrency"""
-    url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    if data.get("Response") != "Success":
-        raise Exception(f"Error getting 4-hour data: {data}")
-    df = pd.DataFrame(data['Data']['Data'])
-    df['time'] = pd.to_datetime(df['time'], unit='s')
-    return df
+    try:
+        url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+
+        if data.get("Response") != "Success":
+            logger.error(f"API Error for {symbol}: {data.get('Message', 'Unknown error')}")
+            return pd.DataFrame()
+
+        df = pd.DataFrame(data['Data']['Data'])
+        if df.empty:
+            logger.warning(f"No data returned for {symbol}")
+            return df
+
+        df['time'] = pd.to_datetime(df['time'], unit='s')
+        return df
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Network error for {symbol}: {str(e)}")
+        return pd.DataFrame()
+    except Exception as e:
+        logger.error(f"Unexpected error getting 4h data for {symbol}: {str(e)}")
+        return pd.DataFrame()
 
 def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     """Get weekly OHLCV data for given cryptocurrency"""
@@ -373,11 +403,11 @@ def process_coins_in_batches(coins, batch_size=3):
                             "data": coin_data
                         })
                         logger.info(f"Successfully processed {coin['symbol']}")
-                time.sleep(1)  # Увеличиваем задержку между запросами в пакете
+                time.sleep(2)  # Увеличиваем задержку между запросами в пакете
             except Exception as coin_error:
                 logger.error(f"Error processing {coin['symbol']}: {str(coin_error)}")
                 continue
-        time.sleep(2)  # Увеличиваем задержку между пакетами
+        time.sleep(3)  # Увеличиваем задержку между пакетами
     return results
 
 @di_index_blueprint.route('/')
@@ -392,7 +422,11 @@ def di_index():
 
         if symbol == "ALL":
             try:
-                results = process_coins_in_batches(AVAILABLE_CRYPTOCURRENCIES[:5])  # Начнем с 5 монет для теста
+                # Start with just first 3 cryptocurrencies for testing
+                test_coins = AVAILABLE_CRYPTOCURRENCIES[:3]
+                logger.info(f"Processing test set of {len(test_coins)} coins")
+
+                results = process_coins_in_batches(test_coins)
 
                 if not results:
                     logger.error("No valid data received for any cryptocurrency")
