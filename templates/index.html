@@ -196,6 +196,7 @@
         try {
             loadingDiv.style.display = "block";
             errorDiv.textContent = "";
+            tableBody.innerHTML = "";
 
             const response = await fetch(`/api/di_index?symbol=${selectedSymbol}`);
             if (!response.ok) {
@@ -203,42 +204,13 @@
             }
             const json = await response.json();
 
-            if (!json.data || !Array.isArray(json.data)) {
+            if (!json.coins || !Array.isArray(json.coins) || !json.coins[0].data) {
                 throw new Error('Invalid data format received from server');
             }
 
-            tableBody.innerHTML = "";
+            const processedData = json.coins[0].data;
 
-            let lastWeeklyValue = null;
-            const processedData = json.data.map(row => {
-                if (row.weekly_di === null || isNaN(row.weekly_di)) {
-                    row.weekly_di = lastWeeklyValue;
-                } else {
-                    lastWeeklyValue = row.weekly_di;
-                }
-
-                if (row.weekly_di !== null && row.daily_di !== null && row['4h_di'] !== null) {
-                    row.total_di = row.weekly_di + row.daily_di + row['4h_di'];
-                }
-
-                return row;
-            });
-
-            const totalValues = processedData.map(row => row.total_di);
-            const ema13Values = calculateEMA(totalValues, 13);
-            const sma30Values = calculateSMA(totalValues, 30);
-
-            processedData.forEach((row, index) => {
-                const ema13 = ema13Values[index];
-                const sma30 = sma30Values[index];
-
-                let trend = '-';
-                if (ema13 !== null && sma30 !== null) {
-                    trend = ema13 > sma30 ? 
-                        '<span style="color:green;">bull</span>' : 
-                        '<span style="color:red;">bear</span>';
-                }
-
+            processedData.forEach(row => {
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
                     <td>${row.time}</td>
@@ -246,9 +218,9 @@
                     <td>${formatValue(row.daily_di)}</td>
                     <td>${formatValue(row['4h_di'])}</td>
                     <td>${formatValue(row.total_di)}</td>
-                    <td>${formatValue(ema13)}</td>
-                    <td>${formatValue(sma30)}</td>
-                    <td>${trend}</td>
+                    <td>${formatValue(row.di_ema_13)}</td>
+                    <td>${formatValue(row.di_sma_30)}</td>
+                    <td>${row.trend ? `<span style="color:${row.trend === 'bull' ? 'green' : 'red'}">${row.trend}</span>` : '-'}</td>
                     <td>${formatValue(row.close)}</td>
                 `;
                 tableBody.appendChild(tr);

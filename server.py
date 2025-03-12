@@ -48,7 +48,7 @@ def validate_symbol(symbol):
 def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     """Get daily OHLCV data for given cryptocurrency"""
     try:
-        url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={symbol}&tsyms=USD&limit={limit}&api_key={API_KEY}"
+        url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={symbol}&tsym={tsym}&limit={limit}&api_key={API_KEY}"
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
@@ -71,7 +71,7 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
 def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     """Get 4-hour OHLCV data for given cryptocurrency"""
     try:
-        url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsyms=USD&limit={limit}&aggregate=4&api_key={API_KEY}"
+        url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
@@ -255,7 +255,7 @@ def di_index():
                                     "data": coin_data
                                 })
                                 logger.info(f"Successfully processed {coin['symbol']}")
-                        time.sleep(2)  # Delay between coins
+                        time.sleep(2)
                     except Exception as coin_error:
                         logger.error(f"Error processing {coin['symbol']}: {str(coin_error)}")
                         continue
@@ -277,10 +277,17 @@ def di_index():
             if not validate_symbol(symbol):
                 return jsonify({"error": f"Invalid cryptocurrency symbol: {symbol}"}), 400
 
-            results = calculate_combined_indices(symbol=symbol, debug=debug_mode)
+            coin_data = calculate_combined_indices(symbol=symbol, debug=debug_mode)
+            if not coin_data:
+                return jsonify({"error": f"No data available for {symbol}"}), 404
+
+            # Make response format consistent with ALL endpoint
             return jsonify({
-                "symbol": symbol,
-                "data": results
+                "coins": [{
+                    "symbol": symbol,
+                    "name": next((c["name"] for c in TEST_CRYPTOCURRENCIES if c["symbol"] == symbol), symbol),
+                    "data": coin_data
+                }]
             })
 
     except Exception as e:
