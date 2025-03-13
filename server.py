@@ -28,8 +28,8 @@ API_KEY = os.getenv("CRYPTOCOMPARE_API_KEY", "2193d3ce789e90e474570058a3a96caa0d
 
 # Cache for storing cryptocurrency data
 CACHE = {}
-CACHE_DURATION = 3600  # 1 hour in seconds
-MAX_WORKERS = 3  # Maximum number of concurrent workers
+CACHE_DURATION = 7200  # 2 hours in seconds
+MAX_WORKERS = 5  # Increase maximum number of concurrent workers
 
 def get_cache_key(symbol, data_type):
     """Generate cache key for given symbol and data type"""
@@ -390,6 +390,7 @@ def calculate_di_index(df, debug=False):
             "close": nan_to_none(row["close"])
         })
     return result
+
 
 
 @di_index_blueprint.route('/api/di_index')

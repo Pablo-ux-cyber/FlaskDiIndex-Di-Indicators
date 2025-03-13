@@ -15,7 +15,7 @@
     #error { color: red; font-weight: bold; margin-top: 20px; white-space: pre-wrap; }
     .symbol-selector { margin: 20px 0; }
     #loading { font-size: 1.2em; margin: 20px 0; }
-    select[multiple] { min-width: 200px; height: 150px; }
+    select[multiple] { min-width: 200px; height: 300px; }
     .loading-indicator { color: #666; font-style: italic; margin-left: 10px; }
     .control-buttons { margin: 10px 0; }
   </style>
@@ -26,16 +26,35 @@
   <div class="symbol-selector">
     <label for="symbols">Выберите криптовалюты:</label>
     <select id="symbols" multiple>
-      <option value="BTC" selected>Bitcoin (BTC)</option>
-      <option value="ETH">Ethereum (ETH)</option>
-      <option value="BNB">Binance Coin (BNB)</option>
+      <option value="BTC" selected>Биткоин (BTC)</option>
+      <option value="ETH">Эфириум (ETH)</option>
+      <option value="XRP">XRP (XRP)</option>
+      <option value="BNB">BNB (BNB)</option>
       <option value="SOL">Solana (SOL)</option>
-      <option value="XRP">Ripple (XRP)</option>
-      <option value="ADA">Cardano (ADA)</option>
-      <option value="AVAX">Avalanche (AVAX)</option>
-      <option value="DOT">Polkadot (DOT)</option>
-      <option value="MATIC">Polygon (MATIC)</option>
+      <option value="ADA">Кардано (ADA)</option>
+      <option value="DOGE">Dogecoin (DOGE)</option>
+      <option value="TRX">TRON (TRX)</option>
+      <option value="LEO">LEO Token (LEO)</option>
+      <option value="HBAR">Hedera (HBAR)</option>
       <option value="LINK">Chainlink (LINK)</option>
+      <option value="XLM">Stellar (XLM)</option>
+      <option value="AVAX">Avalanche (AVAX)</option>
+      <option value="SUI">Sui (SUI)</option>
+      <option value="SHIB">Shiba Inu (SHIB)</option>
+      <option value="LTC">Лайткоин (LTC)</option>
+      <option value="BCH">Биткойн Кэш (BCH)</option>
+      <option value="TON">Toncoin (TON)</option>
+      <option value="OM">MANTRA OM (OM)</option>
+      <option value="DOT">Polkadot (DOT)</option>
+      <option value="BGB">Bitget Token (BGB)</option>
+      <option value="HYPE">Hyperliquid (HYPE)</option>
+      <option value="WBT">WhiteBIT Coin (WBT)</option>
+      <option value="XMR">Монеро (XMR)</option>
+      <option value="UNI">Uniswap (UNI)</option>
+      <option value="APT">Aptos (APT)</option>
+      <option value="NEAR">NEAR Protocol (NEAR)</option>
+      <option value="AAVE">Aave (AAVE)</option>
+      <option value="ETC">Ethereum Classic (ETC)</option>
     </select>
     <div class="control-buttons">
       <button onclick="selectAll()">Выбрать все</button>
