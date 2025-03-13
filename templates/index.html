@@ -207,11 +207,11 @@
         }
       }
 
-      // Добавляем MA13 к данным
+      // Добавляем MA13 к данным и сортируем по убыванию дат
       return sortedData.map((item, index) => ({
         ...item,
         ma13: ma13[index]
-      })).reverse(); // Разворачиваем обратно для отображения новых данных сверху
+      })).reverse(); // Разворачиваем для отображения новых данных сверху
     }
 
     function updateSentimentTable(sentimentData) {

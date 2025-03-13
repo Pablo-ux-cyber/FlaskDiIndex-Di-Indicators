@@ -193,8 +193,15 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     data = response.json()
     if data.get("Response") != "Success":
         raise Exception(f"Error getting daily data: {data}")
+
+    # Convert timestamp to datetime and adjust to end of day
     df = pd.DataFrame(data['Data']['Data'])
     df['time'] = pd.to_datetime(df['time'], unit='s')
+
+    # Отфильтровываем будущие даты и сегодняшний день, так как он еще не закончился
+    today = pd.Timestamp.now().normalize()
+    df = df[df['time'] < today]
+
     set_cached_data(symbol, "daily_data", df)
     return df
 
@@ -390,6 +397,7 @@ def calculate_di_index(df, debug=False):
             "close": nan_to_none(row["close"])
         })
     return result
+
 
 
 def process_symbol_batch(symbols, debug=False):
