@@ -405,7 +405,10 @@ def process_symbol_batch(symbols, debug=False):
             for future in concurrent.futures.as_completed(future_to_symbol):
                 symbol = future_to_symbol[future]
                 try:
-                    _, result = future.result()
+                    symbol, result = future.result()
+                    # Сортируем результаты по дате перед отправкой
+                    if isinstance(result, list):
+                        result.sort(key=lambda x: x["time"], reverse=True)
                     results[symbol] = result
                 except Exception as e:
                     logger.error(f"Error processing {symbol}: {str(e)}", exc_info=True)

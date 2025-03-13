@@ -18,6 +18,19 @@
     select[multiple] { min-width: 200px; height: 300px; }
     .loading-indicator { color: #666; font-style: italic; margin-left: 10px; }
     .control-buttons { margin: 10px 0; }
+    .market-sentiment { 
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    .bull-percentage {
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+    .sentiment-table {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -68,6 +81,24 @@
   </div>
 
   <div id="error"></div>
+
+  <!-- Добавляем секцию для отображения общего настроения рынка -->
+  <div class="market-sentiment">
+    <h2>Общее настроение рынка</h2>
+    <table class="sentiment-table">
+      <thead>
+        <tr>
+          <th>Дата</th>
+          <th>Количество бычьих сигналов</th>
+          <th>Всего монет с данными</th>
+          <th>Процент бычьих сигналов</th>
+        </tr>
+      </thead>
+      <tbody id="sentimentTableBody">
+      </tbody>
+    </table>
+  </div>
+
   <div id="tables-container">
     <!-- Таблицы будут добавлены здесь -->
   </div>
@@ -119,6 +150,50 @@
 
       tbody.innerHTML = '';
       rows.forEach(row => tbody.appendChild(row));
+    }
+
+    function calculateMarketSentiment(allData) {
+      const sentimentByDate = {};
+
+      // Собираем данные по датам
+      for (const [symbol, data] of Object.entries(allData)) {
+        if (!Array.isArray(data)) continue;
+
+        data.forEach(row => {
+          const date = row.time;
+          if (!sentimentByDate[date]) {
+            sentimentByDate[date] = { bullCount: 0, totalCount: 0 };
+          }
+          if (row.trend !== null) {
+            sentimentByDate[date].totalCount++;
+            if (row.trend === 'bull') {
+              sentimentByDate[date].bullCount++;
+            }
+          }
+        });
+      }
+
+      // Преобразуем в массив и сортируем по дате
+      return Object.entries(sentimentByDate)
+        .map(([date, data]) => ({
+          date,
+          bullCount: data.bullCount,
+          totalCount: data.totalCount,
+          percentage: (data.bullCount / data.totalCount * 100).toFixed(2)
+        }))
+        .sort((a, b) => b.date.localeCompare(a.date));
+    }
+
+    function updateSentimentTable(sentimentData) {
+      const tbody = document.getElementById('sentimentTableBody');
+      tbody.innerHTML = sentimentData.map(row => `
+        <tr>
+          <td>${row.date}</td>
+          <td>${row.bullCount}</td>
+          <td>${row.totalCount}</td>
+          <td>${row.percentage}%</td>
+        </tr>
+      `).join('');
     }
 
     function createTable(symbol, data) {
@@ -192,6 +267,7 @@
         const batches = batchProcess(selectedSymbols);
         let successCount = 0;
         let errorCount = 0;
+        let allData = {};
 
         for (let i = 0; i < batches.length; i++) {
           const batch = batches[i];
@@ -204,6 +280,8 @@
             }
 
             const json = await response.json();
+            // Сохраняем все данные для анализа настроения рынка
+            Object.assign(allData, json);
 
             for (const [symbol, data] of Object.entries(json)) {
               if (Array.isArray(data)) {
@@ -221,6 +299,10 @@
             errorCount += batch.length;
           }
         }
+
+        // Обновляем таблицу настроения рынка
+        const sentimentData = calculateMarketSentiment(allData);
+        updateSentimentTable(sentimentData);
 
         progressDiv.textContent = `Загружено успешно: ${successCount} монет, с ошибками: ${errorCount} монет`;
 
