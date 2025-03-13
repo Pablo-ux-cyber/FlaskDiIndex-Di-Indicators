@@ -17,10 +17,11 @@
     #loading { font-size: 1.2em; margin: 20px 0; }
     select[multiple] { min-width: 200px; height: 150px; }
     .loading-indicator { color: #666; font-style: italic; margin-left: 10px; }
+    .control-buttons { margin: 10px 0; }
   </style>
 </head>
 <body>
-  <h1>DI Index – Объединённые данные по датам</h1>
+  <h1>DI Index – Объединённые данные</h1>
 
   <div class="symbol-selector">
     <label for="symbols">Выберите криптовалюты:</label>
@@ -36,8 +37,15 @@
       <option value="MATIC">Polygon (MATIC)</option>
       <option value="LINK">Chainlink (LINK)</option>
     </select>
-    <button onclick="loadSelectedData()">Загрузить данные</button>
-    <span id="loading" style="display: none;">Загрузка данных...<span class="loading-indicator"></span></span>
+    <div class="control-buttons">
+      <button onclick="selectAll()">Выбрать все</button>
+      <button onclick="deselectAll()">Отменить выбор</button>
+      <button onclick="loadSelectedData()">Загрузить данные</button>
+    </div>
+    <div id="loading" style="display: none;">
+      Загрузка данных...<span class="loading-indicator"></span>
+      <div id="progress"></div>
+    </div>
   </div>
 
   <div id="error"></div>
@@ -50,10 +58,24 @@
       return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
     }
 
+    function selectAll() {
+      const symbolsSelect = document.getElementById('symbols');
+      for (let option of symbolsSelect.options) {
+        option.selected = true;
+      }
+    }
+
+    function deselectAll() {
+      const symbolsSelect = document.getElementById('symbols');
+      for (let option of symbolsSelect.options) {
+        option.selected = false;
+      }
+    }
+
     function sortTable(table, columnIndex) {
       const tbody = table.querySelector('tbody');
       const rows = Array.from(tbody.querySelectorAll('tr'));
-      const isNumeric = columnIndex > 0; // Первая колонка - дата, остальные числовые
+      const isNumeric = columnIndex > 0;
 
       rows.sort((a, b) => {
         let aVal = a.cells[columnIndex].textContent;
@@ -69,16 +91,13 @@
         return 0;
       });
 
-      // Сохраняем текущее направление сортировки
       const currentDir = table.getAttribute('data-sort-dir') === 'asc' ? 'desc' : 'asc';
       table.setAttribute('data-sort-dir', currentDir);
 
-      // Переворачиваем массив если сортировка по убыванию
       if (currentDir === 'desc') {
         rows.reverse();
       }
 
-      // Обновляем таблицу
       tbody.innerHTML = '';
       rows.forEach(row => tbody.appendChild(row));
     }
@@ -127,6 +146,7 @@
 
     async function loadSelectedData() {
       const loadingDiv = document.getElementById('loading');
+      const progressDiv = document.getElementById('progress');
       const errorDiv = document.getElementById('error');
       const container = document.getElementById('tables-container');
 
@@ -142,9 +162,10 @@
           throw new Error('Пожалуйста, выберите хотя бы одну криптовалюту');
         }
 
+        progressDiv.textContent = `Загрузка данных для ${selectedSymbols.length} монет...`;
         console.log('Загрузка данных для:', selectedSymbols.join(','));
-        const response = await fetch(`/api/di_index?symbols=${selectedSymbols.join(',')}`);
 
+        const response = await fetch(`/api/di_index?symbols=${selectedSymbols.join(',')}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -152,17 +173,26 @@
         const json = await response.json();
         console.log('Полученные данные:', json);
 
+        let successCount = 0;
+        let errorCount = 0;
+
         for (const [symbol, data] of Object.entries(json)) {
           if (Array.isArray(data)) {
             container.appendChild(createTable(symbol, data));
+            successCount++;
           } else if (data.error) {
             console.error(`Error for ${symbol}:`, data.error);
             errorDiv.textContent += `Ошибка для ${symbol}: ${data.error}\n`;
+            errorCount++;
           }
         }
+
+        progressDiv.textContent = `Загружено успешно: ${successCount} монет, с ошибками: ${errorCount} монет`;
+
       } catch (error) {
         console.error("Ошибка загрузки данных:", error);
         errorDiv.textContent = `Ошибка загрузки данных: ${error.message}`;
+        progressDiv.textContent = '';
       } finally {
         loadingDiv.style.display = 'none';
       }
