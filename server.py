@@ -65,7 +65,7 @@ def validate_symbol(symbol):
 def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     """Get daily OHLCV data for given cryptocurrency"""
     cached_data = get_cached_data(symbol, "daily_data")
-    if cached_data:
+    if cached_data is not None and not cached_data.empty:
         return cached_data
 
     url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={symbol}&tsym={tsym}&limit={limit}&api_key={API_KEY}"
@@ -81,7 +81,7 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
 def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     """Get 4-hour OHLCV data for given cryptocurrency"""
     cached_data = get_cached_data(symbol, "4h_data")
-    if cached_data:
+    if cached_data is not None and not cached_data.empty:
         return cached_data
 
     url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
@@ -97,7 +97,7 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
 def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     """Get weekly OHLCV data for given cryptocurrency"""
     cached_data = get_cached_data(symbol, "weekly_data")
-    if cached_data:
+    if cached_data is not None and not cached_data.empty:
         return cached_data
 
     df_daily = get_daily_data(symbol, tsym, limit)
