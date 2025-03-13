@@ -187,15 +187,23 @@
       // Рассчитываем 13MA для процентов
       const percentages = sortedData.map(item => parseFloat(item.percentage));
       const ma13 = [];
+      const alpha = 2 / (13 + 1); // Коэффициент сглаживания для EMA
+
       for (let i = 0; i < percentages.length; i++) {
         if (i < 12) {
-          // Для первых 12 точек MA не рассчитывается
-          ma13.push(null);
+          // Для первых 12 точек используем простое среднее
+          if (i === 0) {
+            ma13.push(percentages[0]);
+          } else {
+            const slice = percentages.slice(0, i + 1);
+            const average = slice.reduce((a, b) => a + b, 0) / slice.length;
+            ma13.push(average.toFixed(2));
+          }
         } else {
-          // Берем 13 предыдущих значений и считаем среднее
-          const slice = percentages.slice(i - 12, i + 1);
-          const average = slice.reduce((a, b) => a + b, 0) / 13;
-          ma13.push(average.toFixed(2));
+          // Используем EMA для остальных точек
+          const prevEMA = parseFloat(ma13[i - 1]);
+          const ema = (percentages[i] * alpha) + (prevEMA * (1 - alpha));
+          ma13.push(ema.toFixed(2));
         }
       }
 
