@@ -213,30 +213,34 @@ def calculate_ad_index(df):
     return df
 
 def calculate_di_index(df, debug=False):
+    # Убедимся, что у нас есть столбец time и он доступен
+    if 'time' not in df.columns and df.index.name == 'time':
+        df = df.reset_index()
+
     df = calculate_ma_index(df)
     if debug:
-        print("MA_index:")
-        print(df[["time", "micro", "short", "medium", "long", "MA_index"]].head(10))
+        logger.debug("MA_index:")
+        logger.debug(df[["time", "micro", "short", "medium", "long", "MA_index"]].head(10))
     df = calculate_willy_index(df)
     if debug:
-        print("Willy_index:")
-        print(df[["time", "upper", "lower", "out", "out2", "Willy_index"]].head(10))
+        logger.debug("Willy_index:")
+        logger.debug(df[["time", "upper", "lower", "out", "out2", "Willy_index"]].head(10))
     df = calculate_macd_index(df)
     if debug:
-        print("MACD_index:")
-        print(df[["time", "macd", "signal", "macd_index"]].head(10))
+        logger.debug("MACD_index:")
+        logger.debug(df[["time", "macd", "signal", "macd_index"]].head(10))
     df = calculate_obv_index(df)
     if debug:
-        print("OBV_index:")
-        print(df[["time", "obv", "obv_ema", "OBV_index"]].head(10))
+        logger.debug("OBV_index:")
+        logger.debug(df[["time", "obv", "obv_ema", "OBV_index"]].head(10))
     df = calculate_mfi_index(df)
     if debug:
-        print("MFI_index:")
-        print(df[["time", "mfi_mf", "mfi_mf2", "mfi_index"]].head(10))
+        logger.debug("MFI_index:")
+        logger.debug(df[["time", "mfi_mf", "mfi_mf2", "mfi_index"]].head(10))
     df = calculate_ad_index(df)
     if debug:
-        print("AD_index:")
-        print(df[["time", "ad", "AD_index"]].head(10))
+        logger.debug("AD_index:")
+        logger.debug(df[["time", "ad", "AD_index"]].head(10))
 
     df["DI_index"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
                       df["OBV_index"] + df["mfi_index"] + df["AD_index"])
@@ -251,8 +255,14 @@ def calculate_di_index(df, debug=False):
 
     result = []
     for _, row in df.iterrows():
+        time_val = row["time"] if "time" in row.index else row.name
+        if isinstance(time_val, pd.Timestamp):
+            time_str = time_val.strftime("%Y-%m-%d")
+        else:
+            time_str = str(time_val)
+
         result.append({
-            "time": row["time"].strftime("%Y-%m-%d") if isinstance(row["time"], pd.Timestamp) else str(row["time"]),
+            "time": time_str,
             "DI_index": nan_to_none(row["DI_index"]),
             "DI_index_EMA": nan_to_none(row["DI_index_EMA"]),
             "DI_index_SMA": nan_to_none(row["DI_index_SMA"]),
