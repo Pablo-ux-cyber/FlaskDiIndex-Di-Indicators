@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>DI Index – Анализ криптовалют</title>
+  <title>DI Index – Объединённые данные</title>
   <style>
     body { font-family: Arial, sans-serif; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
@@ -11,41 +11,11 @@
     tr:hover { background-color: #e0f7fa; }
     caption { margin-bottom: 10px; font-size: 1.4em; font-weight: bold; }
     #error { color: red; font-weight: bold; margin-top: 20px; white-space: pre-wrap; }
-    .controls { margin: 20px 0; }
-    select { padding: 8px; font-size: 16px; }
-    #loading { display: none; margin: 20px 0; font-weight: bold; }
-    .stats { 
-      margin: 20px 0;
-      padding: 15px;
-      background-color: #f8f9fa;
-      border-radius: 5px;
-    }
-    .stats-title {
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
   </style>
 </head>
 <body>
-  <h1>DI Index – Анализ криптовалют</h1>
-
-  <div class="controls">
-    <select id="cryptoSelect" onchange="loadSingleCoinData()">
-      <option value="ALL">Все монеты</option>
-      {% for crypto in cryptocurrencies %}
-      <option value="{{ crypto.symbol }}">{{ crypto.name }} ({{ crypto.symbol }})</option>
-      {% endfor %}
-    </select>
-  </div>
-
-  <div id="loading">Загрузка данных...</div>
+  <h1>DI Index – Объединённые данные по датам</h1>
   <div id="error"></div>
-
-  <div id="marketStats" class="stats" style="display: none;">
-    <div class="stats-title">Статистика рынка</div>
-    <div id="statsContent"></div>
-  </div>
-
   <table id="dataTable">
     <caption>Weekly, Daily, 4h DI Index, Total, 13 EMA (Total), 30 SMA (Total) и Trend</caption>
     <thead>
@@ -62,178 +32,127 @@
       </tr>
     </thead>
     <tbody id="tableBody">
+      <!-- Строки будут созданы через JavaScript -->
     </tbody>
   </table>
 
-<script>
+  <script>
     function formatValue(val) {
-        return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
+      return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
     }
 
+    // Функция для расчета EMA
     function calculateEMA(data, period) {
-        const k = 2 / (period + 1);
-        let ema = data[0];
-        const emaData = [ema];
+      const k = 2 / (period + 1);
+      let ema = data[0];
+      const emaData = [ema];
 
-        for (let i = 1; i < data.length; i++) {
-            if (data[i] === null || isNaN(data[i])) {
-                emaData.push(null);
-            } else {
-                ema = data[i] * k + ema * (1 - k);
-                emaData.push(ema);
-            }
+      for (let i = 1; i < data.length; i++) {
+        if (data[i] === null || isNaN(data[i])) {
+          emaData.push(null);
+        } else {
+          ema = data[i] * k + ema * (1 - k);
+          emaData.push(ema);
         }
-        return emaData;
+      }
+      return emaData;
     }
 
+    // Функция для расчета SMA
     function calculateSMA(data, period) {
-        const smaData = [];
-        for (let i = 0; i < data.length; i++) {
-            if (i < period - 1) {
-                smaData.push(null);
-                continue;
-            }
-
-            const window = data.slice(i - period + 1, i + 1);
-            const validValues = window.filter(val => val !== null && !isNaN(val));
-            if (validValues.length === period) {
-                smaData.push(validValues.reduce((a, b) => a + b) / period);
-            } else {
-                smaData.push(null);
-            }
+      const smaData = [];
+      for (let i = 0; i < data.length; i++) {
+        if (i < period - 1) {
+          smaData.push(null);
+          continue;
         }
-        return smaData;
+
+        const window = data.slice(i - period + 1, i + 1);
+        const validValues = window.filter(val => val !== null && !isNaN(val));
+        if (validValues.length === period) {
+          smaData.push(validValues.reduce((a, b) => a + b) / period);
+        } else {
+          smaData.push(null);
+        }
+      }
+      return smaData;
     }
 
-    async function loadAllCoinsData() {
-        const loadingDiv = document.getElementById("loading");
-        const errorDiv = document.getElementById("error");
-        const marketStats = document.getElementById("marketStats");
+    async function loadData() {
+      try {
+        const response = await fetch('/api/di_index?symbol=BTC');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const json = await response.json();
+
+        if (!json.data || !Array.isArray(json.data)) {
+          throw new Error('Invalid data format received from server');
+        }
+
         const tableBody = document.getElementById("tableBody");
+        tableBody.innerHTML = "";
 
-        try {
-            loadingDiv.style.display = "block";
-            errorDiv.textContent = "";
-            tableBody.innerHTML = "";
+        let lastWeeklyValue = null; // Сохраняем последнее известное значение Weekly DI Index
 
-            const response = await fetch('/api/di_index?symbol=ALL');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const json = await response.json();
+        // Предварительная обработка данных
+        const processedData = json.data.map(row => {
+          // Если Weekly DI Index пустой, используем последнее известное значение
+          if (row.weekly_di === null || isNaN(row.weekly_di)) {
+            row.weekly_di = lastWeeklyValue;
+          } else {
+            lastWeeklyValue = row.weekly_di;
+          }
 
-            if (!json.coins || !Array.isArray(json.coins)) {
-                throw new Error('Invalid data format received from server');
-            }
+          // Пересчитываем total с учетом обновленного Weekly DI Index
+          if (row.weekly_di !== null && row.daily_di !== null && row['4h_di'] !== null) {
+            row.total_di = row.weekly_di + row.daily_di + row['4h_di'];
+          }
 
-            // Создаем map для хранения статистики по датам
-            const dateStats = new Map();
+          return row;
+        });
 
-            // Обрабатываем данные каждой монеты
-            json.coins.forEach(coin => {
-                if (coin.data) {
-                    coin.data.forEach(row => {
-                        const date = row.time;
-                        if (!dateStats.has(date)) {
-                            dateStats.set(date, { total: 0, bulls: 0, coins: [] });
-                        }
-                        const stats = dateStats.get(date);
-                        if (row.trend) {  // Только учитываем монеты с определенным трендом
-                            stats.total++;
-                            if (row.trend === 'bull') {
-                                stats.bulls++;
-                            }
-                            stats.coins.push({
-                                symbol: coin.symbol,
-                                trend: row.trend
-                            });
-                        }
-                    });
-                }
-            });
+        // Получаем массив total_di для расчета EMA и SMA
+        const totalValues = processedData.map(row => row.total_di);
 
-            // Сортируем даты в обратном порядке (сначала новые)
-            const sortedDates = Array.from(dateStats.keys()).sort().reverse();
+        // Рассчитываем 13 EMA и 30 SMA
+        const ema13Values = calculateEMA(totalValues, 13);
+        const sma30Values = calculateSMA(totalValues, 30);
 
-            // Формируем статистику
-            const statsContent = document.getElementById("statsContent");
-            statsContent.innerHTML = sortedDates.map(date => {
-                const stats = dateStats.get(date);
-                const bullPercent = stats.total > 0 ? (stats.bulls / stats.total * 100).toFixed(1) : "0.0";
-                const details = stats.coins.map(c => 
-                    `${c.symbol}: <span style="color:${c.trend === 'bull' ? 'green' : 'red'}">${c.trend}</span>`
-                ).join(', ');
-                return `<div>
-                    <strong>${date}</strong>: ${stats.bulls} bull из ${stats.total} (${bullPercent}%)
-                    <div style="font-size: 0.9em; margin-left: 20px;">${details}</div>
-                </div>`;
-            }).join('');
+        // Отображаем данные
+        processedData.forEach((row, index) => {
+          const ema13 = ema13Values[index];
+          const sma30 = sma30Values[index];
 
-            marketStats.style.display = "block";
+          // Определяем тренд
+          let trend = '-';
+          if (ema13 !== null && sma30 !== null) {
+            trend = ema13 > sma30 ? 
+              '<span style="color:green;">bull</span>' : 
+              '<span style="color:red;">bear</span>';
+          }
 
-        } catch (error) {
-            console.error("Ошибка загрузки данных:", error);
-            errorDiv.textContent = `Ошибка загрузки данных: ${error.message}`;
-        } finally {
-            loadingDiv.style.display = "none";
-        }
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${row.time}</td>
+            <td>${formatValue(row.weekly_di)}</td>
+            <td>${formatValue(row.daily_di)}</td>
+            <td>${formatValue(row['4h_di'])}</td>
+            <td>${formatValue(row.total_di)}</td>
+            <td>${formatValue(ema13)}</td>
+            <td>${formatValue(sma30)}</td>
+            <td>${trend}</td>
+            <td>${formatValue(row.close)}</td>
+          `;
+          tableBody.appendChild(tr);
+        });
+      } catch (error) {
+        console.error("Ошибка загрузки данных:", error);
+        document.getElementById("error").textContent = `Ошибка загрузки данных: ${error.message}`;
+      }
     }
 
-    async function loadSingleCoinData() {
-        const selectedSymbol = document.getElementById("cryptoSelect").value;
-        const marketStats = document.getElementById("marketStats");
-
-        if (selectedSymbol === "ALL") {
-            await loadAllCoinsData();
-            return;
-        }
-
-        marketStats.style.display = "none";
-        const loadingDiv = document.getElementById("loading");
-        const errorDiv = document.getElementById("error");
-        const tableBody = document.getElementById("tableBody");
-
-        try {
-            loadingDiv.style.display = "block";
-            errorDiv.textContent = "";
-            tableBody.innerHTML = "";
-
-            const response = await fetch(`/api/di_index?symbol=${selectedSymbol}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const json = await response.json();
-
-            if (!json.coins || !Array.isArray(json.coins) || !json.coins[0].data) {
-                throw new Error('Invalid data format received from server');
-            }
-
-            const processedData = json.coins[0].data;
-
-            processedData.forEach(row => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${row.time}</td>
-                    <td>${formatValue(row.weekly_di)}</td>
-                    <td>${formatValue(row.daily_di)}</td>
-                    <td>${formatValue(row['4h_di'])}</td>
-                    <td>${formatValue(row.total_di)}</td>
-                    <td>${formatValue(row.di_ema_13)}</td>
-                    <td>${formatValue(row.di_sma_30)}</td>
-                    <td>${row.trend ? `<span style="color:${row.trend === 'bull' ? 'green' : 'red'}">${row.trend}</span>` : '-'}</td>
-                    <td>${formatValue(row.close)}</td>
-                `;
-                tableBody.appendChild(tr);
-            });
-        } catch (error) {
-            console.error("Ошибка загрузки данных:", error);
-            errorDiv.textContent = `Ошибка загрузки данных: ${error.message}`;
-        } finally {
-            loadingDiv.style.display = "none";
-        }
-    }
-
-    window.onload = loadSingleCoinData;
-</script>
+    window.onload = loadData;
+  </script>
 </body>
 </html>
