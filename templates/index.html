@@ -5,154 +5,113 @@
   <title>DI Index – Объединённые данные</title>
   <style>
     body { font-family: Arial, sans-serif; }
+    .coin-container { margin-bottom: 40px; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
     th { background-color: #f2f2f2; position: sticky; top: 0; z-index: 1; }
     tr:hover { background-color: #e0f7fa; }
     caption { margin-bottom: 10px; font-size: 1.4em; font-weight: bold; }
     #error { color: red; font-weight: bold; margin-top: 20px; white-space: pre-wrap; }
+    .symbol-selector { margin: 20px 0; }
   </style>
 </head>
 <body>
   <h1>DI Index – Объединённые данные по датам</h1>
+
+  <div class="symbol-selector">
+    <label for="symbols">Выберите криптовалюты:</label>
+    <select id="symbols" multiple>
+      <option value="BTC" selected>Bitcoin (BTC)</option>
+      <option value="ETH">Ethereum (ETH)</option>
+      <option value="BNB">Binance Coin (BNB)</option>
+    </select>
+    <button onclick="loadSelectedData()">Загрузить данные</button>
+  </div>
+
   <div id="error"></div>
-  <table id="dataTable">
-    <caption>Weekly, Daily, 4h DI Index, Total, 13 EMA (Total), 30 SMA (Total) и Trend</caption>
-    <thead>
-      <tr>
-        <th>Дата</th>
-        <th>Weekly DI Index</th>
-        <th>Daily DI Index</th>
-        <th>4h DI Index</th>
-        <th>Total</th>
-        <th>13 EMA (Total)</th>
-        <th>30 SMA (Total)</th>
-        <th>Trend</th>
-        <th>Close (Daily)</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody">
-      <!-- Строки будут созданы через JavaScript -->
-    </tbody>
-  </table>
+  <div id="tables-container">
+    <!-- Таблицы будут добавлены здесь -->
+  </div>
 
   <script>
     function formatValue(val) {
       return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
     }
 
-    // Функция для расчета EMA
-    function calculateEMA(data, period) {
-      const k = 2 / (period + 1);
-      let ema = data[0];
-      const emaData = [ema];
+    function createTable(symbol, data) {
+      const container = document.createElement('div');
+      container.className = 'coin-container';
 
-      for (let i = 1; i < data.length; i++) {
-        if (data[i] === null || isNaN(data[i])) {
-          emaData.push(null);
-        } else {
-          ema = data[i] * k + ema * (1 - k);
-          emaData.push(ema);
-        }
-      }
-      return emaData;
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <caption>${symbol} - DI Index</caption>
+        <thead>
+          <tr>
+            <th>Дата</th>
+            <th>Weekly DI Index</th>
+            <th>Daily DI Index</th>
+            <th>4h DI Index</th>
+            <th>Total</th>
+            <th>13 EMA (Total)</th>
+            <th>30 SMA (Total)</th>
+            <th>Trend</th>
+            <th>Close (Daily)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(row => `
+            <tr>
+              <td>${row.time}</td>
+              <td>${formatValue(row.weekly_di)}</td>
+              <td>${formatValue(row.daily_di)}</td>
+              <td>${formatValue(row['4h_di'])}</td>
+              <td>${formatValue(row.total_di)}</td>
+              <td>${formatValue(row.di_ema_13)}</td>
+              <td>${formatValue(row.di_sma_30)}</td>
+              <td>${row.trend ? (row.trend === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
+              <td>${formatValue(row.close)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+
+      container.appendChild(table);
+      return container;
     }
 
-    // Функция для расчета SMA
-    function calculateSMA(data, period) {
-      const smaData = [];
-      for (let i = 0; i < data.length; i++) {
-        if (i < period - 1) {
-          smaData.push(null);
-          continue;
-        }
-
-        const window = data.slice(i - period + 1, i + 1);
-        const validValues = window.filter(val => val !== null && !isNaN(val));
-        if (validValues.length === period) {
-          smaData.push(validValues.reduce((a, b) => a + b) / period);
-        } else {
-          smaData.push(null);
-        }
-      }
-      return smaData;
-    }
-
-    async function loadData() {
+    async function loadSelectedData() {
       try {
-        const response = await fetch('/api/di_index?symbol=BTC');
+        const symbolsSelect = document.getElementById('symbols');
+        const selectedSymbols = Array.from(symbolsSelect.selectedOptions).map(option => option.value);
+
+        if (selectedSymbols.length === 0) {
+          throw new Error('Пожалуйста, выберите хотя бы одну криптовалюту');
+        }
+
+        const response = await fetch(`/api/di_index?symbols=${selectedSymbols.join(',')}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const json = await response.json();
 
-        if (!json.data || !Array.isArray(json.data)) {
-          throw new Error('Invalid data format received from server');
+        const container = document.getElementById('tables-container');
+        container.innerHTML = '';
+
+        for (const [symbol, data] of Object.entries(json)) {
+          if (Array.isArray(data)) {
+            container.appendChild(createTable(symbol, data));
+          } else if (data.error) {
+            console.error(`Error for ${symbol}:`, data.error);
+          }
         }
-
-        const tableBody = document.getElementById("tableBody");
-        tableBody.innerHTML = "";
-
-        let lastWeeklyValue = null; // Сохраняем последнее известное значение Weekly DI Index
-
-        // Предварительная обработка данных
-        const processedData = json.data.map(row => {
-          // Если Weekly DI Index пустой, используем последнее известное значение
-          if (row.weekly_di === null || isNaN(row.weekly_di)) {
-            row.weekly_di = lastWeeklyValue;
-          } else {
-            lastWeeklyValue = row.weekly_di;
-          }
-
-          // Пересчитываем total с учетом обновленного Weekly DI Index
-          if (row.weekly_di !== null && row.daily_di !== null && row['4h_di'] !== null) {
-            row.total_di = row.weekly_di + row.daily_di + row['4h_di'];
-          }
-
-          return row;
-        });
-
-        // Получаем массив total_di для расчета EMA и SMA
-        const totalValues = processedData.map(row => row.total_di);
-
-        // Рассчитываем 13 EMA и 30 SMA
-        const ema13Values = calculateEMA(totalValues, 13);
-        const sma30Values = calculateSMA(totalValues, 30);
-
-        // Отображаем данные
-        processedData.forEach((row, index) => {
-          const ema13 = ema13Values[index];
-          const sma30 = sma30Values[index];
-
-          // Определяем тренд
-          let trend = '-';
-          if (ema13 !== null && sma30 !== null) {
-            trend = ema13 > sma30 ? 
-              '<span style="color:green;">bull</span>' : 
-              '<span style="color:red;">bear</span>';
-          }
-
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${row.time}</td>
-            <td>${formatValue(row.weekly_di)}</td>
-            <td>${formatValue(row.daily_di)}</td>
-            <td>${formatValue(row['4h_di'])}</td>
-            <td>${formatValue(row.total_di)}</td>
-            <td>${formatValue(ema13)}</td>
-            <td>${formatValue(sma30)}</td>
-            <td>${trend}</td>
-            <td>${formatValue(row.close)}</td>
-          `;
-          tableBody.appendChild(tr);
-        });
       } catch (error) {
         console.error("Ошибка загрузки данных:", error);
         document.getElementById("error").textContent = `Ошибка загрузки данных: ${error.message}`;
       }
     }
 
-    window.onload = loadData;
+    // Загружаем данные при загрузке страницы
+    window.onload = loadSelectedData;
   </script>
 </body>
 </html>
