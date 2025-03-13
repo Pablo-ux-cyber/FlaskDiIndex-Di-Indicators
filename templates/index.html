@@ -24,12 +24,21 @@
       border-radius: 5px;
       margin: 20px 0;
     }
-    .bull-percentage {
-      font-size: 1.2em;
-      font-weight: bold;
+    .legend {
+      margin: 10px 0;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 5px;
     }
-    .sentiment-table {
-      margin-top: 20px;
+    .legend-item {
+      display: inline-block;
+      margin-right: 20px;
+    }
+    .no-4h-data {
+      background-color: rgba(255, 255, 0, 0.15) !important;
+    }
+    .no-4h-data:hover {
+      background-color: rgba(255, 255, 0, 0.25) !important;
     }
   </style>
 </head>
@@ -100,7 +109,12 @@
       </tbody>
     </table>
   </div>
-
+  <div class="legend">
+    <div class="legend-item">
+      <span style="background-color: rgba(255, 255, 0, 0.15); padding: 2px 5px;">⚠️</span>
+      Строки, выделенные желтым: расчёт без 4h данных (Total считается по Weekly + Daily)
+    </div>
+  </div>
   <div id="tables-container">
     <!-- Таблицы будут добавлены здесь -->
   </div>
@@ -250,7 +264,7 @@
       table.setAttribute('data-sort-dir', 'asc');
 
       const headers = [
-        'Дата', 'Weekly DI Index', 'Daily DI Index', '4h DI Index',
+        'Дата', 'Weekly DI Index', 'Daily DI Index', '4h DI Index (опционально)',
         'Total', '13 EMA (Total)', '30 SMA (Total)', 'Trend', 'Close (Daily)'
       ];
 
@@ -265,7 +279,7 @@
         </thead>
         <tbody>
           ${data.map(row => `
-            <tr ${row.no_4h_data ? 'style="background-color: rgba(255, 255, 0, 0.1);"' : ''}>
+            <tr class="${row.no_4h_data ? 'no-4h-data' : ''}">
               <td>${row.time}</td>
               <td>${formatValue(row.weekly_di)}</td>
               <td>${formatValue(row.daily_di)}</td>
