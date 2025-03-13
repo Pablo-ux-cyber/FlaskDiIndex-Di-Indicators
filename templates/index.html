@@ -82,7 +82,6 @@
 
   <div id="error"></div>
 
-  <!-- Добавляем секцию для отображения общего настроения рынка -->
   <div class="market-sentiment">
     <h2>Общее настроение рынка</h2>
     <table class="sentiment-table">
@@ -92,6 +91,7 @@
           <th>Количество бычьих сигналов</th>
           <th>Всего монет с данными</th>
           <th>Процент бычьих сигналов</th>
+          <th>13MA (%)</th>
         </tr>
       </thead>
       <tbody id="sentimentTableBody">
@@ -174,14 +174,35 @@
       }
 
       // Преобразуем в массив и сортируем по дате
-      return Object.entries(sentimentByDate)
+      const sortedData = Object.entries(sentimentByDate)
         .map(([date, data]) => ({
           date,
           bullCount: data.bullCount,
           totalCount: data.totalCount,
           percentage: (data.bullCount / data.totalCount * 100).toFixed(2)
         }))
-        .sort((a, b) => b.date.localeCompare(a.date));
+        .sort((a, b) => a.date.localeCompare(b.date)); // Сортируем по возрастанию для правильного расчета MA
+
+      // Рассчитываем 13MA для процентов
+      const percentages = sortedData.map(item => parseFloat(item.percentage));
+      const ma13 = [];
+      for (let i = 0; i < percentages.length; i++) {
+        if (i < 12) {
+          // Для первых 12 точек MA не рассчитывается
+          ma13.push(null);
+        } else {
+          // Берем 13 предыдущих значений и считаем среднее
+          const slice = percentages.slice(i - 12, i + 1);
+          const average = slice.reduce((a, b) => a + b, 0) / 13;
+          ma13.push(average.toFixed(2));
+        }
+      }
+
+      // Добавляем MA13 к данным
+      return sortedData.map((item, index) => ({
+        ...item,
+        ma13: ma13[index]
+      })).reverse(); // Разворачиваем обратно для отображения новых данных сверху
     }
 
     function updateSentimentTable(sentimentData) {
@@ -192,6 +213,7 @@
           <td>${row.bullCount}</td>
           <td>${row.totalCount}</td>
           <td>${row.percentage}%</td>
+          <td>${row.ma13 ? row.ma13 + '%' : '-'}</td>
         </tr>
       `).join('');
     }
