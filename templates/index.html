@@ -8,12 +8,15 @@
     .coin-container { margin-bottom: 40px; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-    th { background-color: #f2f2f2; position: sticky; top: 0; z-index: 1; }
+    th { background-color: #f2f2f2; position: sticky; top: 0; z-index: 1; cursor: pointer; }
+    th:hover { background-color: #e6e6e6; }
     tr:hover { background-color: #e0f7fa; }
     caption { margin-bottom: 10px; font-size: 1.4em; font-weight: bold; }
     #error { color: red; font-weight: bold; margin-top: 20px; white-space: pre-wrap; }
     .symbol-selector { margin: 20px 0; }
     #loading { font-size: 1.2em; margin: 20px 0; }
+    select[multiple] { min-width: 200px; height: 150px; }
+    .loading-indicator { color: #666; font-style: italic; margin-left: 10px; }
   </style>
 </head>
 <body>
@@ -25,11 +28,18 @@
       <option value="BTC" selected>Bitcoin (BTC)</option>
       <option value="ETH">Ethereum (ETH)</option>
       <option value="BNB">Binance Coin (BNB)</option>
+      <option value="SOL">Solana (SOL)</option>
+      <option value="XRP">Ripple (XRP)</option>
+      <option value="ADA">Cardano (ADA)</option>
+      <option value="AVAX">Avalanche (AVAX)</option>
+      <option value="DOT">Polkadot (DOT)</option>
+      <option value="MATIC">Polygon (MATIC)</option>
+      <option value="LINK">Chainlink (LINK)</option>
     </select>
     <button onclick="loadSelectedData()">Загрузить данные</button>
+    <span id="loading" style="display: none;">Загрузка данных...<span class="loading-indicator"></span></span>
   </div>
 
-  <div id="loading" style="display: none;">Загрузка данных...</div>
   <div id="error"></div>
   <div id="tables-container">
     <!-- Таблицы будут добавлены здесь -->
@@ -40,24 +50,58 @@
       return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
     }
 
+    function sortTable(table, columnIndex) {
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr'));
+      const isNumeric = columnIndex > 0; // Первая колонка - дата, остальные числовые
+
+      rows.sort((a, b) => {
+        let aVal = a.cells[columnIndex].textContent;
+        let bVal = b.cells[columnIndex].textContent;
+
+        if (isNumeric) {
+          aVal = aVal === '-' ? -Infinity : parseFloat(aVal);
+          bVal = bVal === '-' ? -Infinity : parseFloat(bVal);
+        }
+
+        if (aVal < bVal) return -1;
+        if (aVal > bVal) return 1;
+        return 0;
+      });
+
+      // Сохраняем текущее направление сортировки
+      const currentDir = table.getAttribute('data-sort-dir') === 'asc' ? 'desc' : 'asc';
+      table.setAttribute('data-sort-dir', currentDir);
+
+      // Переворачиваем массив если сортировка по убыванию
+      if (currentDir === 'desc') {
+        rows.reverse();
+      }
+
+      // Обновляем таблицу
+      tbody.innerHTML = '';
+      rows.forEach(row => tbody.appendChild(row));
+    }
+
     function createTable(symbol, data) {
       const container = document.createElement('div');
       container.className = 'coin-container';
 
       const table = document.createElement('table');
+      table.setAttribute('data-sort-dir', 'asc');
+
+      const headers = [
+        'Дата', 'Weekly DI Index', 'Daily DI Index', '4h DI Index',
+        'Total', '13 EMA (Total)', '30 SMA (Total)', 'Trend', 'Close (Daily)'
+      ];
+
       table.innerHTML = `
         <caption>${symbol} - DI Index</caption>
         <thead>
           <tr>
-            <th>Дата</th>
-            <th>Weekly DI Index</th>
-            <th>Daily DI Index</th>
-            <th>4h DI Index</th>
-            <th>Total</th>
-            <th>13 EMA (Total)</th>
-            <th>30 SMA (Total)</th>
-            <th>Trend</th>
-            <th>Close (Daily)</th>
+            ${headers.map((header, index) => 
+              `<th onclick="sortTable(this.closest('table'), ${index})">${header}</th>`
+            ).join('')}
           </tr>
         </thead>
         <tbody>
