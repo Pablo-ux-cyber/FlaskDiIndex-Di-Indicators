@@ -13,6 +13,7 @@
     caption { margin-bottom: 10px; font-size: 1.4em; font-weight: bold; }
     #error { color: red; font-weight: bold; margin-top: 20px; white-space: pre-wrap; }
     .symbol-selector { margin: 20px 0; }
+    #loading { font-size: 1.2em; margin: 20px 0; }
   </style>
 </head>
 <body>
@@ -28,6 +29,7 @@
     <button onclick="loadSelectedData()">Загрузить данные</button>
   </div>
 
+  <div id="loading" style="display: none;">Загрузка данных...</div>
   <div id="error"></div>
   <div id="tables-container">
     <!-- Таблицы будут добавлены здесь -->
@@ -80,7 +82,15 @@
     }
 
     async function loadSelectedData() {
+      const loadingDiv = document.getElementById('loading');
+      const errorDiv = document.getElementById('error');
+      const container = document.getElementById('tables-container');
+
       try {
+        loadingDiv.style.display = 'block';
+        errorDiv.textContent = '';
+        container.innerHTML = '';
+
         const symbolsSelect = document.getElementById('symbols');
         const selectedSymbols = Array.from(symbolsSelect.selectedOptions).map(option => option.value);
 
@@ -88,25 +98,29 @@
           throw new Error('Пожалуйста, выберите хотя бы одну криптовалюту');
         }
 
+        console.log('Загрузка данных для:', selectedSymbols.join(','));
         const response = await fetch(`/api/di_index?symbols=${selectedSymbols.join(',')}`);
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const json = await response.json();
 
-        const container = document.getElementById('tables-container');
-        container.innerHTML = '';
+        const json = await response.json();
+        console.log('Полученные данные:', json);
 
         for (const [symbol, data] of Object.entries(json)) {
           if (Array.isArray(data)) {
             container.appendChild(createTable(symbol, data));
           } else if (data.error) {
             console.error(`Error for ${symbol}:`, data.error);
+            errorDiv.textContent += `Ошибка для ${symbol}: ${data.error}\n`;
           }
         }
       } catch (error) {
         console.error("Ошибка загрузки данных:", error);
-        document.getElementById("error").textContent = `Ошибка загрузки данных: ${error.message}`;
+        errorDiv.textContent = `Ошибка загрузки данных: ${error.message}`;
+      } finally {
+        loadingDiv.style.display = 'none';
       }
     }
 

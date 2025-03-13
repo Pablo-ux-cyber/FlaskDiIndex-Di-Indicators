@@ -4,6 +4,11 @@ import numpy as np
 from datetime import datetime, timedelta
 import time
 from functools import lru_cache
+import logging
+
+# Настройка логирования
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 # Monkey-patch for numpy's NaN compatibility with pandas-ta
 if not hasattr(np, "NaN"):
@@ -375,7 +380,7 @@ def calculate_combined_indices(symbols=None, debug=False):
             results[symbol] = final_results
 
         except Exception as e:
-            print(f"Error calculating indices for {symbol}: {str(e)}")
+            logger.error(f"Error calculating indices for {symbol}: {str(e)}", exc_info=True)
             results[symbol] = {"error": str(e)}
 
     return results
@@ -390,15 +395,21 @@ def di_index():
         symbols = request.args.get("symbols", "BTC")
         debug_mode = request.args.get("debug", "false").lower() == "true"
 
+        logger.debug(f"Received request for symbols: {symbols}")
+
         # Validate cryptocurrency symbols
         symbol_list = [s.strip().upper() for s in symbols.split(',')]
         for symbol in symbol_list:
             if not validate_symbol(symbol):
+                logger.error(f"Invalid cryptocurrency symbol: {symbol}")
                 return jsonify({"error": f"Invalid cryptocurrency symbol: {symbol}"}), 400
 
         # Calculate combined indices
+        logger.debug(f"Calculating indices for symbols: {symbol_list}")
         results = calculate_combined_indices(symbols=symbols, debug=debug_mode)
+        logger.debug(f"Calculation completed, results: {results.keys()}")
 
         return jsonify(results)
     except Exception as e:
+        logger.error(f"Error in di_index endpoint: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
