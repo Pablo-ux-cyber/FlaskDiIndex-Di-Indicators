@@ -128,7 +128,7 @@ def process_symbol(symbol, debug=False):
         df["total_di"] = df.apply(
             lambda row: (
                 sum(filter(None, [row["weekly_di"], row["daily_di"], row["4h_di"]]))
-                if any(filter(None, [row["weekly_di"], row["daily_di"], row["4h_di"]]))
+                if any(filter(None, [row["weekly_di"], row["daily_di"]]))
                 else None
             ),
             axis=1
@@ -145,6 +145,9 @@ def process_symbol(symbol, debug=False):
             None
         )
 
+        # Add flag for rows without 4h data
+        df["no_4h_data"] = df["4h_di"].isna()
+
         # Format results
         final_results = []
         for _, row in df.iterrows():
@@ -157,7 +160,8 @@ def process_symbol(symbol, debug=False):
                 "di_ema_13": row["di_ema_13"],
                 "di_sma_30": row["di_sma_30"],
                 "trend": row["trend"],
-                "close": row["close"]
+                "close": row["close"],
+                "no_4h_data": bool(row["no_4h_data"])
             }
             # Convert NaN to None
             for key, value in entry.items():
@@ -397,6 +401,7 @@ def calculate_di_index(df, debug=False):
             "close": nan_to_none(row["close"])
         })
     return result
+
 
 
 def process_symbol_batch(symbols, debug=False):

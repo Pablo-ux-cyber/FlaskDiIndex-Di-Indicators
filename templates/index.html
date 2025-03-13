@@ -265,7 +265,7 @@
         </thead>
         <tbody>
           ${data.map(row => `
-            <tr>
+            <tr ${row.no_4h_data ? 'style="background-color: rgba(255, 255, 0, 0.1);"' : ''}>
               <td>${row.time}</td>
               <td>${formatValue(row.weekly_di)}</td>
               <td>${formatValue(row.daily_di)}</td>
