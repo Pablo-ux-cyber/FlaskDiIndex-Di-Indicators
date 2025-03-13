@@ -294,7 +294,7 @@
           throw new Error('Пожалуйста, выберите хотя бы одну криптовалюту');
         }
 
-        const batches = batchProcess(selectedSymbols);
+        const batches = batchProcess(selectedSymbols, 3); // Уменьшаем размер пакета до 3
         let successCount = 0;
         let errorCount = 0;
         let allData = {};
@@ -303,36 +303,54 @@
           const batch = batches[i];
           progressDiv.textContent = `Загрузка пакета ${i + 1} из ${batches.length} (${batch.join(', ')})...`;
 
-          try {
-            const response = await fetch(`/api/di_index?symbols=${batch.join(',')}`);
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
+          // Добавляем механизм повторных попыток
+          let retryCount = 0;
+          const maxRetries = 3;
 
-            const json = await response.json();
-            // Сохраняем все данные для анализа настроения рынка
-            Object.assign(allData, json);
+          while (retryCount < maxRetries) {
+            try {
+              const response = await fetch(`/api/di_index?symbols=${batch.join(',')}`);
+              if (!response.ok) {
+                if (response.status === 502) {
+                  throw new Error('Сервер временно недоступен, повторная попытка...');
+                }
+                throw new Error(`Ошибка HTTP: ${response.status}`);
+              }
 
-            for (const [symbol, data] of Object.entries(json)) {
-              if (Array.isArray(data)) {
-                container.appendChild(createTable(symbol, data));
-                successCount++;
-              } else if (data.error) {
-                console.error(`Error for ${symbol}:`, data.error);
-                errorDiv.textContent += `Ошибка для ${symbol}: ${data.error}\n`;
-                errorCount++;
+              const json = await response.json();
+              Object.assign(allData, json);
+
+              for (const [symbol, data] of Object.entries(json)) {
+                if (Array.isArray(data)) {
+                  container.appendChild(createTable(symbol, data));
+                  successCount++;
+                } else if (data.error) {
+                  console.error(`Ошибка для ${symbol}:`, data.error);
+                  errorDiv.textContent += `Ошибка для ${symbol}: ${data.error}\n`;
+                  errorCount++;
+                }
+              }
+              break; // Успешно получили данные, выходим из цикла повторных попыток
+
+            } catch (error) {
+              retryCount++;
+              if (retryCount === maxRetries) {
+                console.error(`Ошибка обработки пакета ${i + 1} после ${maxRetries} попыток:`, error);
+                errorDiv.textContent += `Ошибка в пакете ${i + 1} (${batch.join(', ')}): ${error.message}\n`;
+                errorCount += batch.length;
+              } else {
+                console.log(`Попытка ${retryCount} из ${maxRetries} для пакета ${i + 1}...`);
+                await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Увеличиваем задержку с каждой попыткой
               }
             }
-          } catch (error) {
-            console.error(`Error processing batch ${i + 1}:`, error);
-            errorDiv.textContent += `Ошибка в пакете ${i + 1}: ${error.message}\n`;
-            errorCount += batch.length;
           }
         }
 
-        // Обновляем таблицу настроения рынка
-        const sentimentData = calculateMarketSentiment(allData);
-        updateSentimentTable(sentimentData);
+        // Обновляем таблицу настроения рынка только если есть успешно загруженные данные
+        if (Object.keys(allData).length > 0) {
+          const sentimentData = calculateMarketSentiment(allData);
+          updateSentimentTable(sentimentData);
+        }
 
         progressDiv.textContent = `Загружено успешно: ${successCount} монет, с ошибками: ${errorCount} монет`;
 

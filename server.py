@@ -399,14 +399,22 @@ def calculate_di_index(df, debug=False):
     return result
 
 
-
 def process_symbol_batch(symbols, debug=False):
     """Process a batch of symbols efficiently"""
     results = {}
     try:
         with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            # Добавляем задержку между запросами к API
+            def process_with_delay(symbol):
+                try:
+                    time.sleep(0.5)  # 500ms задержка между запросами
+                    return process_symbol(symbol, debug)
+                except Exception as e:
+                    logger.error(f"Error processing {symbol}: {str(e)}", exc_info=True)
+                    return symbol, {"error": str(e)}
+
             future_to_symbol = {
-                executor.submit(process_symbol, symbol, debug): symbol
+                executor.submit(process_with_delay, symbol): symbol
                 for symbol in symbols
             }
 
