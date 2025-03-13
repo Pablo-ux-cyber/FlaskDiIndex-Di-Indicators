@@ -121,40 +121,7 @@
       rows.forEach(row => tbody.appendChild(row));
     }
 
-    function createTrendTable(data) {
-      const container = document.createElement('div');
-      container.className = 'coin-container';
-
-      const table = document.createElement('table');
-      table.setAttribute('data-sort-dir', 'asc');
-
-      table.innerHTML = `
-        <caption>Тренды по всем монетам</caption>
-        <thead>
-          <tr>
-            <th onclick="sortTable(this.closest('table'), 0)">Монета</th>
-            <th onclick="sortTable(this.closest('table'), 1)">Последний тренд</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${Object.entries(data).map(([symbol, coinData]) => {
-            if (!Array.isArray(coinData)) return '';
-            const lastTrend = coinData[coinData.length - 1]?.trend || '-';
-            return `
-              <tr>
-                <td>${symbol}</td>
-                <td>${lastTrend ? (lastTrend === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
-              </tr>
-            `;
-          }).join('')}
-        </tbody>
-      `;
-
-      container.appendChild(table);
-      return container;
-    }
-
-    function createDetailedTable(symbol, data) {
+    function createTable(symbol, data) {
       const container = document.createElement('div');
       container.className = 'coin-container';
 
@@ -226,8 +193,6 @@
         let successCount = 0;
         let errorCount = 0;
 
-        const allData = {};
-
         for (let i = 0; i < batches.length; i++) {
           const batch = batches[i];
           progressDiv.textContent = `Загрузка пакета ${i + 1} из ${batches.length} (${batch.join(', ')})...`;
@@ -240,11 +205,9 @@
 
             const json = await response.json();
 
-            // Собираем все данные
-            Object.assign(allData, json);
-
             for (const [symbol, data] of Object.entries(json)) {
               if (Array.isArray(data)) {
+                container.appendChild(createTable(symbol, data));
                 successCount++;
               } else if (data.error) {
                 console.error(`Error for ${symbol}:`, data.error);
@@ -256,19 +219,6 @@
             console.error(`Error processing batch ${i + 1}:`, error);
             errorDiv.textContent += `Ошибка в пакете ${i + 1}: ${error.message}\n`;
             errorCount += batch.length;
-          }
-        }
-
-        // После загрузки всех данных решаем, как их отображать
-        if (selectedSymbols.length > 5) {
-          // Для большого количества монет показываем только тренды
-          container.appendChild(createTrendTable(allData));
-        } else {
-          // Для небольшого количества монет показываем детальную информацию
-          for (const [symbol, data] of Object.entries(allData)) {
-            if (Array.isArray(data)) {
-              container.appendChild(createDetailedTable(symbol, data));
-            }
           }
         }
 
