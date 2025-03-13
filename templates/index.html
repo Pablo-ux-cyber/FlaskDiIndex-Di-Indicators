@@ -92,7 +92,8 @@
           <th>Количество бычьих сигналов</th>
           <th>Всего монет с данными</th>
           <th>Процент бычьих сигналов</th>
-          <th>13MA (%)</th>
+          <th>13 EMA (%)</th>
+          <th>13 SMA (%)</th>
         </tr>
       </thead>
       <tbody id="sentimentTableBody">
@@ -182,20 +183,24 @@
           totalCount: data.totalCount,
           percentage: (data.bullCount / data.totalCount * 100).toFixed(2)
         }))
-        .sort((a, b) => a.date.localeCompare(b.date)); // Сортируем по возрастанию для правильного расчета MA
+        .sort((a, b) => a.date.localeCompare(b.date));
 
       // Рассчитываем 13MA для процентов
       const percentages = sortedData.map(item => parseFloat(item.percentage));
       const ma13 = [];
+      const sma13 = [];
       const alpha = 2 / (13 + 1); // коэффициент для 13 EMA
 
       // Сначала считаем EMA по хронологии
       for (let i = 0; i < percentages.length; i++) {
         if (isNaN(percentages[i])) {
           ma13.push(null);
+          sma13.push(null);
         } else if (i === 0) {
           ma13.push(parseFloat(percentages[i]));
+          sma13.push(parseFloat(percentages[i]));
         } else {
+          // Расчет EMA
           const prevEMA = ma13[i - 1];
           if (prevEMA === null || isNaN(prevEMA)) {
             ma13.push(parseFloat(percentages[i]));
@@ -203,13 +208,23 @@
             const ema = (percentages[i] * alpha) + (prevEMA * (1 - alpha));
             ma13.push(ema);
           }
+
+          // Расчет SMA
+          const start = Math.max(0, i - 12);
+          const slice = percentages.slice(start, i + 1);
+          const validNumbers = slice.filter(n => !isNaN(n));
+          sma13.push(validNumbers.length > 0 ? 
+            validNumbers.reduce((a, b) => a + b, 0) / validNumbers.length : 
+            null
+          );
         }
       }
 
       // Добавляем MA13 к данным и сортируем по убыванию дат
       return sortedData.map((item, index) => ({
         ...item,
-        ma13: ma13[index] === null ? null : ma13[index].toFixed(2)
+        ma13: ma13[index] === null ? null : ma13[index].toFixed(2),
+        sma13: sma13[index] === null ? null : sma13[index].toFixed(2)
       })).reverse(); // Разворачиваем для отображения новых данных сверху
     }
 
@@ -222,6 +237,7 @@
           <td>${row.totalCount}</td>
           <td>${row.percentage}%</td>
           <td>${row.ma13 !== null ? row.ma13 + '%' : '-'}</td>
+          <td>${row.sma13 !== null ? row.sma13 + '%' : '-'}</td>
         </tr>
       `).join('');
     }
