@@ -187,30 +187,29 @@
       // Рассчитываем 13MA для процентов
       const percentages = sortedData.map(item => parseFloat(item.percentage));
       const ma13 = [];
-      const alpha = 2 / (13 + 1); // Коэффициент сглаживания для EMA
+      const alpha = 2 / (13 + 1); // коэффициент для 13 EMA
 
+      // Сначала считаем EMA по хронологии
       for (let i = 0; i < percentages.length; i++) {
-        if (i < 12) {
-          // Для первых 12 точек используем простое среднее
-          if (i === 0) {
-            ma13.push(percentages[0]);
-          } else {
-            const slice = percentages.slice(0, i + 1);
-            const average = slice.reduce((a, b) => a + b, 0) / slice.length;
-            ma13.push(average.toFixed(2));
-          }
+        if (isNaN(percentages[i])) {
+          ma13.push(null);
+        } else if (i === 0) {
+          ma13.push(parseFloat(percentages[i]));
         } else {
-          // Используем EMA для остальных точек
-          const prevEMA = parseFloat(ma13[i - 1]);
-          const ema = (percentages[i] * alpha) + (prevEMA * (1 - alpha));
-          ma13.push(ema.toFixed(2));
+          const prevEMA = ma13[i - 1];
+          if (prevEMA === null || isNaN(prevEMA)) {
+            ma13.push(parseFloat(percentages[i]));
+          } else {
+            const ema = (percentages[i] * alpha) + (prevEMA * (1 - alpha));
+            ma13.push(ema);
+          }
         }
       }
 
       // Добавляем MA13 к данным и сортируем по убыванию дат
       return sortedData.map((item, index) => ({
         ...item,
-        ma13: ma13[index]
+        ma13: ma13[index] === null ? null : ma13[index].toFixed(2)
       })).reverse(); // Разворачиваем для отображения новых данных сверху
     }
 
@@ -222,7 +221,7 @@
           <td>${row.bullCount}</td>
           <td>${row.totalCount}</td>
           <td>${row.percentage}%</td>
-          <td>${row.ma13 ? row.ma13 + '%' : '-'}</td>
+          <td>${row.ma13 !== null ? row.ma13 + '%' : '-'}</td>
         </tr>
       `).join('');
     }
