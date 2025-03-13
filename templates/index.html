@@ -163,6 +163,14 @@
       return container;
     }
 
+    function batchProcess(symbols, batchSize = 5) {
+      const batches = [];
+      for (let i = 0; i < symbols.length; i += batchSize) {
+        batches.push(symbols.slice(i, i + batchSize));
+      }
+      return batches;
+    }
+
     async function loadSelectedData() {
       const loadingDiv = document.getElementById('loading');
       const progressDiv = document.getElementById('progress');
@@ -181,28 +189,36 @@
           throw new Error('Пожалуйста, выберите хотя бы одну криптовалюту');
         }
 
-        progressDiv.textContent = `Загрузка данных для ${selectedSymbols.length} монет...`;
-        console.log('Загрузка данных для:', selectedSymbols.join(','));
-
-        const response = await fetch(`/api/di_index?symbols=${selectedSymbols.join(',')}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const json = await response.json();
-        console.log('Полученные данные:', json);
-
+        const batches = batchProcess(selectedSymbols);
         let successCount = 0;
         let errorCount = 0;
 
-        for (const [symbol, data] of Object.entries(json)) {
-          if (Array.isArray(data)) {
-            container.appendChild(createTable(symbol, data));
-            successCount++;
-          } else if (data.error) {
-            console.error(`Error for ${symbol}:`, data.error);
-            errorDiv.textContent += `Ошибка для ${symbol}: ${data.error}\n`;
-            errorCount++;
+        for (let i = 0; i < batches.length; i++) {
+          const batch = batches[i];
+          progressDiv.textContent = `Загрузка пакета ${i + 1} из ${batches.length} (${batch.join(', ')})...`;
+
+          try {
+            const response = await fetch(`/api/di_index?symbols=${batch.join(',')}`);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const json = await response.json();
+
+            for (const [symbol, data] of Object.entries(json)) {
+              if (Array.isArray(data)) {
+                container.appendChild(createTable(symbol, data));
+                successCount++;
+              } else if (data.error) {
+                console.error(`Error for ${symbol}:`, data.error);
+                errorDiv.textContent += `Ошибка для ${symbol}: ${data.error}\n`;
+                errorCount++;
+              }
+            }
+          } catch (error) {
+            console.error(`Error processing batch ${i + 1}:`, error);
+            errorDiv.textContent += `Ошибка в пакете ${i + 1}: ${error.message}\n`;
+            errorCount += batch.length;
           }
         }
 

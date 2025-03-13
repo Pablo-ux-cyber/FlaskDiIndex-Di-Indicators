@@ -392,6 +392,31 @@ def calculate_di_index(df, debug=False):
     return result
 
 
+def process_symbol_batch(symbols, debug=False):
+    """Process a batch of symbols efficiently"""
+    results = {}
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            future_to_symbol = {
+                executor.submit(process_symbol, symbol, debug): symbol
+                for symbol in symbols
+            }
+
+            for future in concurrent.futures.as_completed(future_to_symbol):
+                symbol = future_to_symbol[future]
+                try:
+                    _, result = future.result()
+                    results[symbol] = result
+                except Exception as e:
+                    logger.error(f"Error processing {symbol}: {str(e)}", exc_info=True)
+                    results[symbol] = {"error": str(e)}
+
+    except Exception as e:
+        logger.error(f"Batch processing error: {str(e)}", exc_info=True)
+        for symbol in symbols:
+            results[symbol] = {"error": f"Batch processing error: {str(e)}"}
+
+    return results
 
 @di_index_blueprint.route('/api/di_index')
 def di_index():
@@ -412,19 +437,9 @@ def di_index():
                 logger.error(f"Invalid cryptocurrency symbol: {symbol}")
                 return jsonify({"error": f"Invalid cryptocurrency symbol: {symbol}"}), 400
 
-        # Process symbols in parallel with a thread pool
-        results = {}
-        with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-            future_to_symbol = {
-                executor.submit(process_symbol, symbol, debug_mode): symbol 
-                for symbol in symbol_list
-            }
-
-            for future in concurrent.futures.as_completed(future_to_symbol):
-                symbol, result = future.result()
-                results[symbol] = result
-
+        results = process_symbol_batch(symbol_list, debug_mode)
         logger.debug(f"Calculation completed, results keys: {list(results.keys())}")
+
         return jsonify(results)
 
     except Exception as e:
