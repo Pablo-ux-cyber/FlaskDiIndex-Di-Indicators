@@ -128,13 +128,13 @@ def process_symbol(symbol, debug=False):
         df["total_di"] = df.apply(
             lambda row: (
                 sum(filter(None, [row["weekly_di"], row["daily_di"], row["4h_di"]]))
-                if any(filter(None, [row["weekly_di"], row["daily_di"]]))  # Теперь считаем, если есть хотя бы weekly или daily
+                if any(filter(None, [row["weekly_di"], row["daily_di"], row["4h_di"]]))
                 else None
             ),
             axis=1
         )
 
-        # Calculate EMA and SMA on total_di
+        # Calculate indicators
         df["di_ema_13"] = ta.ema(df["total_di"], length=13)
         df["di_sma_30"] = df["total_di"].rolling(window=30, min_periods=30).mean()
 
@@ -145,10 +145,7 @@ def process_symbol(symbol, debug=False):
             None
         )
 
-        # Add flag for rows without 4h data
-        df["no_4h_data"] = df["4h_di"].isna()
-
-        # Convert back to dictionary format
+        # Format results
         final_results = []
         for _, row in df.iterrows():
             entry = {
@@ -160,10 +157,9 @@ def process_symbol(symbol, debug=False):
                 "di_ema_13": row["di_ema_13"],
                 "di_sma_30": row["di_sma_30"],
                 "trend": row["trend"],
-                "close": row["close"],
-                "no_4h_data": bool(row["no_4h_data"])
+                "close": row["close"]
             }
-            # Convert NaN/None values
+            # Convert NaN to None
             for key, value in entry.items():
                 if isinstance(value, float) and math.isnan(value):
                     entry[key] = None
@@ -401,7 +397,6 @@ def calculate_di_index(df, debug=False):
             "close": nan_to_none(row["close"])
         })
     return result
-
 
 
 def process_symbol_batch(symbols, debug=False):
