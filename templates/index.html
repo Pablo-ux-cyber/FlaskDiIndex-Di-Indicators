@@ -85,7 +85,10 @@
   <div id="error"></div>
 
   <div class="market-sentiment">
-    <h2>Общее настроение рынка</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h2>Общее настроение рынка</h2>
+      <button class="btn btn-sm btn-secondary" onclick="downloadMarketSentimentExcel()">Экспорт в Excel</button>
+    </div>
     <table class="sentiment-table">
       <thead>
         <tr>
@@ -431,6 +434,40 @@
 
     // Загружаем данные при загрузке страницы
     window.onload = loadSelectedData;
+
+
+    function downloadMarketSentimentExcel() {
+      // Форматируем данные для Excel
+      const rows = [
+        ['Дата', 'Количество бычьих сигналов', 'Всего монет с данными', 'Процент бычьих сигналов', '13 EMA (%)', '13 SMA (%)']
+      ];
+
+      // Получаем данные из таблицы
+      const tbody = document.getElementById('sentimentTableBody');
+      const tableRows = tbody.getElementsByTagName('tr');
+
+      Array.from(tableRows).forEach(row => {
+        const cells = row.getElementsByTagName('td');
+        rows.push([
+          cells[0].textContent, // Дата
+          cells[1].textContent, // Количество бычьих сигналов
+          cells[2].textContent, // Всего монет
+          cells[3].textContent, // Процент
+          cells[4].textContent, // 13 EMA
+          cells[5].textContent  // 13 SMA
+        ]);
+      });
+
+      // Создаем Workbook
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+
+      // Добавляем worksheet в workbook
+      XLSX.utils.book_append_sheet(wb, ws, "Market Sentiment");
+
+      // Сохраняем файл
+      XLSX.writeFile(wb, `Market_Sentiment_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
   </script>
 </body>
 </html>
