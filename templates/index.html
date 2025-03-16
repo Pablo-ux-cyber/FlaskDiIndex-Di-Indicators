@@ -162,6 +162,7 @@
     }
 
     function show4hValues(values, date) {
+      console.log("4h values:", values, "date:", date); // Debugging
       const modalContent = `
         <div class="modal" tabindex="-1" role="dialog">
           <div class="modal-dialog" role="document">
@@ -205,17 +206,29 @@
     }
 
     function get4hValuesForDate(row) {
-      // Combine old and new values
-      const times = new Set([
-        ...row['4h_values_old'].map(v => v.time),
-        ...row['4h_values_new'].map(v => v.time)
-      ]);
+      try {
+        console.log("Row data:", row); // Debugging
+        // Проверяем наличие массивов 4h_values
+        if (!row['4h_values_old'] || !row['4h_values_new']) {
+          console.error("Missing 4h values arrays");
+          return [];
+        }
 
-      return Array.from(times).map(time => ({
-        time,
-        value_old: (row['4h_values_old'].find(v => v.time === time) || {}).value,
-        value_new: (row['4h_values_new'].find(v => v.time === time) || {}).value
-      })).sort((a, b) => a.time.localeCompare(b.time));
+        // Combine old and new values
+        const times = new Set([
+          ...row['4h_values_old'].map(v => v.time),
+          ...row['4h_values_new'].map(v => v.time)
+        ]);
+
+        return Array.from(times).map(time => ({
+          time,
+          value_old: (row['4h_values_old'].find(v => v.time === time) || {}).value,
+          value_new: (row['4h_values_new'].find(v => v.time === time) || {}).value
+        })).sort((a, b) => a.time.localeCompare(b.time));
+      } catch (error) {
+        console.error("Error in get4hValuesForDate:", error);
+        return [];
+      }
     }
 
     function selectAll() {
@@ -468,6 +481,9 @@
             const sma_diff = compareValues(row.di_sma_30_old, row.di_sma_30_new);
             const trend_diff = row.trend_old !== row.trend_new;
 
+            // Convert 4h values to a string for the onclick handler
+            const values4h = JSON.stringify(get4hValuesForDate(row)).replace(/'/g, "\\'");
+
             return `
               <tr>
                 <td>${row.time}</td>
@@ -475,8 +491,8 @@
                 <td class="${weekly_diff ? 'diff-highlight' : ''}">${formatValue(row.weekly_di_new)}</td>
                 <td class="${daily_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_di_old)}</td>
                 <td class="${daily_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_di_new)}</td>
-                <td class="${fourh_diff ? 'diff-highlight' : ''}" style="cursor: pointer" onclick="show4hValues(${JSON.stringify(get4hValuesForDate(row))}, '${row.time}')">${formatValue(row['4h_di_old'])}</td>
-                <td class="${fourh_diff ? 'diff-highlight' : ''} comparison-group" style="cursor: pointer" onclick="show4hValues(${JSON.stringify(get4hValuesForDate(row))}, '${row.time}')">${formatValue(row['4h_di_new'])}</td>
+                <td class="${fourh_diff ? 'diff-highlight' : ''}" style="cursor: pointer" onclick='show4hValues(${values4h}, "${row.time}")'>${formatValue(row['4h_di_old'])}</td>
+                <td class="${fourh_diff ? 'diff-highlight' : ''} comparison-group" style="cursor: pointer" onclick='show4hValues(${values4h}, "${row.time}")'>${formatValue(row['4h_di_new'])}</td>
                 <td class="${di_diff ? 'diff-highlight' : ''}">${formatValue(row.DI_index_old)}</td>
                 <td class="${ema_diff ? 'diff-highlight' : ''}">${formatValue(row.di_ema_13_old)}</td>
                 <td class="${sma_diff ? 'diff-highlight' : ''}">${formatValue(row.di_sma_30_old)}</td>
