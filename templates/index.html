@@ -11,6 +11,8 @@
     th { background-color: #f2f2f2; position: sticky; top: 0; z-index: 1; cursor: pointer; }
     th:hover { background-color: #e6e6e6; }
     tr:hover { background-color: #e0f7fa; }
+    tr.no-4h { background-color: #fff3e0; }
+    tr.no-4h:hover { background-color: #ffe0b2; }
     caption { margin-bottom: 10px; font-size: 1.4em; font-weight: bold; }
     #error { color: red; font-weight: bold; margin-top: 20px; white-space: pre-wrap; }
     .symbol-selector { margin: 20px 0; }
@@ -265,7 +267,7 @@
         </thead>
         <tbody>
           ${data.map(row => `
-            <tr>
+            <tr class="${!row.has_4h ? 'no-4h' : ''}">
               <td>${row.time}</td>
               <td>${formatValue(row.weekly_di)}</td>
               <td>${formatValue(row.daily_di)}</td>
