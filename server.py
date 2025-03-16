@@ -210,8 +210,19 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     data = response.json()
     if data.get("Response") != "Success":
         raise Exception(f"Error getting 4-hour data: {data}")
+
+    # Convert timestamp to datetime with timezone info
     df = pd.DataFrame(data['Data']['Data'])
     df['time'] = pd.to_datetime(df['time'], unit='s')
+
+    # Group by date to ensure we have all 4h intervals
+    df['date'] = df['time'].dt.date
+    df['hour'] = df['time'].dt.hour
+
+    # Log the data distribution
+    logger.debug(f"4h data distribution for {symbol}:")
+    logger.debug(df.groupby(['date', 'hour']).size().reset_index(name='count'))
+
     set_cached_data(symbol, "4h_data", df)
     return df
 
@@ -418,18 +429,17 @@ def calculate_di_index(df, debug=False):
     df["4h_di_old"] = df["DI_index_old"]
     df["4h_di_new"] = df["DI_index_new"]
 
-    def nan_to_none(val):
-        if isinstance(val, float) and math.isnan(val):
-            return None
-        return val
+    if debug:
+        logger.debug("Sample of 4h values:")
+        logger.debug(df[["time", "4h_di_old", "4h_di_new"]].head())
+
+    def format_time(dt):
+        return dt.strftime("%Y-%m-%d %H:%M:%S") if isinstance(dt, pd.Timestamp) else str(dt)
 
     result = []
     for _, row in df.iterrows():
         time_val = row["time"] if "time" in row.index else row.name
-        if isinstance(time_val, pd.Timestamp):
-            time_str = time_val.strftime("%Y-%m-%d")
-        else:
-            time_str = str(time_val)
+        time_str = format_time(time_val)
 
         result.append({
             "time": time_str,
@@ -450,6 +460,11 @@ def calculate_di_index(df, debug=False):
             "close": nan_to_none(row["close"])
         })
     return result
+
+def nan_to_none(val):
+    if isinstance(val, float) and math.isnan(val):
+        return None
+    return val
 
 
 def process_symbol_batch(symbols, debug=False):

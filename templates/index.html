@@ -163,45 +163,52 @@
 
     function show4hValues(values, date) {
       console.log("4h values:", values, "date:", date); // Debugging
-      const modalContent = `
-        <div class="modal" tabindex="-1" role="dialog">
-          <div class="modal-dialog" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title">4h значения за ${date}</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div class="modal-body">
-                <table class="table">
-                  <thead>
+      const modalContent = document.createElement('div');
+      modalContent.className = 'modal';
+      modalContent.innerHTML = `
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">4h значения за ${date}</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Время</th>
+                    <th>Старый метод</th>
+                    <th>Новый метод</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${values.map(entry => `
                     <tr>
-                      <th>Время</th>
-                      <th>Старый метод</th>
-                      <th>Новый метод</th>
+                      <td>${entry.time}</td>
+                      <td>${formatValue(entry.value_old)}</td>
+                      <td>${formatValue(entry.value_new)}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    ${values.map(entry => `
-                      <tr>
-                        <td>${entry.time}</td>
-                        <td>${formatValue(entry.value_old)}</td>
-                        <td>${formatValue(entry.value_new)}</td>
-                      </tr>
-                    `).join('')}
-                  </tbody>
-                </table>
-              </div>
+                  `).join('')}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
       `;
 
-      const modalEl = $(modalContent);
-      modalEl.modal('show');
-      modalEl.on('hidden.bs.modal', function () {
-        modalEl.remove();
+      document.body.appendChild(modalContent);
+      const modal = new bootstrap.Modal(modalContent);
+      modal.show();
+
+      modalContent.addEventListener('hidden.bs.modal', function () {
+        document.body.removeChild(modalContent);
+      });
+
+      // Добавляем обработчик для кнопки закрытия
+      modalContent.querySelector('.close').addEventListener('click', function() {
+        modal.hide();
       });
     }
 
