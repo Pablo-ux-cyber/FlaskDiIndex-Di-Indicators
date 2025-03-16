@@ -84,18 +84,20 @@ def process_symbol(symbol, debug=False):
         fourh_di = calculate_di_index(df_4h, debug)
         weekly_di = calculate_di_index(df_weekly, debug)
 
-        # Process data
+        # Process data - UPDATED to handle new structure
         results_by_date = {}
-
-        for data in [daily_di, fourh_di, weekly_di]:
-            for entry in data:
+        for data_type, data_list in zip(["daily", "4h", "weekly"], [daily_di, fourh_di, weekly_di]):
+            for entry in data_list:
                 date = entry["time"][:10]
                 if date not in results_by_date:
                     results_by_date[date] = {
                         "time": date,
-                        "daily_di": None,
-                        "4h_di": None,
-                        "weekly_di": None,
+                        "daily_di_old": None,
+                        "daily_di_new": None,
+                        "4h_di_old": None,
+                        "4h_di_new": None,
+                        "weekly_di_old": None,
+                        "weekly_di_new": None,
                         "DI_index_old": None,
                         "DI_index_new": None,
                         "di_ema_13_old": None,
@@ -106,34 +108,14 @@ def process_symbol(symbol, debug=False):
                         "trend_new": None,
                         "close": entry["close"]
                     }
+                results_by_date[date][f"{data_type}_di_old"] = entry.get(f"{data_type}_di_old")
+                results_by_date[date][f"{data_type}_di_new"] = entry.get(f"{data_type}_di_new")
+                
 
-                if entry in daily_di:
-                    results_by_date[date].update({
-                        "daily_di": entry["DI_index_new"],
-                        "DI_index_old": entry["DI_index_old"],
-                        "DI_index_new": entry["DI_index_new"],
-                        "di_ema_13_old": entry["di_ema_13_old"],
-                        "di_ema_13_new": entry["di_ema_13_new"],
-                        "di_sma_30_old": entry["di_sma_30_old"],
-                        "di_sma_30_new": entry["di_sma_30_new"],
-                        "trend_old": entry["trend_old"],
-                        "trend_new": entry["trend_new"]
-                    })
-                elif entry in fourh_di:
-                    results_by_date[date]["4h_di"] = entry["DI_index_new"]
-                elif entry in weekly_di:
-                    results_by_date[date]["weekly_di"] = entry["DI_index_new"]
 
         results_list = list(results_by_date.values())
         results_list.sort(key=lambda x: x["time"])
 
-        # Fill Weekly DI Index gaps
-        last_weekly = None
-        for item in results_list:
-            if item["weekly_di"] is None or math.isnan(item["weekly_di"]):
-                item["weekly_di"] = last_weekly
-            else:
-                last_weekly = item["weekly_di"]
 
         # Cache results
         set_cached_data(symbol, 'combined_indices', results_list)
@@ -379,11 +361,20 @@ def calculate_di_index(df, debug=False):
         None
     )
 
-    # Use new method for current calculations
-    df["DI_index"] = df["DI_index_new"]
-    df["di_ema_13"] = df["di_ema_13_new"]
-    df["di_sma_30"] = df["di_sma_30_new"]
-    df["trend"] = df["trend_new"]
+    # Calculate Weekly, Daily, and 4h DI for both methods
+    if len(df) >= 7:  # For weekly calculation
+        df["weekly_di_old"] = df["DI_index_old"].rolling(window=7, min_periods=7).mean()
+        df["weekly_di_new"] = df["DI_index_new"].rolling(window=7, min_periods=7).mean()
+    else:
+        df["weekly_di_old"] = df["DI_index_old"]
+        df["weekly_di_new"] = df["DI_index_new"]
+
+    df["daily_di_old"] = df["DI_index_old"]
+    df["daily_di_new"] = df["DI_index_new"]
+
+    # 4h DI is just the current DI value for that timeframe
+    df["4h_di_old"] = df["DI_index_old"]
+    df["4h_di_new"] = df["DI_index_new"]
 
     def nan_to_none(val):
         if isinstance(val, float) and math.isnan(val):
@@ -400,6 +391,12 @@ def calculate_di_index(df, debug=False):
 
         result.append({
             "time": time_str,
+            "weekly_di_old": nan_to_none(row["weekly_di_old"]),
+            "weekly_di_new": nan_to_none(row["weekly_di_new"]),
+            "daily_di_old": nan_to_none(row["daily_di_old"]),
+            "daily_di_new": nan_to_none(row["daily_di_new"]),
+            "4h_di_old": nan_to_none(row["4h_di_old"]),
+            "4h_di_new": nan_to_none(row["4h_di_new"]),
             "DI_index_old": nan_to_none(row["DI_index_old"]),
             "DI_index_new": nan_to_none(row["DI_index_new"]),
             "di_ema_13_old": nan_to_none(row["di_ema_13_old"]),

@@ -260,7 +260,10 @@
     function downloadExcel(data, symbol) {
       // Форматируем данные для Excel
       const rows = [
-        ['Дата', 'Weekly DI', 'Daily DI', '4h DI',
+        ['Дата', 
+         'Weekly DI (Old)', 'Weekly DI (New)',
+         'Daily DI (Old)', 'Daily DI (New)',
+         '4h DI (Old)', '4h DI (New)',
          'DI Index (Old)', '13 EMA (Old)', '30 SMA (Old)', 'Trend (Old)',
          'DI Index (New)', '13 EMA (New)', '30 SMA (New)', 'Trend (New)',
          'Close (Daily)']
@@ -269,9 +272,12 @@
       data.forEach(row => {
         rows.push([
           row.time,
-          formatValue(row.weekly_di),
-          formatValue(row.daily_di),
-          formatValue(row['4h_di']),
+          formatValue(row.weekly_di_old),
+          formatValue(row.weekly_di_new),
+          formatValue(row.daily_di_old),
+          formatValue(row.daily_di_new),
+          formatValue(row['4h_di_old']),
+          formatValue(row['4h_di_new']),
           formatValue(row.DI_index_old),
           formatValue(row.di_ema_13_old),
           formatValue(row.di_sma_30_old),
@@ -330,19 +336,25 @@
         <thead>
           <tr>
             <th rowspan="3">Дата</th>
-            <th colspan="3" class="group-header comparison-group">DI Компоненты</th>
+            <th colspan="6" class="group-header comparison-group">DI Компоненты</th>
             <th colspan="4" class="group-header comparison-group">Старый метод</th>
             <th colspan="4" class="group-header">Новый метод</th>
             <th rowspan="3">Close (Daily)</th>
           </tr>
           <tr>
-            <th rowspan="2">Weekly</th>
-            <th rowspan="2">Daily</th>
-            <th rowspan="2" class="comparison-group">4h</th>
+            <th colspan="2">Weekly</th>
+            <th colspan="2">Daily</th>
+            <th colspan="2" class="comparison-group">4h</th>
             <th colspan="4" class="group-header comparison-group">Расчет</th>
             <th colspan="4" class="group-header">Расчет</th>
           </tr>
           <tr>
+            <th>Old</th>
+            <th>New</th>
+            <th>Old</th>
+            <th>New</th>
+            <th>Old</th>
+            <th class="comparison-group">New</th>
             <th>DI Index</th>
             <th>13 EMA</th>
             <th>30 SMA</th>
@@ -355,17 +367,23 @@
         </thead>
         <tbody>
           ${data.map(row => {
+            const weekly_diff = compareValues(row.weekly_di_old, row.weekly_di_new);
+            const daily_diff = compareValues(row.daily_di_old, row.daily_di_new);
+            const fourh_diff = compareValues(row['4h_di_old'], row['4h_di_new']);
             const di_diff = compareValues(row.DI_index_old, row.DI_index_new);
             const ema_diff = compareValues(row.di_ema_13_old, row.di_ema_13_new);
             const sma_diff = compareValues(row.di_sma_30_old, row.di_sma_30_new);
             const trend_diff = row.trend_old !== row.trend_new;
 
             return `
-              <tr class="${!row.has_4h ? 'no-4h' : ''}">
+              <tr>
                 <td>${row.time}</td>
-                <td>${formatValue(row.weekly_di)}</td>
-                <td>${formatValue(row.daily_di)}</td>
-                <td class="comparison-group">${formatValue(row['4h_di'])}</td>
+                <td class="${weekly_diff ? 'diff-highlight' : ''}">${formatValue(row.weekly_di_old)}</td>
+                <td class="${weekly_diff ? 'diff-highlight' : ''}">${formatValue(row.weekly_di_new)}</td>
+                <td class="${daily_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_di_old)}</td>
+                <td class="${daily_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_di_new)}</td>
+                <td class="${fourh_diff ? 'diff-highlight' : ''}">${formatValue(row['4h_di_old'])}</td>
+                <td class="${fourh_diff ? 'diff-highlight' : ''} comparison-group">${formatValue(row['4h_di_new'])}</td>
                 <td class="${di_diff ? 'diff-highlight' : ''}">${formatValue(row.DI_index_old)}</td>
                 <td class="${ema_diff ? 'diff-highlight' : ''}">${formatValue(row.di_ema_13_old)}</td>
                 <td class="${sma_diff ? 'diff-highlight' : ''}">${formatValue(row.di_sma_30_old)}</td>
