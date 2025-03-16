@@ -352,40 +352,83 @@ def calculate_ad_index(df):
     return df
 
 def calculate_di_index(df, debug=False):
+    """Calculate DI index components and final value"""
     # Убедимся, что у нас есть столбец time и он доступен
     if 'time' not in df.columns and df.index.name == 'time':
         df = df.reset_index()
 
+    # MA Index calculation (identical to Pine Script)
     df = calculate_ma_index(df)
     if debug:
-        logger.debug("MA_index:")
-        logger.debug(df[["time", "micro", "short", "medium", "long", "MA_index"]].head(10))
+        logger.debug("MA_index components:")
+        logger.debug("MA_bull (micro > short):", df["micro"] > df["short"])
+        logger.debug("MA_bull1 (short > medium):", df["short"] > df["medium"])
+        logger.debug("MA_bull2 (short > long):", df["short"] > df["long"])
+        logger.debug("MA_bull3 (medium > long):", df["medium"] > df["long"])
+        logger.debug("Final MA_index:", df["MA_index"])
+
+    # Willy Index
     df = calculate_willy_index(df)
     if debug:
-        logger.debug("Willy_index:")
-        logger.debug(df[["time", "upper", "lower", "out", "out2", "Willy_index"]].head(10))
+        logger.debug("Willy_index components:")
+        logger.debug("Willy_stupid_os (out2 < -80):", df["out2"] < -80)
+        logger.debug("Willy_stupid_ob (out2 > -20):", df["out2"] > -20)
+        logger.debug("Willy_bullbear (out > out2):", df["out"] > df["out2"])
+        logger.debug("Willy_bias (out > -50):", df["out"] > -50)
+        logger.debug("Final Willy_index:", df["Willy_index"])
+
+    # MACD Index
     df = calculate_macd_index(df)
     if debug:
-        logger.debug("MACD_index:")
-        logger.debug(df[["time", "macd", "signal", "macd_index"]].head(10))
+        logger.debug("MACD_index components:")
+        logger.debug("macd_bullbear (macd > signal):", df["macd"] > df["signal"])
+        logger.debug("macd_bias (macd > 0):", df["macd"] > 0)
+        logger.debug("Final macd_index:", df["macd_index"])
+
+    # OBV Index
     df = calculate_obv_index(df)
     if debug:
-        logger.debug("OBV_index:")
-        logger.debug(df[["time", "obv", "obv_ema", "OBV_index"]].head(10))
+        logger.debug("OBV_index components:")
+        logger.debug("OBV_bullbear (obv > obv_ema):", df["obv"] > df["obv_ema"])
+        logger.debug("OBV_bias (obv > 0):", df["obv"] > 0)
+        logger.debug("Final OBV_index:", df["OBV_index"])
+
+    # MFI Index
     df = calculate_mfi_index(df)
     if debug:
-        logger.debug("MFI_index:")
-        logger.debug(df[["time", "mfi_mf", "mfi_mf2", "mfi_index"]].head(10))
+        logger.debug("MFI_index components:")
+        logger.debug("mfi_stupid_os (mfi_mf < 20):", df["mfi_mf"] < 20)
+        logger.debug("mfi_stupid_ob (mfi_mf > 80):", df["mfi_mf"] > 80)
+        logger.debug("mfi_bullbear (mfi_mf > mfi_mf2):", df["mfi_mf"] > df["mfi_mf2"])
+        logger.debug("mfi_bias (mfi_mf > 50):", df["mfi_mf"] > 50)
+        logger.debug("Final mfi_index:", df["mfi_index"])
+
+    # AD Index
     df = calculate_ad_index(df)
     if debug:
-        logger.debug("AD_index:")
-        logger.debug(df[["time", "ad", "AD_index"]].head(10))
+        logger.debug("AD_index components:")
+        logger.debug("AD_bullbear_short (ad > ad2):", df["ad"] > df["ad2"])
+        logger.debug("AD_bullbear_med (ad > ad3):", df["ad"] > df["ad3"])
+        logger.debug("AD_bullbear_long (ad2 > ad3):", df["ad2"] > df["ad3"])
+        logger.debug("AD_bias (ad > 0):", df["ad"] > 0)
+        logger.debug("AD_bias_long (ad3 > ad4):", df["ad3"] > df["ad4"])
+        logger.debug("Final AD_index:", df["AD_index"])
 
+    # Final DI calculation (identical to Pine Script)
     df["DI_index"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
                       df["OBV_index"] + df["mfi_index"] + df["AD_index"])
+
+    # Calculate EMA and SMA
     df["DI_index_EMA"] = ta.ema(df["DI_index"], length=13)
     df["DI_index_SMA"] = df["DI_index"].rolling(window=30, min_periods=30).mean()
     df["weekly_DI_index"] = df["DI_index"].rolling(window=7, min_periods=7).mean()
+
+    if debug:
+        logger.debug("Final calculations:")
+        logger.debug("DI_index =", df["DI_index"])
+        logger.debug("DI_index_EMA =", df["DI_index_EMA"])
+        logger.debug("DI_index_SMA =", df["DI_index_SMA"])
+        logger.debug("weekly_DI_index =", df["weekly_DI_index"])
 
     def nan_to_none(val):
         if isinstance(val, float) and math.isnan(val):
@@ -409,7 +452,6 @@ def calculate_di_index(df, debug=False):
             "close": nan_to_none(row["close"])
         })
     return result
-
 
 
 def process_symbol_batch(symbols, debug=False):
