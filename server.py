@@ -110,7 +110,7 @@ def process_symbol(symbol, debug=False):
                     }
                 results_by_date[date][f"{data_type}_di_old"] = entry.get(f"{data_type}_di_old")
                 results_by_date[date][f"{data_type}_di_new"] = entry.get(f"{data_type}_di_new")
-
+                
 
 
         results_list = list(results_by_date.values())
@@ -365,48 +365,16 @@ def calculate_di_index(df, debug=False):
     if len(df) >= 7:  # For weekly calculation
         df["weekly_di_old"] = df["DI_index_old"].rolling(window=7, min_periods=7).mean()
         df["weekly_di_new"] = df["DI_index_new"].rolling(window=7, min_periods=7).mean()
-        df["weekly_ema_13_old"] = ta.ema(df["weekly_di_old"], length=13)
-        df["weekly_sma_30_old"] = df["weekly_di_old"].rolling(window=30, min_periods=30).mean()
-        df["weekly_ema_13_new"] = ta.ema(df["weekly_di_new"], length=13)
-        df["weekly_sma_30_new"] = df["weekly_di_new"].rolling(window=30, min_periods=30).mean()
     else:
         df["weekly_di_old"] = df["DI_index_old"]
         df["weekly_di_new"] = df["DI_index_new"]
-        df["weekly_ema_13_old"] = df["di_ema_13_old"]
-        df["weekly_sma_30_old"] = df["di_sma_30_old"]
-        df["weekly_ema_13_new"] = df["di_ema_13_new"]
-        df["weekly_sma_30_new"] = df["di_sma_30_new"]
 
-    df["weekly_trend_old"] = np.where(
-        (df["weekly_ema_13_old"].notna() & df["weekly_sma_30_old"].notna()),
-        np.where(df["weekly_ema_13_old"] > df["weekly_sma_30_old"], "bull", "bear"),
-        None
-    )
-    df["weekly_trend_new"] = np.where(
-        (df["weekly_ema_13_new"].notna() & df["weekly_sma_30_new"].notna()),
-        np.where(df["weekly_ema_13_new"] > df["weekly_sma_30_new"], "bull", "bear"),
-        None
-    )
-
-    # Daily DI is just the current DI value
     df["daily_di_old"] = df["DI_index_old"]
     df["daily_di_new"] = df["DI_index_new"]
-    df["daily_ema_13_old"] = df["di_ema_13_old"]
-    df["daily_sma_30_old"] = df["di_sma_30_old"]
-    df["daily_ema_13_new"] = df["di_ema_13_new"]
-    df["daily_sma_30_new"] = df["di_sma_30_new"]
-    df["daily_trend_old"] = df["trend_old"]
-    df["daily_trend_new"] = df["trend_new"]
 
     # 4h DI is just the current DI value for that timeframe
     df["4h_di_old"] = df["DI_index_old"]
     df["4h_di_new"] = df["DI_index_new"]
-    df["4h_ema_13_old"] = df["di_ema_13_old"]
-    df["4h_sma_30_old"] = df["di_sma_30_old"]
-    df["4h_ema_13_new"] = df["di_ema_13_new"]
-    df["4h_sma_30_new"] = df["di_sma_30_new"]
-    df["4h_trend_old"] = df["trend_old"]
-    df["4h_trend_new"] = df["trend_new"]
 
     def nan_to_none(val):
         if isinstance(val, float) and math.isnan(val):
@@ -425,31 +393,10 @@ def calculate_di_index(df, debug=False):
             "time": time_str,
             "weekly_di_old": nan_to_none(row["weekly_di_old"]),
             "weekly_di_new": nan_to_none(row["weekly_di_new"]),
-            "weekly_ema_13_old": nan_to_none(row["weekly_ema_13_old"]),
-            "weekly_ema_13_new": nan_to_none(row["weekly_ema_13_new"]),
-            "weekly_sma_30_old": nan_to_none(row["weekly_sma_30_old"]),
-            "weekly_sma_30_new": nan_to_none(row["weekly_sma_30_new"]),
-            "weekly_trend_old": row["weekly_trend_old"],
-            "weekly_trend_new": row["weekly_trend_new"],
-
             "daily_di_old": nan_to_none(row["daily_di_old"]),
             "daily_di_new": nan_to_none(row["daily_di_new"]),
-            "daily_ema_13_old": nan_to_none(row["daily_ema_13_old"]),
-            "daily_ema_13_new": nan_to_none(row["daily_ema_13_new"]),
-            "daily_sma_30_old": nan_to_none(row["daily_sma_30_old"]),
-            "daily_sma_30_new": nan_to_none(row["daily_sma_30_new"]),
-            "daily_trend_old": row["daily_trend_old"],
-            "daily_trend_new": row["daily_trend_new"],
-
             "4h_di_old": nan_to_none(row["4h_di_old"]),
             "4h_di_new": nan_to_none(row["4h_di_new"]),
-            "4h_ema_13_old": nan_to_none(row["4h_ema_13_old"]),
-            "4h_ema_13_new": nan_to_none(row["4h_ema_13_new"]),
-            "4h_sma_30_old": nan_to_none(row["4h_sma_30_old"]),
-            "4h_sma_30_new": nan_to_none(row["4h_sma_30_new"]),
-            "4h_trend_old": row["4h_trend_old"],
-            "4h_trend_new": row["4h_trend_new"],
-
             "DI_index_old": nan_to_none(row["DI_index_old"]),
             "DI_index_new": nan_to_none(row["DI_index_new"]),
             "di_ema_13_old": nan_to_none(row["di_ema_13_old"]),
