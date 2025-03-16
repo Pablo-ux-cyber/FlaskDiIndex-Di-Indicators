@@ -249,19 +249,21 @@
     function downloadExcel(data, symbol) {
       // Форматируем данные для Excel
       const rows = [
-        ['Дата', 'Weekly DI Index', 'Daily DI Index', '4h DI Index', 'Total', '13 EMA (Total)', '30 SMA (Total)', 'Trend', 'Close (Daily)']
+        ['Дата', 'DI Index (Old)', '13 EMA (Old)', '30 SMA (Old)', 'Trend (Old)',
+         'DI Index (New)', '13 EMA (New)', '30 SMA (New)', 'Trend (New)', 'Close (Daily)']
       ];
 
       data.forEach(row => {
         rows.push([
           row.time,
-          formatValue(row.weekly_di),
-          formatValue(row.daily_di),
-          formatValue(row['4h_di']),
-          formatValue(row.total_di),
-          formatValue(row.di_ema_13),
-          formatValue(row.di_sma_30),
-          row.trend || '-',
+          formatValue(row.DI_index_old),
+          formatValue(row.di_ema_13_old),
+          formatValue(row.di_sma_30_old),
+          row.trend_old || '-',
+          formatValue(row.DI_index_new),
+          formatValue(row.di_ema_13_new),
+          formatValue(row.di_sma_30_new),
+          row.trend_new || '-',
           formatValue(row.close)
         ]);
       });
@@ -304,8 +306,16 @@
       table.setAttribute('data-sort-dir', 'asc');
 
       const headers = [
-        'Дата', 'Weekly DI Index', 'Daily DI Index', '4h DI Index',
-        'Total', '13 EMA (Total)', '30 SMA (Total)', 'Trend', 'Close (Daily)'
+        'Дата',
+        'DI Index (Old)',
+        '13 EMA (Old)',
+        '30 SMA (Old)',
+        'Trend (Old)',
+        'DI Index (New)',
+        '13 EMA (New)',
+        '30 SMA (New)',
+        'Trend (New)',
+        'Close (Daily)'
       ];
 
       table.innerHTML = `
@@ -318,15 +328,16 @@
         </thead>
         <tbody>
           ${data.map(row => `
-            <tr class="${!row.has_4h ? 'no-4h' : ''}">
+            <tr>
               <td>${row.time}</td>
-              <td>${formatValue(row.weekly_di)}</td>
-              <td>${formatValue(row.daily_di)}</td>
-              <td>${formatValue(row['4h_di'])}</td>
-              <td>${formatValue(row.total_di)}</td>
-              <td>${formatValue(row.di_ema_13)}</td>
-              <td>${formatValue(row.di_sma_30)}</td>
-              <td>${row.trend ? (row.trend === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
+              <td>${formatValue(row.DI_index_old)}</td>
+              <td>${formatValue(row.di_ema_13_old)}</td>
+              <td>${formatValue(row.di_sma_30_old)}</td>
+              <td>${row.trend_old ? (row.trend_old === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
+              <td>${formatValue(row.DI_index_new)}</td>
+              <td>${formatValue(row.di_ema_13_new)}</td>
+              <td>${formatValue(row.di_sma_30_new)}</td>
+              <td>${row.trend_new ? (row.trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
               <td>${formatValue(row.close)}</td>
             </tr>
           `).join('')}

@@ -291,23 +291,40 @@ def calculate_macd_index(df):
     return df
 
 def calculate_obv_index(df):
+    """Calculate OBV Index using both old and new methods"""
+    # Old method
     df["change"] = df["close"].diff()
     df["direction"] = 0
     df.loc[df["change"] > 0, "direction"] = 1
     df.loc[df["change"] < 0, "direction"] = -1
-    df["obv"] = (df["volumefrom"] * df["direction"]).fillna(0).cumsum()
-    df["obv_ema"] = ta.ema(df["obv"], length=13)
-    df["OBV_bullbear"] = (df["obv"] > df["obv_ema"]).astype(int)
-    df["OBV_bias"] = (df["obv"] > 0).astype(int)
-    df["OBV_index"] = df["OBV_bullbear"] + df["OBV_bias"]
+    df["obv_old"] = (df["volumefrom"] * df["direction"]).fillna(0).cumsum()
+    df["obv_ema_old"] = ta.ema(df["obv_old"], length=13)
+    df["OBV_bullbear_old"] = (df["obv_old"] > df["obv_ema_old"]).astype(int)
+    df["OBV_bias_old"] = (df["obv_old"] > 0).astype(int)
+    df["OBV_index_old"] = df["OBV_bullbear_old"] + df["OBV_bias_old"]
+
+    # New method (Pine Script style)
+    df["obv_new"] = df.apply(
+        lambda row: row["volumefrom"] if row["change"] > 0 else (-row["volumefrom"] if row["change"] < 0 else 0),
+        axis=1
+    ).fillna(0).cumsum()
+    df["obv_ema_new"] = ta.ema(df["obv_new"], length=13)
+    df["OBV_bullbear_new"] = (df["obv_new"] > df["obv_ema_new"]).astype(int)
+    df["OBV_bias_new"] = (df["obv_new"] > 0).astype(int)
+    df["OBV_index_new"] = df["OBV_bullbear_new"] + df["OBV_bias_new"]
+
+    # Use new method for final calculations
+    df["OBV_index"] = df["OBV_index_new"]
     return df
 
 def calculate_mfi_index(df):
+    """Calculate MFI Index using both old and new methods"""
     mfi_length = 14
     mfi_len = 13
     df["mfi_src"] = (df["high"] + df["low"] + df["close"]) / 3
     df["mfi_change"] = df["mfi_src"].diff()
 
+    # Old method
     def safe_mfi_upper(row):
         if pd.isna(row["mfi_change"]):
             return np.nan
@@ -326,14 +343,29 @@ def calculate_mfi_index(df):
     df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
 
     df["mfi_ratio"] = df["mfi_upper_sum"] / df["mfi_lower_sum"]
-    df["mfi_mf"] = 100 - (100 / (1 + df["mfi_ratio"]))
-    df["mfi_mf2"] = ta.ema(df["mfi_mf"], length=mfi_len)
+    df["mfi_mf_old"] = 100 - (100 / (1 + df["mfi_ratio"]))
+    df["mfi_mf2_old"] = ta.ema(df["mfi_mf_old"], length=mfi_len)
 
-    df["mfi_stupid_os"] = df["mfi_mf"].fillna(0).lt(20).astype(int)
-    df["mfi_stupid_ob"] = df["mfi_mf"].fillna(0).gt(80).astype(int)
-    df["mfi_bullbear"] = (df["mfi_mf"].fillna(0) > df["mfi_mf2"].fillna(0)).astype(int)
-    df["mfi_bias"] = df["mfi_mf"].fillna(0).gt(50).astype(int)
-    df["mfi_index"] = df["mfi_bullbear"] + df["mfi_bias"] + df["mfi_stupid_os"] - df["mfi_stupid_ob"]
+    # Old method components
+    df["mfi_stupid_os_old"] = df["mfi_mf_old"].fillna(0).lt(20).astype(int)
+    df["mfi_stupid_ob_old"] = df["mfi_mf_old"].fillna(0).gt(80).astype(int)
+    df["mfi_bullbear_old"] = (df["mfi_mf_old"].fillna(0) > df["mfi_mf2_old"].fillna(0)).astype(int)
+    df["mfi_bias_old"] = df["mfi_mf_old"].fillna(0).gt(50).astype(int)
+    df["mfi_index_old"] = df["mfi_bullbear_old"] + df["mfi_bias_old"] + df["mfi_stupid_os_old"] - df["mfi_stupid_ob_old"]
+
+    # New method (Pine Script style using RSI)
+    df["mfi_mf_new"] = ta.rsi(df["mfi_upper_sum"], df["mfi_lower_sum"], length=mfi_length)
+    df["mfi_mf2_new"] = ta.ema(df["mfi_mf_new"], length=mfi_len)
+
+    # New method components
+    df["mfi_stupid_os_new"] = df["mfi_mf_new"].fillna(0).lt(20).astype(int)
+    df["mfi_stupid_ob_new"] = df["mfi_mf_new"].fillna(0).gt(80).astype(int)
+    df["mfi_bullbear_new"] = (df["mfi_mf_new"].fillna(0) > df["mfi_mf2_new"].fillna(0)).astype(int)
+    df["mfi_bias_new"] = df["mfi_mf_new"].fillna(0).gt(50).astype(int)
+    df["mfi_index_new"] = df["mfi_bullbear_new"] + df["mfi_bias_new"] + df["mfi_stupid_os_new"] - df["mfi_stupid_ob_new"]
+
+    # Use new method for final calculations
+    df["mfi_index"] = df["mfi_index_new"]
     return df
 
 def calculate_ad_index(df):
@@ -353,82 +385,46 @@ def calculate_ad_index(df):
 
 def calculate_di_index(df, debug=False):
     """Calculate DI index components and final value"""
-    # Убедимся, что у нас есть столбец time и он доступен
     if 'time' not in df.columns and df.index.name == 'time':
         df = df.reset_index()
 
-    # MA Index calculation (identical to Pine Script)
+    # Calculate all components
     df = calculate_ma_index(df)
-    if debug:
-        logger.debug("MA_index components:")
-        logger.debug("MA_bull (micro > short):", df["micro"] > df["short"])
-        logger.debug("MA_bull1 (short > medium):", df["short"] > df["medium"])
-        logger.debug("MA_bull2 (short > long):", df["short"] > df["long"])
-        logger.debug("MA_bull3 (medium > long):", df["medium"] > df["long"])
-        logger.debug("Final MA_index:", df["MA_index"])
-
-    # Willy Index
     df = calculate_willy_index(df)
-    if debug:
-        logger.debug("Willy_index components:")
-        logger.debug("Willy_stupid_os (out2 < -80):", df["out2"] < -80)
-        logger.debug("Willy_stupid_ob (out2 > -20):", df["out2"] > -20)
-        logger.debug("Willy_bullbear (out > out2):", df["out"] > df["out2"])
-        logger.debug("Willy_bias (out > -50):", df["out"] > -50)
-        logger.debug("Final Willy_index:", df["Willy_index"])
-
-    # MACD Index
     df = calculate_macd_index(df)
-    if debug:
-        logger.debug("MACD_index components:")
-        logger.debug("macd_bullbear (macd > signal):", df["macd"] > df["signal"])
-        logger.debug("macd_bias (macd > 0):", df["macd"] > 0)
-        logger.debug("Final macd_index:", df["macd_index"])
-
-    # OBV Index
     df = calculate_obv_index(df)
-    if debug:
-        logger.debug("OBV_index components:")
-        logger.debug("OBV_bullbear (obv > obv_ema):", df["obv"] > df["obv_ema"])
-        logger.debug("OBV_bias (obv > 0):", df["obv"] > 0)
-        logger.debug("Final OBV_index:", df["OBV_index"])
-
-    # MFI Index
     df = calculate_mfi_index(df)
-    if debug:
-        logger.debug("MFI_index components:")
-        logger.debug("mfi_stupid_os (mfi_mf < 20):", df["mfi_mf"] < 20)
-        logger.debug("mfi_stupid_ob (mfi_mf > 80):", df["mfi_mf"] > 80)
-        logger.debug("mfi_bullbear (mfi_mf > mfi_mf2):", df["mfi_mf"] > df["mfi_mf2"])
-        logger.debug("mfi_bias (mfi_mf > 50):", df["mfi_mf"] > 50)
-        logger.debug("Final mfi_index:", df["mfi_index"])
-
-    # AD Index
     df = calculate_ad_index(df)
-    if debug:
-        logger.debug("AD_index components:")
-        logger.debug("AD_bullbear_short (ad > ad2):", df["ad"] > df["ad2"])
-        logger.debug("AD_bullbear_med (ad > ad3):", df["ad"] > df["ad3"])
-        logger.debug("AD_bullbear_long (ad2 > ad3):", df["ad2"] > df["ad3"])
-        logger.debug("AD_bias (ad > 0):", df["ad"] > 0)
-        logger.debug("AD_bias_long (ad3 > ad4):", df["ad3"] > df["ad4"])
-        logger.debug("Final AD_index:", df["AD_index"])
 
-    # Final DI calculation (identical to Pine Script)
-    df["DI_index"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                      df["OBV_index"] + df["mfi_index"] + df["AD_index"])
+    # Calculate old and new DI indices
+    df["DI_index_old"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
+                         df["OBV_index_old"] + df["mfi_index_old"] + df["AD_index"])
 
-    # Calculate EMA and SMA
-    df["DI_index_EMA"] = ta.ema(df["DI_index"], length=13)
-    df["DI_index_SMA"] = df["DI_index"].rolling(window=30, min_periods=30).mean()
-    df["weekly_DI_index"] = df["DI_index"].rolling(window=7, min_periods=7).mean()
+    df["DI_index_new"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
+                         df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
 
-    if debug:
-        logger.debug("Final calculations:")
-        logger.debug("DI_index =", df["DI_index"])
-        logger.debug("DI_index_EMA =", df["DI_index_EMA"])
-        logger.debug("DI_index_SMA =", df["DI_index_SMA"])
-        logger.debug("weekly_DI_index =", df["weekly_DI_index"])
+    # Calculate EMAs and SMAs for both methods
+    df["di_ema_13_old"] = ta.ema(df["DI_index_old"], length=13)
+    df["di_sma_30_old"] = df["DI_index_old"].rolling(window=30, min_periods=30).mean()
+    df["trend_old"] = np.where(
+        (df["di_ema_13_old"].notna() & df["di_sma_30_old"].notna()),
+        np.where(df["di_ema_13_old"] > df["di_sma_30_old"], "bull", "bear"),
+        None
+    )
+
+    df["di_ema_13_new"] = ta.ema(df["DI_index_new"], length=13)
+    df["di_sma_30_new"] = df["DI_index_new"].rolling(window=30, min_periods=30).mean()
+    df["trend_new"] = np.where(
+        (df["di_ema_13_new"].notna() & df["di_sma_30_new"].notna()),
+        np.where(df["di_ema_13_new"] > df["di_sma_30_new"], "bull", "bear"),
+        None
+    )
+
+    # Use new method for current calculations
+    df["DI_index"] = df["DI_index_new"]
+    df["di_ema_13"] = df["di_ema_13_new"]
+    df["di_sma_30"] = df["di_sma_30_new"]
+    df["trend"] = df["trend_new"]
 
     def nan_to_none(val):
         if isinstance(val, float) and math.isnan(val):
@@ -445,10 +441,14 @@ def calculate_di_index(df, debug=False):
 
         result.append({
             "time": time_str,
-            "DI_index": nan_to_none(row["DI_index"]),
-            "DI_index_EMA": nan_to_none(row["DI_index_EMA"]),
-            "DI_index_SMA": nan_to_none(row["DI_index_SMA"]),
-            "weekly_DI_index": nan_to_none(row["weekly_DI_index"]),
+            "DI_index_old": nan_to_none(row["DI_index_old"]),
+            "DI_index_new": nan_to_none(row["DI_index_new"]),
+            "di_ema_13_old": nan_to_none(row["di_ema_13_old"]),
+            "di_ema_13_new": nan_to_none(row["di_ema_13_new"]),
+            "di_sma_30_old": nan_to_none(row["di_sma_30_old"]),
+            "di_sma_30_new": nan_to_none(row["di_sma_30_new"]),
+            "trend_old": row["trend_old"],
+            "trend_new": row["trend_new"],
             "close": nan_to_none(row["close"])
         })
     return result
