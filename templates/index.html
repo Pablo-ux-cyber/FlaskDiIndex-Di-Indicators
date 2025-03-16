@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <title>DI Index – Объединённые данные</title>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
     body { font-family: Arial, sans-serif; }
     .coin-container { margin-bottom: 40px; }
@@ -42,6 +45,39 @@
       text-align: center;
       background-color: #e9ecef;
       font-weight: bold;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.4);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -123,6 +159,63 @@
   <script>
     function formatValue(val) {
       return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
+    }
+
+    function show4hValues(values, date) {
+      const modalContent = `
+        <div class="modal" tabindex="-1" role="dialog">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">4h значения за ${date}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Время</th>
+                      <th>Старый метод</th>
+                      <th>Новый метод</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${values.map(entry => `
+                      <tr>
+                        <td>${entry.time}</td>
+                        <td>${formatValue(entry.value_old)}</td>
+                        <td>${formatValue(entry.value_new)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const modalEl = $(modalContent);
+      modalEl.modal('show');
+      modalEl.on('hidden.bs.modal', function () {
+        modalEl.remove();
+      });
+    }
+
+    function get4hValuesForDate(row) {
+      // Combine old and new values
+      const times = new Set([
+        ...row['4h_values_old'].map(v => v.time),
+        ...row['4h_values_new'].map(v => v.time)
+      ]);
+
+      return Array.from(times).map(time => ({
+        time,
+        value_old: (row['4h_values_old'].find(v => v.time === time) || {}).value,
+        value_new: (row['4h_values_new'].find(v => v.time === time) || {}).value
+      })).sort((a, b) => a.time.localeCompare(b.time));
     }
 
     function selectAll() {
@@ -382,8 +475,8 @@
                 <td class="${weekly_diff ? 'diff-highlight' : ''}">${formatValue(row.weekly_di_new)}</td>
                 <td class="${daily_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_di_old)}</td>
                 <td class="${daily_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_di_new)}</td>
-                <td class="${fourh_diff ? 'diff-highlight' : ''}">${formatValue(row['4h_di_old'])}</td>
-                <td class="${fourh_diff ? 'diff-highlight' : ''} comparison-group">${formatValue(row['4h_di_new'])}</td>
+                <td class="${fourh_diff ? 'diff-highlight' : ''}" style="cursor: pointer" onclick="show4hValues(${JSON.stringify(get4hValuesForDate(row))}, '${row.time}')">${formatValue(row['4h_di_old'])}</td>
+                <td class="${fourh_diff ? 'diff-highlight' : ''} comparison-group" style="cursor: pointer" onclick="show4hValues(${JSON.stringify(get4hValuesForDate(row))}, '${row.time}')">${formatValue(row['4h_di_new'])}</td>
                 <td class="${di_diff ? 'diff-highlight' : ''}">${formatValue(row.DI_index_old)}</td>
                 <td class="${ema_diff ? 'diff-highlight' : ''}">${formatValue(row.di_ema_13_old)}</td>
                 <td class="${sma_diff ? 'diff-highlight' : ''}">${formatValue(row.di_sma_30_old)}</td>

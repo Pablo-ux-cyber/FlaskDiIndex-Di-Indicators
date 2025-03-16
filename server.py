@@ -86,18 +86,22 @@ def process_symbol(symbol, debug=False):
 
         # Process data - UPDATED to handle new structure
         results_by_date = {}
-        for data_type, data_list in zip(["daily", "4h", "weekly"], [daily_di, fourh_di, weekly_di]):
+
+        # First, process daily and weekly data
+        for data_type, data_list in zip(["daily", "weekly"], [daily_di, weekly_di]):
             for entry in data_list:
-                date = entry["time"][:10]
+                date = entry["time"][:10]  # Get just the date part
                 if date not in results_by_date:
                     results_by_date[date] = {
                         "time": date,
                         "daily_di_old": None,
                         "daily_di_new": None,
-                        "4h_di_old": None,
-                        "4h_di_new": None,
                         "weekly_di_old": None,
                         "weekly_di_new": None,
+                        "4h_values_old": [],  # List to store all 4h values
+                        "4h_values_new": [],  # List to store all 4h values
+                        "4h_di_old": None,    # Latest 4h value
+                        "4h_di_new": None,    # Latest 4h value
                         "DI_index_old": None,
                         "DI_index_new": None,
                         "di_ema_13_old": None,
@@ -108,14 +112,52 @@ def process_symbol(symbol, debug=False):
                         "trend_new": None,
                         "close": entry["close"]
                     }
-                results_by_date[date][f"{data_type}_di_old"] = entry.get(f"{data_type}_di_old")
-                results_by_date[date][f"{data_type}_di_new"] = entry.get(f"{data_type}_di_new")
-                
 
+                # Update daily/weekly values
+                if data_type == "daily":
+                    results_by_date[date].update({
+                        "daily_di_old": entry["daily_di_old"],
+                        "daily_di_new": entry["daily_di_new"],
+                        "DI_index_old": entry["DI_index_old"],
+                        "DI_index_new": entry["DI_index_new"],
+                        "di_ema_13_old": entry["di_ema_13_old"],
+                        "di_ema_13_new": entry["di_ema_13_new"],
+                        "di_sma_30_old": entry["di_sma_30_old"],
+                        "di_sma_30_new": entry["di_sma_30_new"],
+                        "trend_old": entry["trend_old"],
+                        "trend_new": entry["trend_new"]
+                    })
+                elif data_type == "weekly":
+                    results_by_date[date].update({
+                        "weekly_di_old": entry["weekly_di_old"],
+                        "weekly_di_new": entry["weekly_di_new"]
+                    })
+
+        # Then process 4h data
+        for entry in fourh_di:
+            date = entry["time"][:10]
+            if date in results_by_date:
+                # Store the full 4h value
+                results_by_date[date]["4h_values_old"].append({
+                    "time": entry["time"],
+                    "value": entry["4h_di_old"]
+                })
+                results_by_date[date]["4h_values_new"].append({
+                    "time": entry["time"],
+                    "value": entry["4h_di_new"]
+                })
+
+                # Update the latest 4h value for the day
+                results_by_date[date]["4h_di_old"] = entry["4h_di_old"]
+                results_by_date[date]["4h_di_new"] = entry["4h_di_new"]
+
+        # Sort 4h values by time for each day
+        for date_data in results_by_date.values():
+            date_data["4h_values_old"].sort(key=lambda x: x["time"])
+            date_data["4h_values_new"].sort(key=lambda x: x["time"])
 
         results_list = list(results_by_date.values())
         results_list.sort(key=lambda x: x["time"])
-
 
         # Cache results
         set_cached_data(symbol, 'combined_indices', results_list)
