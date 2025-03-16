@@ -354,7 +354,8 @@ def calculate_mfi_index(df):
     df["mfi_index_old"] = df["mfi_bullbear_old"] + df["mfi_bias_old"] + df["mfi_stupid_os_old"] - df["mfi_stupid_ob_old"]
 
     # New method (Pine Script style using RSI)
-    df["mfi_mf_new"] = ta.rsi(df["mfi_upper_sum"], df["mfi_lower_sum"], length=mfi_length)
+    # Fix: calculate RSI correctly on the money flow ratio
+    df["mfi_mf_new"] = ta.rsi(close=df["mfi_upper_sum"] / df["mfi_lower_sum"], length=mfi_length)
     df["mfi_mf2_new"] = ta.ema(df["mfi_mf_new"], length=mfi_len)
 
     # New method components
