@@ -337,18 +337,32 @@ def calculate_mfi_index(df):
     return df
 
 def calculate_ad_index(df):
+    # AD calculation as per Pine Script
     condition = ((df["close"] == df["high"]) & (df["close"] == df["low"])) | (df["high"] == df["low"])
     df["ad_calc"] = ((2 * df["close"] - df["low"] - df["high"]) / (df["high"] - df["low"])).where(~condition, 0) * df["volumefrom"]
     df["ad"] = df["ad_calc"].cumsum()
-    ad2 = ta.ema(df["ad"], length=13)
-    ad3 = df["ad"].rolling(window=30, min_periods=30).mean()
-    ad4 = df["ad"].rolling(window=200, min_periods=200).mean()
-    df["AD_bullbear_short"] = (df["ad"] > ad2).astype(int)
-    df["AD_bullbear_med"] = (df["ad"] > ad3).astype(int)
-    df["AD_bullbear_long"] = (ad2 > ad3).astype(int)
+
+    # Calculate EMA and SMA of AD
+    df["ad2"] = ta.ema(df["ad"], length=13)  # First define ad2
+    df["ad3"] = df["ad"].rolling(window=30, min_periods=30).mean()
+    df["ad4"] = df["ad"].rolling(window=200, min_periods=200).mean()
+
+    # Calculate components
+    df["AD_bullbear_short"] = (df["ad"] > df["ad2"]).astype(int)
+    df["AD_bullbear_med"] = (df["ad"] > df["ad3"]).astype(int)
+    df["AD_bullbear_long"] = (df["ad2"] > df["ad3"]).astype(int)
     df["AD_bias"] = (df["ad"] > 0).astype(int)
-    df["AD_bias_long"] = (ad3 > ad4).astype(int)
-    df["AD_index"] = df["AD_bullbear_short"] + df["AD_bullbear_med"] + df["AD_bullbear_long"] + df["AD_bias"] + df["AD_bias_long"]
+    df["AD_bias_long"] = (df["ad3"] > df["ad4"]).astype(int)
+
+    # Final AD index calculation
+    df["AD_index"] = (df["AD_bullbear_short"] + df["AD_bullbear_med"] + 
+                      df["AD_bullbear_long"] + df["AD_bias"] + df["AD_bias_long"])
+
+    # Debug logs for checking values
+    logger.debug("\nAD Index Components:")
+    logger.debug(f"Sample AD values:\n{df[['ad', 'ad2', 'ad3', 'ad4']].head()}")
+    logger.debug(f"\nAD Index components:\n{df[['AD_bullbear_short', 'AD_bullbear_med', 'AD_bullbear_long', 'AD_bias', 'AD_bias_long', 'AD_index']].head()}")
+
     return df
 
 def calculate_di_index(df, debug=False):
@@ -452,6 +466,7 @@ def calculate_di_index(df, debug=False):
             "close": nan_to_none(row["close"])
         })
     return result
+
 
 
 def process_symbol_batch(symbols, debug=False):
