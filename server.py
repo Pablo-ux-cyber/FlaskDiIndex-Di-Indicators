@@ -55,6 +55,204 @@ def set_cached_data(symbol, data_type, data):
         'time': time.time()
     }
 
+def process_symbol(symbol, debug=False):
+    """Process a single symbol"""
+    try:
+        logger.debug(f"Processing symbol: {symbol}")
+
+        # Check cache first
+        cached_result = get_cached_data(symbol, 'combined_indices')
+        if cached_result is not None:
+            logger.debug(f"Cache hit for {symbol}")
+            return symbol, cached_result
+
+        # Get data for all timeframes with retries
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                df_daily = get_daily_data(symbol=symbol)
+                df_4h = get_4h_data(symbol=symbol)
+                df_weekly = get_weekly_data(symbol=symbol)
+                break
+            except Exception as e:
+                if attempt == max_retries - 1:
+                    raise
+                time.sleep(1)  # Wait before retry
+
+        # Calculate indices
+        daily_di = calculate_di_index(df_daily, debug)
+        fourh_di = calculate_di_index(df_4h, debug)
+        weekly_di = calculate_di_index(df_weekly, debug)
+
+        # Process data
+        results_by_date = {}
+
+        for data in [daily_di, fourh_di, weekly_di]:
+            for entry in data:
+                date = entry["time"][:10]
+                if date not in results_by_date:
+                    results_by_date[date] = {
+                        "time": date,
+                        "daily_di": None,
+                        "4h_di": None,
+                        "weekly_di": None,
+                        "total_di": None,
+                        "di_ema_13": None,
+                        "di_sma_30": None,
+                        "trend": None,
+                        "close": entry["close"]
+                    }
+
+                if entry in daily_di:
+                    results_by_date[date]["daily_di"] = entry["DI_index"]
+                elif entry in fourh_di:
+                    results_by_date[date]["4h_di"] = entry["DI_index"]
+                elif entry in weekly_di:
+                    results_by_date[date]["weekly_di"] = entry["DI_index"]
+
+        results_list = list(results_by_date.values())
+        results_list.sort(key=lambda x: x["time"])
+
+        # Fill Weekly DI Index gaps
+        last_weekly = None
+        for item in results_list:
+            if item["weekly_di"] is None or math.isnan(item["weekly_di"]):
+                item["weekly_di"] = last_weekly
+            else:
+                last_weekly = item["weekly_di"]
+
+        # Calculate metrics
+        df = pd.DataFrame(results_list)
+
+        # Calculate Total DI with filled weekly values
+        df["total_di"] = df.apply(
+            lambda row: (
+                sum(filter(None, [
+                    row["weekly_di"],
+                    row["daily_di"],
+                    # Only include 4h_di if it exists
+                    row["4h_di"] if pd.notna(row["4h_di"]) else None
+                ]))
+            ),
+            axis=1
+        )
+
+        # Debug logs for calculations
+        logger.debug("Sample of Total DI calculations:")
+        logger.debug(df[["time", "weekly_di", "daily_di", "4h_di", "total_di"]].head())
+
+        # Calculate indicators
+        df["di_ema_13"] = ta.ema(df["total_di"], length=13)
+        df["di_sma_30"] = df["total_di"].rolling(window=30, min_periods=30).mean()
+
+        # Debug logs for indicators
+        logger.debug("Sample of indicators:")
+        logger.debug(df[["time", "total_di", "di_ema_13", "di_sma_30"]].head())
+
+        # Calculate trend
+        df["trend"] = np.where(
+            (df["di_ema_13"].notna() & df["di_sma_30"].notna()),
+            np.where(df["di_ema_13"] > df["di_sma_30"], "bull", "bear"),
+            None
+        )
+
+        # Format results
+        final_results = []
+        for _, row in df.iterrows():
+            entry = {
+                "time": row["time"],
+                "daily_di": row["daily_di"],
+                "4h_di": row["4h_di"],
+                "weekly_di": row["weekly_di"],
+                "total_di": row["total_di"],
+                "di_ema_13": row["di_ema_13"],
+                "di_sma_30": row["di_sma_30"],
+                "trend": row["trend"],
+                "close": row["close"],
+                "has_4h": pd.notna(row["4h_di"])  # Add flag for 4h data presence
+            }
+            # Convert NaN to None
+            for key, value in entry.items():
+                if isinstance(value, float) and math.isnan(value):
+                    entry[key] = None
+            final_results.append(entry)
+
+        # Cache results
+        set_cached_data(symbol, 'combined_indices', final_results)
+        return symbol, final_results
+
+    except Exception as e:
+        logger.error(f"Error processing {symbol}: {str(e)}", exc_info=True)
+        return symbol, {"error": str(e)}
+
+def validate_symbol(symbol):
+    """Validate if the cryptocurrency symbol exists on CryptoCompare"""
+    url = f"https://min-api.cryptocompare.com/data/price?fsym={symbol}&tsyms=USD&api_key={API_KEY}"
+    response = requests.get(url)
+    data = response.json()
+    if "Response" in data and data["Response"] == "Error":
+        return False
+    return True
+
+def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
+    """Get daily OHLCV data for given cryptocurrency"""
+    cached_data = get_cached_data(symbol, "daily_data")
+    if cached_data is not None and not cached_data.empty:
+        return cached_data
+
+    url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={symbol}&tsym={tsym}&limit={limit}&api_key={API_KEY}"
+    response = requests.get(url)
+    data = response.json()
+    if data.get("Response") != "Success":
+        raise Exception(f"Error getting daily data: {data}")
+
+    # Convert timestamp to datetime and adjust to end of day
+    df = pd.DataFrame(data['Data']['Data'])
+    df['time'] = pd.to_datetime(df['time'], unit='s')
+
+    # Отфильтровываем будущие даты и сегодняшний день, так как он еще не закончился
+    today = pd.Timestamp.now().normalize()
+    df = df[df['time'] < today]
+
+    set_cached_data(symbol, "daily_data", df)
+    return df
+
+def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
+    """Get 4-hour OHLCV data for given cryptocurrency"""
+    cached_data = get_cached_data(symbol, "4h_data")
+    if cached_data is not None and not cached_data.empty:
+        return cached_data
+
+    url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
+    response = requests.get(url)
+    data = response.json()
+    if data.get("Response") != "Success":
+        raise Exception(f"Error getting 4-hour data: {data}")
+    df = pd.DataFrame(data['Data']['Data'])
+    df['time'] = pd.to_datetime(df['time'], unit='s')
+    set_cached_data(symbol, "4h_data", df)
+    return df
+
+def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
+    """Get weekly OHLCV data for given cryptocurrency"""
+    cached_data = get_cached_data(symbol, "weekly_data")
+    if cached_data is not None and not cached_data.empty:
+        return cached_data
+
+    df_daily = get_daily_data(symbol, tsym, limit)
+    df_daily.set_index('time', inplace=True)
+    df_weekly = df_daily.resample('W').agg({
+        'open': 'first',
+        'high': 'max',
+        'low': 'min',
+        'close': 'last',
+        'volumefrom': 'sum',
+        'volumeto': 'sum'
+    }).dropna()
+    df_weekly.reset_index(inplace=True)
+    set_cached_data(symbol, "weekly_data", df_weekly)
+    return df_weekly
+
 def calculate_ma_index(df):
     df["micro"] = ta.ema(df["close"], length=6)
     df["short"] = ta.ema(df["close"], length=13)
@@ -139,84 +337,19 @@ def calculate_mfi_index(df):
     return df
 
 def calculate_ad_index(df):
-    # AD calculation as per Pine Script
     condition = ((df["close"] == df["high"]) & (df["close"] == df["low"])) | (df["high"] == df["low"])
     df["ad_calc"] = ((2 * df["close"] - df["low"] - df["high"]) / (df["high"] - df["low"])).where(~condition, 0) * df["volumefrom"]
     df["ad"] = df["ad_calc"].cumsum()
-
-    # Calculate EMA and SMA of AD
-    df["ad2"] = ta.ema(df["ad"], length=13)  # First define ad2
-    df["ad3"] = df["ad"].rolling(window=30, min_periods=30).mean()
-    df["ad4"] = df["ad"].rolling(window=200, min_periods=200).mean()
-
-    # Calculate components
-    df["AD_bullbear_short"] = (df["ad"] > df["ad2"]).astype(int)
-    df["AD_bullbear_med"] = (df["ad"] > df["ad3"]).astype(int)
-    df["AD_bullbear_long"] = (df["ad2"] > df["ad3"]).astype(int)
+    ad2 = ta.ema(df["ad"], length=13)
+    ad3 = df["ad"].rolling(window=30, min_periods=30).mean()
+    ad4 = df["ad"].rolling(window=200, min_periods=200).mean()
+    df["AD_bullbear_short"] = (df["ad"] > ad2).astype(int)
+    df["AD_bullbear_med"] = (df["ad"] > ad3).astype(int)
+    df["AD_bullbear_long"] = (ad2 > ad3).astype(int)
     df["AD_bias"] = (df["ad"] > 0).astype(int)
-    df["AD_bias_long"] = (df["ad3"] > df["ad4"]).astype(int)
-
-    # Final AD index calculation
-    df["AD_index"] = (df["AD_bullbear_short"] + df["AD_bullbear_med"] +
-                      df["AD_bullbear_long"] + df["AD_bias"] + df["AD_bias_long"])
-
-    # Debug logs for checking values
-    logger.debug("\nAD Index Components:")
-    logger.debug(f"Sample AD values:\n{df[['ad', 'ad2', 'ad3', 'ad4']].head()}")
-    logger.debug(f"\nAD Index components:\n{df[['AD_bullbear_short', 'AD_bullbear_med', 'AD_bullbear_long', 'AD_bias', 'AD_bias_long', 'AD_index']].head()}")
-
+    df["AD_bias_long"] = (ad3 > ad4).astype(int)
+    df["AD_index"] = df["AD_bullbear_short"] + df["AD_bullbear_med"] + df["AD_bullbear_long"] + df["AD_bias"] + df["AD_bias_long"]
     return df
-
-def calculate_di_index_new(df, debug=False):
-    """Calculate DI index using Pine Script logic"""
-    if 'time' not in df.columns and df.index.name == 'time':
-        df = df.reset_index()
-
-    # MA Index calculation (identical to Pine Script)
-    df = calculate_ma_index(df)
-    df = calculate_willy_index(df)
-    df = calculate_macd_index(df)
-    df = calculate_obv_index(df)
-    df = calculate_mfi_index(df)
-    df = calculate_ad_index(df)
-
-    # Final DI calculation (identical to Pine Script)
-    df["DI_index_new"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                      df["OBV_index"] + df["mfi_index"] + df["AD_index"])
-
-    # Calculate EMA and SMA
-    df["DI_index_EMA_new"] = ta.ema(df["DI_index_new"], length=13)
-    df["DI_index_SMA_new"] = df["DI_index_new"].rolling(window=30, min_periods=30).mean()
-
-    # Calculate trend
-    df["trend_new"] = np.where(
-        (df["DI_index_EMA_new"].notna() & df["DI_index_SMA_new"].notna()),
-        np.where(df["DI_index_EMA_new"] > df["DI_index_SMA_new"], "bull", "bear"),
-        None
-    )
-
-    def nan_to_none(val):
-        if isinstance(val, float) and math.isnan(val):
-            return None
-        return val
-
-    result = []
-    for _, row in df.iterrows():
-        time_val = row["time"] if "time" in row.index else row.name
-        if isinstance(time_val, pd.Timestamp):
-            time_str = time_val.strftime("%Y-%m-%d")
-        else:
-            time_str = str(time_val)
-
-        result.append({
-            "time": time_str,
-            "DI_index_new": nan_to_none(row["DI_index_new"]),
-            "DI_index_EMA_new": nan_to_none(row["DI_index_EMA_new"]),
-            "DI_index_SMA_new": nan_to_none(row["DI_index_SMA_new"]),
-            "trend_new": row["trend_new"],
-            "close": nan_to_none(row["close"])
-        })
-    return result
 
 def calculate_di_index(df, debug=False):
     """Calculate DI index components and final value"""
@@ -320,253 +453,6 @@ def calculate_di_index(df, debug=False):
         })
     return result
 
-def process_symbol(symbol, debug=False):
-    """Process a single symbol"""
-    try:
-        logger.debug(f"Processing symbol: {symbol}")
-
-        # Check cache first
-        cached_result = get_cached_data(symbol, 'combined_indices')
-        if cached_result is not None:
-            logger.debug(f"Cache hit for {symbol}")
-            return symbol, cached_result
-
-        # Get data for all timeframes with retries
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                df_daily = get_daily_data(symbol=symbol)
-                df_4h = get_4h_data(symbol=symbol)
-                df_weekly = get_weekly_data(symbol=symbol)
-                break
-            except Exception as e:
-                if attempt == max_retries - 1:
-                    raise
-                time.sleep(1)  # Wait before retry
-
-        # Calculate indices using both methods
-        daily_di = calculate_di_index(df_daily, debug)
-        daily_di_new = calculate_di_index_new(df_daily, debug)
-        fourh_di = calculate_di_index(df_4h, debug)
-        fourh_di_new = calculate_di_index_new(df_4h, debug)
-        weekly_di = calculate_di_index(df_weekly, debug)
-        weekly_di_new = calculate_di_index_new(df_weekly, debug)
-
-        # Process data
-        results_by_date = {}
-
-        # Process old method results
-        for data in [daily_di, fourh_di, weekly_di]:
-            for entry in data:
-                date = entry["time"][:10]
-                if date not in results_by_date:
-                    results_by_date[date] = {
-                        "time": date,
-                        "daily_di": None,
-                        "daily_di_new": None,
-                        "4h_di": None,
-                        "4h_di_new": None,
-                        "weekly_di": None,
-                        "weekly_di_new": None,
-                        "total_di": None,
-                        "total_di_new": None,
-                        "di_ema_13": None,
-                        "di_ema_13_new": None,
-                        "di_sma_30": None,
-                        "di_sma_30_new": None,
-                        "trend": None,
-                        "trend_new": None,
-                        "close": entry["close"]
-                    }
-
-                if entry in daily_di:
-                    results_by_date[date]["daily_di"] = entry["DI_index"]
-                elif entry in fourh_di:
-                    results_by_date[date]["4h_di"] = entry["DI_index"]
-                elif entry in weekly_di:
-                    results_by_date[date]["weekly_di"] = entry["DI_index"]
-
-        # Process new method results
-        for data in [daily_di_new, fourh_di_new, weekly_di_new]:
-            for entry in data:
-                date = entry["time"][:10]
-                if date in results_by_date:
-                    if entry in daily_di_new:
-                        results_by_date[date]["daily_di_new"] = entry["DI_index_new"]
-                    elif entry in fourh_di_new:
-                        results_by_date[date]["4h_di_new"] = entry["DI_index_new"]
-                    elif entry in weekly_di_new:
-                        results_by_date[date]["weekly_di_new"] = entry["DI_index_new"]
-
-        results_list = list(results_by_date.values())
-        results_list.sort(key=lambda x: x["time"])
-
-        # Fill Weekly DI Index gaps
-        last_weekly = None
-        last_weekly_new = None
-        for item in results_list:
-            if item["weekly_di"] is None or math.isnan(item["weekly_di"]):
-                item["weekly_di"] = last_weekly
-            else:
-                last_weekly = item["weekly_di"]
-
-            if item["weekly_di_new"] is None or math.isnan(item["weekly_di_new"]):
-                item["weekly_di_new"] = last_weekly_new
-            else:
-                last_weekly_new = item["weekly_di_new"]
-
-        # Calculate metrics
-        df = pd.DataFrame(results_list)
-
-        # Calculate Total DI with filled weekly values (old method)
-        df["total_di"] = df.apply(
-            lambda row: (
-                sum(filter(None, [
-                    row["weekly_di"],
-                    row["daily_di"],
-                    row["4h_di"] if pd.notna(row["4h_di"]) else None
-                ]))
-            ),
-            axis=1
-        )
-
-        # Calculate Total DI with filled weekly values (new method)
-        df["total_di_new"] = df.apply(
-            lambda row: (
-                sum(filter(None, [
-                    row["weekly_di_new"],
-                    row["daily_di_new"],
-                    row["4h_di_new"] if pd.notna(row["4h_di_new"]) else None
-                ]))
-            ),
-            axis=1
-        )
-
-        # Calculate indicators (old method)
-        df["di_ema_13"] = ta.ema(df["total_di"], length=13)
-        df["di_sma_30"] = df["total_di"].rolling(window=30, min_periods=30).mean()
-
-        # Calculate indicators (new method)
-        df["di_ema_13_new"] = ta.ema(df["total_di_new"], length=13)
-        df["di_sma_30_new"] = df["total_di_new"].rolling(window=30, min_periods=30).mean()
-
-        # Calculate trend (old method)
-        df["trend"] = np.where(
-            (df["di_ema_13"].notna() & df["di_sma_30"].notna()),
-            np.where(df["di_ema_13"] > df["di_sma_30"], "bull", "bear"),
-            None
-        )
-
-        # Calculate trend (new method)
-        df["trend_new"] = np.where(
-            (df["di_ema_13_new"].notna() & df["di_sma_30_new"].notna()),
-            np.where(df["di_ema_13_new"] > df["di_sma_30_new"], "bull", "bear"),
-            None
-        )
-
-        # Format results
-        final_results = []
-        for _, row in df.iterrows():
-            entry = {
-                "time": row["time"],
-                "daily_di": row["daily_di"],
-                "daily_di_new": row["daily_di_new"],
-                "4h_di": row["4h_di"],
-                "4h_di_new": row["4h_di_new"],
-                "weekly_di": row["weekly_di"],
-                "weekly_di_new": row["weekly_di_new"],
-                "total_di": row["total_di"],
-                "total_di_new": row["total_di_new"],
-                "di_ema_13": row["di_ema_13"],
-                "di_ema_13_new": row["di_ema_13_new"],
-                "di_sma_30": row["di_sma_30"],
-                "di_sma_30_new": row["di_sma_30_new"],
-                "trend": row["trend"],
-                "trend_new": row["trend_new"],
-                "close": row["close"],
-                "has_4h": pd.notna(row["4h_di"])
-            }
-            # Convert NaN to None
-            for key, value in entry.items():
-                if isinstance(value, float) and math.isnan(value):
-                    entry[key] = None
-            final_results.append(entry)
-
-        # Cache results
-        set_cached_data(symbol, 'combined_indices', final_results)
-        return symbol, final_results
-
-    except Exception as e:
-        logger.error(f"Error processing {symbol}: {str(e)}", exc_info=True)
-        return symbol, {"error": str(e)}
-
-def validate_symbol(symbol):
-    """Validate if the cryptocurrency symbol exists on CryptoCompare"""
-    url = f"https://min-api.cryptocompare.com/data/price?fsym={symbol}&tsyms=USD&api_key={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    if "Response" in data and data["Response"] == "Error":
-        return False
-    return True
-
-def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
-    """Get daily OHLCV data for given cryptocurrency"""
-    cached_data = get_cached_data(symbol, "daily_data")
-    if cached_data is not None and not cached_data.empty:
-        return cached_data
-
-    url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={symbol}&tsym={tsym}&limit={limit}&api_key={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    if data.get("Response") != "Success":
-        raise Exception(f"Error getting daily data: {data}")
-
-    # Convert timestamp to datetime and adjust to end of day
-    df = pd.DataFrame(data['Data']['Data'])
-    df['time'] = pd.to_datetime(df['time'], unit='s')
-
-    # Отфильтровываем будущие даты и сегодняшний день, так как он еще не закончился
-    today = pd.Timestamp.now().normalize()
-    df = df[df['time'] < today]
-
-    set_cached_data(symbol, "daily_data", df)
-    return df
-
-def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
-    """Get 4-hour OHLCV data for given cryptocurrency"""
-    cached_data = get_cached_data(symbol, "4h_data")
-    if cached_data is not None and not cached_data.empty:
-        return cached_data
-
-    url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    if data.get("Response") != "Success":
-        raise Exception(f"Error getting 4-hour data: {data}")
-    df = pd.DataFrame(data['Data']['Data'])
-    df['time'] = pd.to_datetime(df['time'], unit='s')
-    set_cached_data(symbol, "4h_data", df)
-    return df
-
-def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
-    """Get weekly OHLCV data for given cryptocurrency"""
-    cached_data = get_cached_data(symbol, "weekly_data")
-    if cached_data is not None and not cached_data.empty:
-        return cached_data
-
-    df_daily = get_daily_data(symbol, tsym, limit)
-    df_daily.set_index('time', inplace=True)
-    df_weekly = df_daily.resample('W').agg({
-        'open': 'first',
-        'high': 'max',
-        'low': 'min',
-        'close': 'last',
-        'volumefrom': 'sum',
-        'volumeto': 'sum'
-    }).dropna()
-    df_weekly.reset_index(inplace=True)
-    set_cached_data(symbol, "weekly_data", df_weekly)
-    return df_weekly
 
 def process_symbol_batch(symbols, debug=False):
     """Process a batch of symbols efficiently"""
@@ -610,7 +496,7 @@ def process_symbol_batch(symbols, debug=False):
 def di_index():
     try:
         symbols = request.args.get("symbols", "BTC")
-        debug_mode = True  # Включаем режим отладки для проверки
+        debug_mode = request.args.get("debug", "false").lower() == "true"
 
         logger.debug(f"Received request for symbols: {symbols}")
         symbol_list = [s.strip().upper() for s in symbols.split(',') if s.strip()]
