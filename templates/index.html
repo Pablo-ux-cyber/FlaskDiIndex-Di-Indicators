@@ -46,39 +46,6 @@
       background-color: #e9ecef;
       font-weight: bold;
     }
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      overflow: auto;
-      background-color: rgba(0,0,0,0.4);
-    }
-
-    .modal-content {
-      background-color: #fefefe;
-      margin: 15% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-    }
-
-    .close {
-      color: #aaa;
-      float: right;
-      font-size: 28px;
-      font-weight: bold;
-    }
-
-    .close:hover,
-    .close:focus {
-      color: black;
-      text-decoration: none;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
@@ -162,54 +129,60 @@
     }
 
     function show4hValues(values, date) {
-      console.log("4h values:", values, "date:", date); // Debugging
-      const modalContent = document.createElement('div');
-      modalContent.className = 'modal';
-      modalContent.innerHTML = `
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">4h значения за ${date}</h5>
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
+        // Удалить существующее модальное окно, если оно есть
+        const existingModal = document.querySelector('#fourHourModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Создать новое модальное окно
+        const modalHtml = `
+        <div class="modal fade" id="fourHourModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">4h значения за ${date}</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Время</th>
+                                    <th>Старый метод</th>
+                                    <th>Новый метод</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${values.map(entry => `
+                                    <tr>
+                                        <td>${entry.time}</td>
+                                        <td>${formatValue(entry.value_old)}</td>
+                                        <td>${formatValue(entry.value_new)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Время</th>
-                    <th>Старый метод</th>
-                    <th>Новый метод</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${values.map(entry => `
-                    <tr>
-                      <td>${entry.time}</td>
-                      <td>${formatValue(entry.value_old)}</td>
-                      <td>${formatValue(entry.value_new)}</td>
-                    </tr>
-                  `).join('')}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      `;
+        </div>`;
 
-      document.body.appendChild(modalContent);
-      const modal = new bootstrap.Modal(modalContent);
-      modal.show();
+        // Добавить модальное окно в DOM
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-      modalContent.addEventListener('hidden.bs.modal', function () {
-        document.body.removeChild(modalContent);
-      });
+        // Показать модальное окно
+        $('#fourHourModal').modal('show');
 
-      // Добавляем обработчик для кнопки закрытия
-      modalContent.querySelector('.close').addEventListener('click', function() {
-        modal.hide();
-      });
+        // Удалить модальное окно после закрытия
+        $('#fourHourModal').on('hidden.bs.modal', function (e) {
+            $(this).remove();
+        });
     }
 
     function get4hValuesForDate(row) {
