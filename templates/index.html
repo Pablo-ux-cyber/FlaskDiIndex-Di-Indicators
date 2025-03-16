@@ -260,13 +260,18 @@
     function downloadExcel(data, symbol) {
       // Форматируем данные для Excel
       const rows = [
-        ['Дата', 'DI Index (Old)', '13 EMA (Old)', '30 SMA (Old)', 'Trend (Old)',
-         'DI Index (New)', '13 EMA (New)', '30 SMA (New)', 'Trend (New)', 'Close (Daily)']
+        ['Дата', 'Weekly DI', 'Daily DI', '4h DI',
+         'DI Index (Old)', '13 EMA (Old)', '30 SMA (Old)', 'Trend (Old)',
+         'DI Index (New)', '13 EMA (New)', '30 SMA (New)', 'Trend (New)',
+         'Close (Daily)']
       ];
 
       data.forEach(row => {
         rows.push([
           row.time,
+          formatValue(row.weekly_di),
+          formatValue(row.daily_di),
+          formatValue(row['4h_di']),
           formatValue(row.DI_index_old),
           formatValue(row.di_ema_13_old),
           formatValue(row.di_sma_30_old),
@@ -324,10 +329,18 @@
       table.innerHTML = `
         <thead>
           <tr>
-            <th rowspan="2">Дата</th>
+            <th rowspan="3">Дата</th>
+            <th colspan="3" class="group-header comparison-group">DI Компоненты</th>
             <th colspan="4" class="group-header comparison-group">Старый метод</th>
             <th colspan="4" class="group-header">Новый метод</th>
-            <th rowspan="2">Close (Daily)</th>
+            <th rowspan="3">Close (Daily)</th>
+          </tr>
+          <tr>
+            <th rowspan="2">Weekly</th>
+            <th rowspan="2">Daily</th>
+            <th rowspan="2" class="comparison-group">4h</th>
+            <th colspan="4" class="group-header comparison-group">Расчет</th>
+            <th colspan="4" class="group-header">Расчет</th>
           </tr>
           <tr>
             <th>DI Index</th>
@@ -348,8 +361,11 @@
             const trend_diff = row.trend_old !== row.trend_new;
 
             return `
-              <tr>
+              <tr class="${!row.has_4h ? 'no-4h' : ''}">
                 <td>${row.time}</td>
+                <td>${formatValue(row.weekly_di)}</td>
+                <td>${formatValue(row.daily_di)}</td>
+                <td class="comparison-group">${formatValue(row['4h_di'])}</td>
                 <td class="${di_diff ? 'diff-highlight' : ''}">${formatValue(row.DI_index_old)}</td>
                 <td class="${ema_diff ? 'diff-highlight' : ''}">${formatValue(row.di_ema_13_old)}</td>
                 <td class="${sma_diff ? 'diff-highlight' : ''}">${formatValue(row.di_sma_30_old)}</td>
