@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>DI Index – Объединённые данные</title>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; }
     .coin-container { margin-bottom: 40px; }
@@ -20,18 +21,16 @@
     select[multiple] { min-width: 200px; height: 300px; }
     .loading-indicator { color: #666; font-style: italic; margin-left: 10px; }
     .control-buttons { margin: 10px 0; }
-    .market-sentiment { 
-      padding: 20px;
-      background: #f8f9fa;
-      border-radius: 5px;
-      margin: 20px 0;
+    .btn { 
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background-color: #6c757d;
+      color: white;
     }
-    .bull-percentage {
-      font-size: 1.2em;
-      font-weight: bold;
-    }
-    .sentiment-table {
-      margin-top: 20px;
+    .btn:hover {
+      background-color: #5a6268;
     }
   </style>
 </head>
@@ -244,9 +243,59 @@
       `).join('');
     }
 
+    function downloadExcel(data, symbol) {
+      // Форматируем данные для Excel
+      const rows = [
+        ['Дата', 'Weekly DI Index', 'Daily DI Index', '4h DI Index', 'Total', '13 EMA (Total)', '30 SMA (Total)', 'Trend', 'Close (Daily)']
+      ];
+
+      data.forEach(row => {
+        rows.push([
+          row.time,
+          formatValue(row.weekly_di),
+          formatValue(row.daily_di),
+          formatValue(row['4h_di']),
+          formatValue(row.total_di),
+          formatValue(row.di_ema_13),
+          formatValue(row.di_sma_30),
+          row.trend || '-',
+          formatValue(row.close)
+        ]);
+      });
+
+      // Создаем Workbook
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+
+      // Добавляем worksheet в workbook
+      XLSX.utils.book_append_sheet(wb, ws, symbol);
+
+      // Сохраняем файл
+      XLSX.writeFile(wb, `${symbol}_DI_Index_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
     function createTable(symbol, data) {
       const container = document.createElement('div');
       container.className = 'coin-container';
+
+      // Добавляем кнопку экспорта
+      const exportButton = document.createElement('button');
+      exportButton.className = 'btn btn-sm btn-secondary';
+      exportButton.innerHTML = 'Экспорт в Excel';
+      exportButton.onclick = () => downloadExcel(data, symbol);
+
+      const headerDiv = document.createElement('div');
+      headerDiv.style.display = 'flex';
+      headerDiv.style.justifyContent = 'space-between';
+      headerDiv.style.alignItems = 'center';
+      headerDiv.style.marginBottom = '10px';
+
+      const title = document.createElement('h3');
+      title.textContent = `${symbol} - DI Index`;
+
+      headerDiv.appendChild(title);
+      headerDiv.appendChild(exportButton);
+      container.appendChild(headerDiv);
 
       const table = document.createElement('table');
       table.setAttribute('data-sort-dir', 'asc');
@@ -257,7 +306,6 @@
       ];
 
       table.innerHTML = `
-        <caption>${symbol} - DI Index</caption>
         <thead>
           <tr>
             ${headers.map((header, index) => 
