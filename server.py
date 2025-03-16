@@ -496,7 +496,7 @@ def process_symbol_batch(symbols, debug=False):
 def di_index():
     try:
         symbols = request.args.get("symbols", "BTC")
-        debug_mode = request.args.get("debug", "false").lower() == "true"
+        debug_mode = True  # Включаем режим отладки для проверки
 
         logger.debug(f"Received request for symbols: {symbols}")
         symbol_list = [s.strip().upper() for s in symbols.split(',') if s.strip()]
