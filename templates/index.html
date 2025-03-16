@@ -249,19 +249,34 @@
     function downloadExcel(data, symbol) {
       // Форматируем данные для Excel
       const rows = [
-        ['Дата', 'Weekly DI Index', 'Daily DI Index', '4h DI Index', 'Total', '13 EMA (Total)', '30 SMA (Total)', 'Trend', 'Close (Daily)']
+        ['Дата',
+         'Weekly DI (Old)', 'Weekly DI (New)',
+         'Daily DI (Old)', 'Daily DI (New)',
+         '4h DI (Old)', '4h DI (New)',
+         'Total (Old)', 'Total (New)',
+         '13 EMA (Old)', '13 EMA (New)',
+         '30 SMA (Old)', '30 SMA (New)',
+         'Trend (Old)', 'Trend (New)',
+         'Close (Daily)']
       ];
 
       data.forEach(row => {
         rows.push([
           row.time,
           formatValue(row.weekly_di),
+          formatValue(row.weekly_di_new),
           formatValue(row.daily_di),
+          formatValue(row.daily_di_new),
           formatValue(row['4h_di']),
+          formatValue(row['4h_di_new']),
           formatValue(row.total_di),
+          formatValue(row.total_di_new),
           formatValue(row.di_ema_13),
+          formatValue(row.di_ema_13_new),
           formatValue(row.di_sma_30),
+          formatValue(row.di_sma_30_new),
           row.trend || '-',
+          row.trend_new || '-',
           formatValue(row.close)
         ]);
       });
@@ -274,7 +289,7 @@
       XLSX.utils.book_append_sheet(wb, ws, symbol);
 
       // Сохраняем файл
-      XLSX.writeFile(wb, `${symbol}_DI_Index_${new Date().toISOString().split('T')[0]}.xlsx`);
+      XLSX.writeFile(wb, `${symbol}_DI_Index_Comparison_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
     function createTable(symbol, data) {
@@ -304,8 +319,15 @@
       table.setAttribute('data-sort-dir', 'asc');
 
       const headers = [
-        'Дата', 'Weekly DI Index', 'Daily DI Index', '4h DI Index',
-        'Total', '13 EMA (Total)', '30 SMA (Total)', 'Trend', 'Close (Daily)'
+        'Дата',
+        'Weekly DI (Old)', 'Weekly DI (New)',
+        'Daily DI (Old)', 'Daily DI (New)',
+        '4h DI (Old)', '4h DI (New)',
+        'Total (Old)', 'Total (New)',
+        '13 EMA (Old)', '13 EMA (New)',
+        '30 SMA (Old)', '30 SMA (New)',
+        'Trend (Old)', 'Trend (New)',
+        'Close (Daily)'
       ];
 
       table.innerHTML = `
@@ -321,12 +343,19 @@
             <tr class="${!row.has_4h ? 'no-4h' : ''}">
               <td>${row.time}</td>
               <td>${formatValue(row.weekly_di)}</td>
+              <td style="${row.weekly_di !== row.weekly_di_new ? 'background-color: #fff3e0;' : ''}">${formatValue(row.weekly_di_new)}</td>
               <td>${formatValue(row.daily_di)}</td>
+              <td style="${row.daily_di !== row.daily_di_new ? 'background-color: #fff3e0;' : ''}">${formatValue(row.daily_di_new)}</td>
               <td>${formatValue(row['4h_di'])}</td>
+              <td style="${row['4h_di'] !== row['4h_di_new'] ? 'background-color: #fff3e0;' : ''}">${formatValue(row['4h_di_new'])}</td>
               <td>${formatValue(row.total_di)}</td>
+              <td style="${row.total_di !== row.total_di_new ? 'background-color: #fff3e0;' : ''}">${formatValue(row.total_di_new)}</td>
               <td>${formatValue(row.di_ema_13)}</td>
+              <td style="${row.di_ema_13 !== row.di_ema_13_new ? 'background-color: #fff3e0;' : ''}">${formatValue(row.di_ema_13_new)}</td>
               <td>${formatValue(row.di_sma_30)}</td>
+              <td style="${row.di_sma_30 !== row.di_sma_30_new ? 'background-color: #fff3e0;' : ''}">${formatValue(row.di_sma_30_new)}</td>
               <td>${row.trend ? (row.trend === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
+              <td style="${row.trend !== row.trend_new ? 'background-color: #fff3e0;' : ''}">${row.trend_new ? (row.trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
               <td>${formatValue(row.close)}</td>
             </tr>
           `).join('')}
