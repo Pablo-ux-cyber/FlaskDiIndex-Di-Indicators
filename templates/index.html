@@ -261,31 +261,48 @@
       // Форматируем данные для Excel
       const rows = [
         ['Дата', 
-         'Weekly DI (Old)', 'Weekly DI (New)',
-         'Daily DI (Old)', 'Daily DI (New)',
-         '4h DI (Old)', '4h DI (New)',
-         'DI Index (Old)', '13 EMA (Old)', '30 SMA (Old)', 'Trend (Old)',
-         'DI Index (New)', '13 EMA (New)', '30 SMA (New)', 'Trend (New)',
+         // Weekly
+         'Weekly DI (Old)', 'Weekly 13 EMA (Old)', 'Weekly 30 SMA (Old)', 'Weekly Trend (Old)',
+         'Weekly DI (New)', 'Weekly 13 EMA (New)', 'Weekly 30 SMA (New)', 'Weekly Trend (New)',
+         // Daily
+         'Daily DI (Old)', 'Daily 13 EMA (Old)', 'Daily 30 SMA (Old)', 'Daily Trend (Old)',
+         'Daily DI (New)', 'Daily 13 EMA (New)', 'Daily 30 SMA (New)', 'Daily Trend (New)',
+         // 4h
+         '4h DI (Old)', '4h 13 EMA (Old)', '4h 30 SMA (Old)', '4h Trend (Old)',
+         '4h DI (New)', '4h 13 EMA (New)', '4h 30 SMA (New)', '4h Trend (New)',
          'Close (Daily)']
       ];
 
       data.forEach(row => {
         rows.push([
           row.time,
+          // Weekly
           formatValue(row.weekly_di_old),
+          formatValue(row.weekly_ema_13_old),
+          formatValue(row.weekly_sma_30_old),
+          row.weekly_trend_old || '-',
           formatValue(row.weekly_di_new),
+          formatValue(row.weekly_ema_13_new),
+          formatValue(row.weekly_sma_30_new),
+          row.weekly_trend_new || '-',
+          // Daily
           formatValue(row.daily_di_old),
+          formatValue(row.daily_ema_13_old),
+          formatValue(row.daily_sma_30_old),
+          row.daily_trend_old || '-',
           formatValue(row.daily_di_new),
+          formatValue(row.daily_ema_13_new),
+          formatValue(row.daily_sma_30_new),
+          row.daily_trend_new || '-',
+          // 4h
           formatValue(row['4h_di_old']),
+          formatValue(row['4h_ema_13_old']),
+          formatValue(row['4h_sma_30_old']),
+          row['4h_trend_old'] || '-',
           formatValue(row['4h_di_new']),
-          formatValue(row.DI_index_old),
-          formatValue(row.di_ema_13_old),
-          formatValue(row.di_sma_30_old),
-          row.trend_old || '-',
-          formatValue(row.DI_index_new),
-          formatValue(row.di_ema_13_new),
-          formatValue(row.di_sma_30_new),
-          row.trend_new || '-',
+          formatValue(row['4h_ema_13_new']),
+          formatValue(row['4h_sma_30_new']),
+          row['4h_trend_new'] || '-',
           formatValue(row.close)
         ]);
       });
@@ -336,29 +353,42 @@
         <thead>
           <tr>
             <th rowspan="3">Дата</th>
-            <th colspan="6" class="group-header comparison-group">DI Компоненты</th>
-            <th colspan="4" class="group-header comparison-group">Старый метод</th>
-            <th colspan="4" class="group-header">Новый метод</th>
-            <th rowspan="3">Close (Daily)</th>
+            <th colspan="16" class="group-header comparison-group">Weekly</th>
+            <th colspan="16" class="group-header comparison-group">Daily</th>
+            <th colspan="16" class="group-header">4h</th>
+            <th rowspan="3">Close</th>
           </tr>
           <tr>
-            <th colspan="2">Weekly</th>
-            <th colspan="2">Daily</th>
-            <th colspan="2" class="comparison-group">4h</th>
-            <th colspan="4" class="group-header comparison-group">Расчет</th>
-            <th colspan="4" class="group-header">Расчет</th>
+            <th colspan="8" class="group-header comparison-group">Старый метод</th>
+            <th colspan="8" class="group-header">Новый метод</th>
+            <th colspan="8" class="group-header comparison-group">Старый метод</th>
+            <th colspan="8" class="group-header">Новый метод</th>
+            <th colspan="8" class="group-header comparison-group">Старый метод</th>
+            <th colspan="8" class="group-header">Новый метод</th>
           </tr>
           <tr>
-            <th>Old</th>
-            <th>New</th>
-            <th>Old</th>
-            <th>New</th>
-            <th>Old</th>
-            <th class="comparison-group">New</th>
             <th>DI Index</th>
             <th>13 EMA</th>
             <th>30 SMA</th>
             <th class="comparison-group">Trend</th>
+            <th>DI Index</th>
+            <th>13 EMA</th>
+            <th>30 SMA</th>
+            <th class="comparison-group">Trend</th>
+
+            <th>DI Index</th>
+            <th>13 EMA</th>
+            <th>30 SMA</th>
+            <th class="comparison-group">Trend</th>
+            <th>DI Index</th>
+            <th>13 EMA</th>
+            <th>30 SMA</th>
+            <th class="comparison-group">Trend</th>
+
+            <th>DI Index</th>
+            <th>13 EMA</th>
+            <th>30 SMA</th>
+            <th>Trend</th>
             <th>DI Index</th>
             <th>13 EMA</th>
             <th>30 SMA</th>
@@ -367,35 +397,67 @@
         </thead>
         <tbody>
           ${data.map(row => {
-            const weekly_diff = compareValues(row.weekly_di_old, row.weekly_di_new);
-            const daily_diff = compareValues(row.daily_di_old, row.daily_di_new);
-            const fourh_diff = compareValues(row['4h_di_old'], row['4h_di_new']);
-            const di_diff = compareValues(row.DI_index_old, row.DI_index_new);
-            const ema_diff = compareValues(row.di_ema_13_old, row.di_ema_13_new);
-            const sma_diff = compareValues(row.di_sma_30_old, row.di_sma_30_new);
-            const trend_diff = row.trend_old !== row.trend_new;
+            const weekly_di_diff = compareValues(row.weekly_di_old, row.weekly_di_new);
+            const weekly_ema_diff = compareValues(row.weekly_ema_13_old, row.weekly_ema_13_new);
+            const weekly_sma_diff = compareValues(row.weekly_sma_30_old, row.weekly_sma_30_new);
+            const weekly_trend_diff = row.weekly_trend_old !== row.weekly_trend_new;
+
+            const daily_di_diff = compareValues(row.daily_di_old, row.daily_di_new);
+            const daily_ema_diff = compareValues(row.daily_ema_13_old, row.daily_ema_13_new);
+            const daily_sma_diff = compareValues(row.daily_sma_30_old, row.daily_sma_30_new);
+            const daily_trend_diff = row.daily_trend_old !== row.daily_trend_new;
+
+            const fourh_di_diff = compareValues(row['4h_di_old'], row['4h_di_new']);
+            const fourh_ema_diff = compareValues(row['4h_ema_13_old'], row['4h_ema_13_new']);
+            const fourh_sma_diff = compareValues(row['4h_sma_30_old'], row['4h_sma_30_new']);
+            const fourh_trend_diff = row['4h_trend_old'] !== row['4h_trend_new'];
 
             return `
               <tr>
                 <td>${row.time}</td>
-                <td class="${weekly_diff ? 'diff-highlight' : ''}">${formatValue(row.weekly_di_old)}</td>
-                <td class="${weekly_diff ? 'diff-highlight' : ''}">${formatValue(row.weekly_di_new)}</td>
-                <td class="${daily_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_di_old)}</td>
-                <td class="${daily_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_di_new)}</td>
-                <td class="${fourh_diff ? 'diff-highlight' : ''}">${formatValue(row['4h_di_old'])}</td>
-                <td class="${fourh_diff ? 'diff-highlight' : ''} comparison-group">${formatValue(row['4h_di_new'])}</td>
-                <td class="${di_diff ? 'diff-highlight' : ''}">${formatValue(row.DI_index_old)}</td>
-                <td class="${ema_diff ? 'diff-highlight' : ''}">${formatValue(row.di_ema_13_old)}</td>
-                <td class="${sma_diff ? 'diff-highlight' : ''}">${formatValue(row.di_sma_30_old)}</td>
-                <td class="${trend_diff ? 'diff-highlight' : ''} comparison-group">
-                  ${row.trend_old ? (row.trend_old === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}
+
+                <!-- Weekly -->
+                <td class="${weekly_di_diff ? 'diff-highlight' : ''}">${formatValue(row.weekly_di_old)}</td>
+                <td class="${weekly_ema_diff ? 'diff-highlight' : ''}">${formatValue(row.weekly_ema_13_old)}</td>
+                <td class="${weekly_sma_diff ? 'diff-highlight' : ''}">${formatValue(row.weekly_sma_30_old)}</td>
+                <td class="${weekly_trend_diff ? 'diff-highlight' : ''} comparison-group">
+                  ${row.weekly_trend_old ? (row.weekly_trend_old === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}
                 </td>
-                <td class="${di_diff ? 'diff-highlight' : ''}">${formatValue(row.DI_index_new)}</td>
-                <td class="${ema_diff ? 'diff-highlight' : ''}">${formatValue(row.di_ema_13_new)}</td>
-                <td class="${sma_diff ? 'diff-highlight' : ''}">${formatValue(row.di_sma_30_new)}</td>
-                <td class="${trend_diff ? 'diff-highlight' : ''}">
-                  ${row.trend_new ? (row.trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}
+                <td class="${weekly_di_diff ? 'diff-highlight' : ''}">${formatValue(row.weekly_di_new)}</td>
+                <td class="${weekly_ema_diff ? 'diff-highlight' : ''}">${formatValue(row.weekly_ema_13_new)}</td>
+                <td class="${weekly_sma_diff ? 'diff-highlight' : ''}">${formatValue(row.weekly_sma_30_new)}</td>
+                <td class="${weekly_trend_diff ? 'diff-highlight' : ''} comparison-group">
+                  ${row.weekly_trend_new ? (row.weekly_trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}
                 </td>
+
+                <!-- Daily -->
+                <td class="${daily_di_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_di_old)}</td>
+                <td class="${daily_ema_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_ema_13_old)}</td>
+                <td class="${daily_sma_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_sma_30_old)}</td>
+                <td class="${daily_trend_diff ? 'diff-highlight' : ''} comparison-group">
+                  ${row.daily_trend_old ? (row.daily_trend_old === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}
+                </td>
+                <td class="${daily_di_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_di_new)}</td>
+                <td class="${daily_ema_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_ema_13_new)}</td>
+                <td class="${daily_sma_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_sma_30_new)}</td>
+                <td class="${daily_trend_diff ? 'diff-highlight' : ''} comparison-group">
+                  ${row.daily_trend_new ? (row.daily_trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}
+                </td>
+
+                <!-- 4h -->
+                <td class="${fourh_di_diff ? 'diff-highlight' : ''}">${formatValue(row['4h_di_old'])}</td>
+                <td class="${fourh_ema_diff ? 'diff-highlight' : ''}">${formatValue(row['4h_ema_13_old'])}</td>
+                <td class="${fourh_sma_diff ? 'diff-highlight' : ''}">${formatValue(row['4h_sma_30_old'])}</td>
+                <td class="${fourh_trend_diff ? 'diff-highlight' : ''}">
+                  ${row['4h_trend_old'] ? (row['4h_trend_old'] === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}
+                </td>
+                <td class="${fourh_di_diff ? 'diff-highlight' : ''}">${formatValue(row['4h_di_new'])}</td>
+                <td class="${fourh_ema_diff ? 'diff-highlight' : ''}">${formatValue(row['4h_ema_13_new'])}</td>
+                <td class="${fourh_sma_diff ? 'diff-highlight' : ''}">${formatValue(row['4h_sma_30_new'])}</td>
+                <td class="${fourh_trend_diff ? 'diff-highlight' : ''}">
+                  ${row['4h_trend_new'] ? (row['4h_trend_new'] === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}
+                </td>
+
                 <td>${formatValue(row.close)}</td>
               </tr>
             `;
