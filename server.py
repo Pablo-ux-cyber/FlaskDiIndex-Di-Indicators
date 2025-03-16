@@ -96,19 +96,33 @@ def process_symbol(symbol, debug=False):
                         "daily_di": None,
                         "4h_di": None,
                         "weekly_di": None,
-                        "total_di": None,
-                        "di_ema_13": None,
-                        "di_sma_30": None,
-                        "trend": None,
+                        "DI_index_old": None,
+                        "DI_index_new": None,
+                        "di_ema_13_old": None,
+                        "di_ema_13_new": None,
+                        "di_sma_30_old": None,
+                        "di_sma_30_new": None,
+                        "trend_old": None,
+                        "trend_new": None,
                         "close": entry["close"]
                     }
 
                 if entry in daily_di:
-                    results_by_date[date]["daily_di"] = entry["DI_index"]
+                    results_by_date[date].update({
+                        "daily_di": entry["DI_index_new"],
+                        "DI_index_old": entry["DI_index_old"],
+                        "DI_index_new": entry["DI_index_new"],
+                        "di_ema_13_old": entry["di_ema_13_old"],
+                        "di_ema_13_new": entry["di_ema_13_new"],
+                        "di_sma_30_old": entry["di_sma_30_old"],
+                        "di_sma_30_new": entry["di_sma_30_new"],
+                        "trend_old": entry["trend_old"],
+                        "trend_new": entry["trend_new"]
+                    })
                 elif entry in fourh_di:
-                    results_by_date[date]["4h_di"] = entry["DI_index"]
+                    results_by_date[date]["4h_di"] = entry["DI_index_new"]
                 elif entry in weekly_di:
-                    results_by_date[date]["weekly_di"] = entry["DI_index"]
+                    results_by_date[date]["weekly_di"] = entry["DI_index_new"]
 
         results_list = list(results_by_date.values())
         results_list.sort(key=lambda x: x["time"])
@@ -121,65 +135,9 @@ def process_symbol(symbol, debug=False):
             else:
                 last_weekly = item["weekly_di"]
 
-        # Calculate metrics
-        df = pd.DataFrame(results_list)
-
-        # Calculate Total DI with filled weekly values
-        df["total_di"] = df.apply(
-            lambda row: (
-                sum(filter(None, [
-                    row["weekly_di"],
-                    row["daily_di"],
-                    # Only include 4h_di if it exists
-                    row["4h_di"] if pd.notna(row["4h_di"]) else None
-                ]))
-            ),
-            axis=1
-        )
-
-        # Debug logs for calculations
-        logger.debug("Sample of Total DI calculations:")
-        logger.debug(df[["time", "weekly_di", "daily_di", "4h_di", "total_di"]].head())
-
-        # Calculate indicators
-        df["di_ema_13"] = ta.ema(df["total_di"], length=13)
-        df["di_sma_30"] = df["total_di"].rolling(window=30, min_periods=30).mean()
-
-        # Debug logs for indicators
-        logger.debug("Sample of indicators:")
-        logger.debug(df[["time", "total_di", "di_ema_13", "di_sma_30"]].head())
-
-        # Calculate trend
-        df["trend"] = np.where(
-            (df["di_ema_13"].notna() & df["di_sma_30"].notna()),
-            np.where(df["di_ema_13"] > df["di_sma_30"], "bull", "bear"),
-            None
-        )
-
-        # Format results
-        final_results = []
-        for _, row in df.iterrows():
-            entry = {
-                "time": row["time"],
-                "daily_di": row["daily_di"],
-                "4h_di": row["4h_di"],
-                "weekly_di": row["weekly_di"],
-                "total_di": row["total_di"],
-                "di_ema_13": row["di_ema_13"],
-                "di_sma_30": row["di_sma_30"],
-                "trend": row["trend"],
-                "close": row["close"],
-                "has_4h": pd.notna(row["4h_di"])  # Add flag for 4h data presence
-            }
-            # Convert NaN to None
-            for key, value in entry.items():
-                if isinstance(value, float) and math.isnan(value):
-                    entry[key] = None
-            final_results.append(entry)
-
         # Cache results
-        set_cached_data(symbol, 'combined_indices', final_results)
-        return symbol, final_results
+        set_cached_data(symbol, 'combined_indices', results_list)
+        return symbol, results_list
 
     except Exception as e:
         logger.error(f"Error processing {symbol}: {str(e)}", exc_info=True)
