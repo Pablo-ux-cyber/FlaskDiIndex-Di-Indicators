@@ -137,9 +137,17 @@ def process_symbol(symbol, debug=False):
             axis=1
         )
 
+        # Debug logs for calculations
+        logger.debug("Sample of Total DI calculations:")
+        logger.debug(df[["time", "weekly_di", "daily_di", "4h_di", "total_di"]].head())
+
         # Calculate indicators
         df["di_ema_13"] = ta.ema(df["total_di"], length=13)
         df["di_sma_30"] = df["total_di"].rolling(window=30, min_periods=30).mean()
+
+        # Debug logs for indicators
+        logger.debug("Sample of indicators:")
+        logger.debug(df[["time", "total_di", "di_ema_13", "di_sma_30"]].head())
 
         # Calculate trend
         df["trend"] = np.where(
