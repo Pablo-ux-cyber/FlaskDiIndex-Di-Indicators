@@ -32,6 +32,17 @@
     .btn:hover {
       background-color: #5a6268;
     }
+    .diff-highlight {
+      background-color: rgba(255, 244, 229, 0.3);
+    }
+    .comparison-group {
+      border-right: 2px solid #ddd;
+    }
+    thead tr th.group-header {
+      text-align: center;
+      background-color: #e9ecef;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -279,6 +290,11 @@
       XLSX.writeFile(wb, `${symbol}_DI_Index_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
+    function compareValues(val1, val2) {
+      if (val1 === null || val2 === null || isNaN(val1) || isNaN(val2)) return false;
+      return Math.abs(val1 - val2) > 0.01; // Различие больше 0.01 считаем значимым
+    }
+
     function createTable(symbol, data) {
       const container = document.createElement('div');
       container.className = 'coin-container';
@@ -305,42 +321,51 @@
       const table = document.createElement('table');
       table.setAttribute('data-sort-dir', 'asc');
 
-      const headers = [
-        'Дата',
-        'DI Index (Old)',
-        '13 EMA (Old)',
-        '30 SMA (Old)',
-        'Trend (Old)',
-        'DI Index (New)',
-        '13 EMA (New)',
-        '30 SMA (New)',
-        'Trend (New)',
-        'Close (Daily)'
-      ];
-
       table.innerHTML = `
         <thead>
           <tr>
-            ${headers.map((header, index) => 
-              `<th onclick="sortTable(this.closest('table'), ${index})">${header}</th>`
-            ).join('')}
+            <th rowspan="2">Дата</th>
+            <th colspan="4" class="group-header comparison-group">Старый метод</th>
+            <th colspan="4" class="group-header">Новый метод</th>
+            <th rowspan="2">Close (Daily)</th>
+          </tr>
+          <tr>
+            <th>DI Index</th>
+            <th>13 EMA</th>
+            <th>30 SMA</th>
+            <th class="comparison-group">Trend</th>
+            <th>DI Index</th>
+            <th>13 EMA</th>
+            <th>30 SMA</th>
+            <th>Trend</th>
           </tr>
         </thead>
         <tbody>
-          ${data.map(row => `
-            <tr>
-              <td>${row.time}</td>
-              <td>${formatValue(row.DI_index_old)}</td>
-              <td>${formatValue(row.di_ema_13_old)}</td>
-              <td>${formatValue(row.di_sma_30_old)}</td>
-              <td>${row.trend_old ? (row.trend_old === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
-              <td>${formatValue(row.DI_index_new)}</td>
-              <td>${formatValue(row.di_ema_13_new)}</td>
-              <td>${formatValue(row.di_sma_30_new)}</td>
-              <td>${row.trend_new ? (row.trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
-              <td>${formatValue(row.close)}</td>
-            </tr>
-          `).join('')}
+          ${data.map(row => {
+            const di_diff = compareValues(row.DI_index_old, row.DI_index_new);
+            const ema_diff = compareValues(row.di_ema_13_old, row.di_ema_13_new);
+            const sma_diff = compareValues(row.di_sma_30_old, row.di_sma_30_new);
+            const trend_diff = row.trend_old !== row.trend_new;
+
+            return `
+              <tr>
+                <td>${row.time}</td>
+                <td class="${di_diff ? 'diff-highlight' : ''}">${formatValue(row.DI_index_old)}</td>
+                <td class="${ema_diff ? 'diff-highlight' : ''}">${formatValue(row.di_ema_13_old)}</td>
+                <td class="${sma_diff ? 'diff-highlight' : ''}">${formatValue(row.di_sma_30_old)}</td>
+                <td class="${trend_diff ? 'diff-highlight' : ''} comparison-group">
+                  ${row.trend_old ? (row.trend_old === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}
+                </td>
+                <td class="${di_diff ? 'diff-highlight' : ''}">${formatValue(row.DI_index_new)}</td>
+                <td class="${ema_diff ? 'diff-highlight' : ''}">${formatValue(row.di_ema_13_new)}</td>
+                <td class="${sma_diff ? 'diff-highlight' : ''}">${formatValue(row.di_sma_30_new)}</td>
+                <td class="${trend_diff ? 'diff-highlight' : ''}">
+                  ${row.trend_new ? (row.trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}
+                </td>
+                <td>${formatValue(row.close)}</td>
+              </tr>
+            `;
+          }).join('')}
         </tbody>
       `;
 
