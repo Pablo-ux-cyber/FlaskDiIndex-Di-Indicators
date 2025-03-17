@@ -451,13 +451,18 @@ def calculate_di_index(df, debug=False):
     # В соответствии с TradingView Pine Script используем сам DI Index для всех периодов
     if "timeframe" in df.attrs:
         if df.attrs["timeframe"] == "weekly":
-            # Для weekly берем фиолетовую полосу как есть
+            # Для weekly берем фиолетовую полосу (DI_index) как есть
             df["weekly_di_old"] = df["DI_index_old"]
             df["weekly_di_new"] = df["DI_index_new"]
             df["daily_di_old"] = None
             df["daily_di_new"] = None
             df["4h_di_old"] = None
             df["4h_di_new"] = None
+
+            if debug:
+                logger.debug("Weekly DI values and their times:")
+                logger.debug(df[["time", "weekly_di_old", "weekly_di_new", "DI_index_old", "DI_index_new"]].head())
+
         elif df.attrs["timeframe"] == "daily":
             # Для daily тоже берем фиолетовую полосу как есть
             df["weekly_di_old"] = None
@@ -479,11 +484,9 @@ def calculate_di_index(df, debug=False):
             df["4h_di_old"] = df["DI_index_old"]
             df["4h_di_new"] = df["DI_index_new"]
 
-        if debug:
-            logger.debug(f"Final DI values for timeframe {df.attrs['timeframe']}:")
-            logger.debug(df[["time", "weekly_di_old", "weekly_di_new", 
-                           "daily_di_old", "daily_di_new",
-                           "4h_di_old", "4h_di_new"]].head())
+            if debug:
+                logger.debug("4h DI values and their times:")
+                logger.debug(df[["time", "4h_di_old", "4h_di_new"]].head())
 
     result = []
     for _, row in df.iterrows():
