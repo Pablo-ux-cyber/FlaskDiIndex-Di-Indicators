@@ -255,9 +255,6 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     logger.debug(f"Weekly data dates after reset_index for {symbol}:")
     logger.debug(df_weekly)
 
-    # Рассчитываем индикаторы как в Pine Script
-    df_weekly["DI_index"] = None  # Будет рассчитано в calculate_di_index
-
     set_cached_data(symbol, "weekly_data", df_weekly)
     return df_weekly
 
@@ -430,33 +427,17 @@ def calculate_di_index(df, debug=False):
         None
     )
 
-    # Calculate Weekly, Daily, and 4h DI for both methods
-    # Используем DI_index (фиолетовая полоса) для weekly данных
-    if len(df) >= 7:  # For weekly calculation
-        # Группируем данные по неделям с понедельника по воскресенье
-        df.set_index('time', inplace=True)
-        # Берем значения на конец воскресенья как в TradingView
-        weekly_data = df.resample('W-MON').agg({
-            'DI_index_old': 'last',  # Значение DI на конец недели (воскресенье)
-            'DI_index_new': 'last'   # Значение DI на конец недели (воскресенье)
-        }).dropna()
-
-        # Логируем недельные значения для отладки
-        if debug:
-            logger.debug("Weekly data after resampling:")
-            logger.debug(weekly_data[['DI_index_old', 'DI_index_new']].head())
-
-        df.reset_index(inplace=True)
-        weekly_data.reset_index(inplace=True)
-
-        # Присваиваем значения обратно в основной DataFrame
-        df = pd.merge(df, weekly_data.rename(columns={
-            'DI_index_old': 'weekly_di_old',
-            'DI_index_new': 'weekly_di_new'
-        }), on='time', how='left')
-    else:
+    # Для weekly данных используем сами значения DI_index
+    if "timeframe" in df.attrs and df.attrs["timeframe"] == "weekly":
         df["weekly_di_old"] = df["DI_index_old"]
         df["weekly_di_new"] = df["DI_index_new"]
+
+        if debug:
+            logger.debug("Weekly DI values:")
+            logger.debug(df[["time", "weekly_di_old", "weekly_di_new"]].head())
+    else:
+        df["weekly_di_old"] = None
+        df["weekly_di_new"] = None
 
     df["daily_di_old"] = df["DI_index_old"]
     df["daily_di_new"] = df["DI_index_new"]
