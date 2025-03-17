@@ -84,7 +84,7 @@ def process_symbol(symbol, debug=False):
         fourh_di = calculate_di_index(df_4h, debug)
         weekly_di = calculate_di_index(df_weekly, debug)
 
-        # Process data - UPDATED to handle new structure
+        # Process data
         results_by_date = {}
 
         # First, process daily and weekly data
@@ -107,37 +107,51 @@ def process_symbol(symbol, debug=False):
 
                 # Update daily/weekly values
                 if data_type == "daily":
-                    results_by_date[date].update({
-                        "daily_di_new": entry["total_new"],
-                        "total_new": entry["total_new"],
-                        "di_ema_13_new": entry["di_ema_13_new"],
-                        "di_sma_30_new": entry["di_sma_30_new"],
-                        "trend_new": entry["trend_new"]
-                    })
+                    results_by_date[date]["daily_di_new"] = entry["daily_di_new"]
                 elif data_type == "weekly":
-                    results_by_date[date].update({
-                        "weekly_di_new": entry["total_new"]
-                    })
+                    results_by_date[date]["weekly_di_new"] = entry["weekly_di_new"]
 
         # Then process 4h data
         for entry in fourh_di:
             date = entry["time"][:10]
             if date in results_by_date:
-                # Store the full 4h value
                 results_by_date[date]["4h_values_new"].append({
                     "time": entry["time"],
-                    "value": entry["total_new"]
+                    "value": entry["4h_di_new"]
                 })
-
                 # Update the latest 4h value for the day
-                results_by_date[date]["4h_di_new"] = entry["total_new"]
+                results_by_date[date]["4h_di_new"] = entry["4h_di_new"]
 
-        # Sort 4h values by time for each day
-        for date_data in results_by_date.values():
-            date_data["4h_values_new"].sort(key=lambda x: x["time"])
+        # Calculate total and indicators for each date
+        results_list = []
+        for date, data in results_by_date.items():
+            # Calculate total
+            components = [
+                data["weekly_di_new"],
+                data["daily_di_new"],
+                data["4h_di_new"]
+            ]
+            total = sum(x for x in components if x is not None)
+            data["total_new"] = total
+            results_list.append(data)
 
-        results_list = list(results_by_date.values())
+        # Sort by date
         results_list.sort(key=lambda x: x["time"])
+
+        # Calculate EMAs and SMAs on the total values
+        totals = pd.Series([d["total_new"] for d in results_list])
+        ema13 = ta.ema(totals, length=13)
+        sma30 = totals.rolling(window=30, min_periods=30).mean()
+
+        # Update results with EMAs, SMAs and trends
+        for i, data in enumerate(results_list):
+            data["di_ema_13_new"] = None if pd.isna(ema13.iloc[i]) else ema13.iloc[i]
+            data["di_sma_30_new"] = None if pd.isna(sma30.iloc[i]) else sma30.iloc[i]
+
+            if data["di_ema_13_new"] is not None and data["di_sma_30_new"] is not None:
+                data["trend_new"] = "bull" if data["di_ema_13_new"] > data["di_sma_30_new"] else "bear"
+            else:
+                data["trend_new"] = None
 
         # Cache results
         set_cached_data(symbol, 'combined_indices', results_list)
@@ -405,12 +419,12 @@ def calculate_di_index(df, debug=False):
     df = calculate_mfi_index(df)
     df = calculate_ad_index(df)
 
-    # Calculate total (фиолетовая полоса) для нового метода
-    df["total_new"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                       df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
+    # Calculate DI Index для текущего таймфрейма
+    df["di_value"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
+                     df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
 
     if debug:
-        logger.debug(f"Components for total calculation ({df.attrs.get('timeframe', 'unknown')}):")
+        logger.debug(f"Components for DI Index calculation ({df.attrs.get('timeframe', 'unknown')}):")
         logger.debug("Time format: %Y-%m-%d %H:%M:%S UTC")
         logger.debug("MA_index values:")
         logger.debug(df[["time", "MA_index"]].head())
@@ -424,60 +438,51 @@ def calculate_di_index(df, debug=False):
         logger.debug(df[["time", "mfi_index_new"]].head())
         logger.debug("AD_index values:")
         logger.debug(df[["time", "AD_index"]].head())
-        logger.debug("Final total:")
-        logger.debug(df[["time", "total_new"]].head())
+        logger.debug("Final DI value:")
+        logger.debug(df[["time", "di_value"]].head())
 
-    # Calculate total as sum of all components for each timeframe
+    # Initialize all timeframe columns as None
+    df["weekly_di_new"] = None
+    df["daily_di_new"] = None
+    df["4h_di_new"] = None
+
+    # Assign DI value to appropriate timeframe column
     if df.attrs.get("timeframe") == "weekly":
-        df["weekly_di_new"] = df["total_new"]
-        df["daily_di_new"] = None
-        df["4h_di_new"] = None
+        df["weekly_di_new"] = df["di_value"]
     elif df.attrs.get("timeframe") == "daily":
-        df["weekly_di_new"] = None
-        df["daily_di_new"] = df["total_new"]
-        df["4h_di_new"] = None
+        df["daily_di_new"] = df["di_value"]
     else:  # 4h
-        df["weekly_di_new"] = None
-        df["daily_di_new"] = None
-        df["4h_di_new"] = df["total_new"]
-
-    # Calculate total as sum of non-null components
-    df["total_final"] = df.apply(
-        lambda row: sum(x for x in [row["weekly_di_new"], row["daily_di_new"], row["4h_di_new"]] 
-                       if x is not None and not pd.isna(x)),
-        axis=1
-    )
-
-    # Calculate EMAs and SMAs based on total_final
-    df["di_ema_13_new"] = ta.ema(df["total_final"], length=13)
-    df["di_sma_30_new"] = df["total_final"].rolling(window=30, min_periods=30).mean()
-    df["trend_new"] = np.where(
-        (df["di_ema_13_new"].notna() & df["di_sma_30_new"].notna()),
-        np.where(df["di_ema_13_new"] > df["di_sma_30_new"], "bull", "bear"),
-        None
-    )
-
-    if debug:
-        logger.debug(f"Final data for timeframe {df.attrs.get('timeframe', 'unknown')}:")
-        logger.debug(df[["time", "weekly_di_new", "daily_di_new", "4h_di_new", "total_final", 
-                        "di_ema_13_new", "di_sma_30_new", "trend_new"]].head())
+        df["4h_di_new"] = df["di_value"]
 
     result = []
     for _, row in df.iterrows():
         time_val = row["time"] if "time" in row.index else row.name
         time_str = time_val.strftime("%Y-%m-%d %H:%M:%S") if isinstance(time_val, pd.Timestamp) else str(time_val)
 
+        # Calculate total as sum of available components
+        components = [
+            nan_to_none(row["weekly_di_new"]),
+            nan_to_none(row["daily_di_new"]),
+            nan_to_none(row["4h_di_new"])
+        ]
+        total = sum(x for x in components if x is not None)
+
         result.append({
             "time": time_str,
             "weekly_di_new": nan_to_none(row["weekly_di_new"]),
             "daily_di_new": nan_to_none(row["daily_di_new"]),
             "4h_di_new": nan_to_none(row["4h_di_new"]),
-            "total_new": nan_to_none(row["total_final"]),
-            "di_ema_13_new": nan_to_none(row["di_ema_13_new"]),
-            "di_sma_30_new": nan_to_none(row["di_sma_30_new"]),
-            "trend_new": row["trend_new"],
+            "total_new": total,
+            "di_ema_13_new": nan_to_none(row["di_ema_13_new"]) if "di_ema_13_new" in row else None,
+            "di_sma_30_new": nan_to_none(row["di_sma_30_new"]) if "di_sma_30_new" in row else None,
+            "trend_new": row["trend_new"] if "trend_new" in row else None,
             "close": nan_to_none(row["close"])
         })
+
+    if debug:
+        logger.debug(f"Final data structure for timeframe {df.attrs.get('timeframe', 'unknown')}:")
+        sample_result = pd.DataFrame(result[:5])
+        logger.debug(sample_result[["time", "weekly_di_new", "daily_di_new", "4h_di_new", "total_new"]].to_string())
 
     return result
 
