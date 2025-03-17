@@ -73,12 +73,6 @@ def process_symbol(symbol, debug=False):
                 df_daily = get_daily_data(symbol=symbol)
                 df_4h = get_4h_data(symbol=symbol)
                 df_weekly = get_weekly_data(symbol=symbol)
-
-                # Add debug logging for dates
-                logger.debug("Sample dates from each timeframe:")
-                logger.debug(f"Daily dates: {df_daily.index if 'time' not in df_daily.columns else df_daily['time']}")
-                logger.debug(f"4h dates: {df_4h.index if 'time' not in df_4h.columns else df_4h['time']}")
-                logger.debug(f"Weekly dates: {df_weekly.index if 'time' not in df_weekly.columns else df_weekly['time']}")
                 break
             except Exception as e:
                 if attempt == max_retries - 1:
@@ -89,13 +83,6 @@ def process_symbol(symbol, debug=False):
         daily_di = calculate_di_index(df_daily, debug)
         fourh_di = calculate_di_index(df_4h, debug)
         weekly_di = calculate_di_index(df_weekly, debug)
-
-        # Add debug logging for calculated indices
-        if debug:
-            logger.debug("Sample of calculated indices:")
-            logger.debug(f"Daily DI first row: {daily_di[0] if daily_di else None}")
-            logger.debug(f"4h DI first row: {fourh_di[0] if fourh_di else None}")
-            logger.debug(f"Weekly DI first row: {weekly_di[0] if weekly_di else None}")
 
         # Process data - UPDATED to handle new structure
         results_by_date = {}
@@ -172,10 +159,6 @@ def process_symbol(symbol, debug=False):
         results_list = list(results_by_date.values())
         results_list.sort(key=lambda x: x["time"])
 
-        if debug:
-            logger.debug("Sample of final results:")
-            logger.debug(f"First row of results: {results_list[0] if results_list else None}")
-
         # Cache results
         set_cached_data(symbol, 'combined_indices', results_list)
         return symbol, results_list
@@ -212,9 +195,6 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     # Отфильтровываем будущие даты и сегодняшний день, так как он еще не закончился
     today = pd.Timestamp.now().normalize()
     df = df[df['time'] < today]
-
-    logger.debug(f"Daily data sample for {symbol}:")
-    logger.debug(df[['time', 'close']].head())
 
     set_cached_data(symbol, "daily_data", df)
     return df
@@ -254,26 +234,14 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
 
     df_daily = get_daily_data(symbol, tsym, limit)
     df_daily.set_index('time', inplace=True)
-
-    # Группируем данные по неделям, начиная с понедельника (как в TradingView)
-    df_weekly = df_daily.resample('W-MON').agg({
-        'open': 'first',  # Берем open первого дня недели
-        'high': 'max',    # Максимум за неделю
-        'low': 'min',     # Минимум за неделю
-        'close': 'last',  # Close последнего дня недели
+    df_weekly = df_daily.resample('W').agg({
+        'open': 'first',
+        'high': 'max',
+        'low': 'min',
+        'close': 'last',
         'volumefrom': 'sum',
         'volumeto': 'sum'
     }).dropna()
-
-    # Важно: сдвигаем метку времени на начало недели (понедельник)
-    # так как по умолчанию resample ставит метку на конец периода
-    df_weekly.index = df_weekly.index - pd.Timedelta(days=6)
-
-    logger.debug(f"Weekly data sample for {symbol}:")
-    logger.debug(df_weekly.head())
-    logger.debug("Weekly data dates:")
-    logger.debug(df_weekly.index.tolist()[:5])  # Показываем первые 5 дат для проверки
-
     df_weekly.reset_index(inplace=True)
     set_cached_data(symbol, "weekly_data", df_weekly)
     return df_weekly
