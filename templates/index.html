@@ -51,6 +51,7 @@
 <body>
   <h1>DI Index – Объединённые данные</h1>
 
+  <!-- Селектор символов -->
   <div class="symbol-selector">
     <label for="symbols">Выберите криптовалюты:</label>
     <select id="symbols" multiple>
@@ -129,13 +130,11 @@
     }
 
     function show4hValues(values, date) {
-        // Удалить существующее модальное окно, если оно есть
         const existingModal = document.querySelector('#fourHourModal');
         if (existingModal) {
             existingModal.remove();
         }
 
-        // Создать новое модальное окно
         const modalHtml = `
         <div class="modal fade" id="fourHourModal" tabindex="-1" role="dialog">
             <div class="modal-dialog" role="document">
@@ -151,15 +150,13 @@
                             <thead>
                                 <tr>
                                     <th>Время</th>
-                                    <th>Старый метод</th>
-                                    <th>Новый метод</th>
+                                    <th>Значение</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${values.map(entry => `
                                     <tr>
                                         <td>${entry.time}</td>
-                                        <td>${formatValue(entry.value_old)}</td>
                                         <td>${formatValue(entry.value_new)}</td>
                                     </tr>
                                 `).join('')}
@@ -173,13 +170,8 @@
             </div>
         </div>`;
 
-        // Добавить модальное окно в DOM
         document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        // Показать модальное окно
         $('#fourHourModal').modal('show');
-
-        // Удалить модальное окно после закрытия
         $('#fourHourModal').on('hidden.bs.modal', function (e) {
             $(this).remove();
         });
@@ -187,216 +179,22 @@
 
     function get4hValuesForDate(row) {
       try {
-        console.log("Row data:", row); // Debugging
-        // Проверяем наличие массивов 4h_values
-        if (!row['4h_values_old'] || !row['4h_values_new']) {
+        if (!row['4h_values_new']) {
           console.error("Missing 4h values arrays");
           return [];
         }
 
-        // Combine old and new values
-        const times = new Set([
-          ...row['4h_values_old'].map(v => v.time),
-          ...row['4h_values_new'].map(v => v.time)
-        ]);
-
-        return Array.from(times).map(time => ({
-          time,
-          value_old: (row['4h_values_old'].find(v => v.time === time) || {}).value,
-          value_new: (row['4h_values_new'].find(v => v.time === time) || {}).value
-        })).sort((a, b) => a.time.localeCompare(b.time));
+        return row['4h_values_new'].sort((a, b) => a.time.localeCompare(b.time));
       } catch (error) {
         console.error("Error in get4hValuesForDate:", error);
         return [];
       }
     }
 
-    function selectAll() {
-      const symbolsSelect = document.getElementById('symbols');
-      for (let option of symbolsSelect.options) {
-        option.selected = true;
-      }
-    }
-
-    function deselectAll() {
-      const symbolsSelect = document.getElementById('symbols');
-      for (let option of symbolsSelect.options) {
-        option.selected = false;
-      }
-    }
-
-    function sortTable(table, columnIndex) {
-      const tbody = table.querySelector('tbody');
-      const rows = Array.from(tbody.querySelectorAll('tr'));
-      const isNumeric = columnIndex > 0;
-
-      rows.sort((a, b) => {
-        let aVal = a.cells[columnIndex].textContent;
-        let bVal = b.cells[columnIndex].textContent;
-
-        if (isNumeric) {
-          aVal = aVal === '-' ? -Infinity : parseFloat(aVal);
-          bVal = bVal === '-' ? -Infinity : parseFloat(bVal);
-        }
-
-        if (aVal < bVal) return -1;
-        if (aVal > bVal) return 1;
-        return 0;
-      });
-
-      const currentDir = table.getAttribute('data-sort-dir') === 'asc' ? 'desc' : 'asc';
-      table.setAttribute('data-sort-dir', currentDir);
-
-      if (currentDir === 'desc') {
-        rows.reverse();
-      }
-
-      tbody.innerHTML = '';
-      rows.forEach(row => tbody.appendChild(row));
-    }
-
-    function calculateMarketSentiment(allData) {
-      const sentimentByDate = {};
-
-      // Собираем данные по датам
-      for (const [symbol, data] of Object.entries(allData)) {
-        if (!Array.isArray(data)) continue;
-
-        data.forEach(row => {
-          const date = row.time;
-          if (!sentimentByDate[date]) {
-            sentimentByDate[date] = { bullCount: 0, totalCount: 0 };
-          }
-          if (row.trend !== null) {
-            sentimentByDate[date].totalCount++;
-            if (row.trend === 'bull') {
-              sentimentByDate[date].bullCount++;
-            }
-          }
-        });
-      }
-
-      // Преобразуем в массив и сортируем по дате
-      const sortedData = Object.entries(sentimentByDate)
-        .map(([date, data]) => ({
-          date,
-          bullCount: data.bullCount,
-          totalCount: data.totalCount,
-          percentage: (data.bullCount / data.totalCount * 100).toFixed(2)
-        }))
-        .sort((a, b) => a.date.localeCompare(b.date));
-
-      // Рассчитываем 13MA для процентов
-      const percentages = sortedData.map(item => parseFloat(item.percentage));
-      const ma13 = [];
-      const sma13 = [];
-      const alpha = 2 / (13 + 1); // коэффициент для 13 EMA
-
-      // Сначала считаем EMA по хронологии
-      for (let i = 0; i < percentages.length; i++) {
-        if (isNaN(percentages[i])) {
-          ma13.push(null);
-          sma13.push(null);
-        } else if (i === 0) {
-          ma13.push(parseFloat(percentages[i]));
-          sma13.push(parseFloat(percentages[i]));
-        } else {
-          // Расчет EMA
-          const prevEMA = ma13[i - 1];
-          if (prevEMA === null || isNaN(prevEMA)) {
-            ma13.push(parseFloat(percentages[i]));
-          } else {
-            const ema = (percentages[i] * alpha) + (prevEMA * (1 - alpha));
-            ma13.push(ema);
-          }
-
-          // Расчет SMA
-          const start = Math.max(0, i - 12);
-          const slice = percentages.slice(start, i + 1);
-          const validNumbers = slice.filter(n => !isNaN(n));
-          sma13.push(validNumbers.length > 0 ? 
-            validNumbers.reduce((a, b) => a + b, 0) / validNumbers.length : 
-            null
-          );
-        }
-      }
-
-      // Добавляем MA13 к данным и сортируем по убыванию дат
-      return sortedData.map((item, index) => ({
-        ...item,
-        ma13: ma13[index] === null ? null : ma13[index].toFixed(2),
-        sma13: sma13[index] === null ? null : sma13[index].toFixed(2)
-      })).reverse(); // Разворачиваем для отображения новых данных сверху
-    }
-
-    function updateSentimentTable(sentimentData) {
-      const tbody = document.getElementById('sentimentTableBody');
-      tbody.innerHTML = sentimentData.map(row => `
-        <tr>
-          <td>${row.date}</td>
-          <td>${row.bullCount}</td>
-          <td>${row.totalCount}</td>
-          <td>${row.percentage}%</td>
-          <td>${row.ma13 !== null ? row.ma13 + '%' : '-'}</td>
-          <td>${row.sma13 !== null ? row.sma13 + '%' : '-'}</td>
-        </tr>
-      `).join('');
-    }
-
-    function downloadExcel(data, symbol) {
-      // Форматируем данные для Excel
-      const rows = [
-        ['Дата', 
-         'Weekly DI (Old)', 'Weekly DI (New)',
-         'Daily DI (Old)', 'Daily DI (New)',
-         '4h DI (Old)', '4h DI (New)',
-         'DI Index (Old)', '13 EMA (Old)', '30 SMA (Old)', 'Trend (Old)',
-         'DI Index (New)', '13 EMA (New)', '30 SMA (New)', 'Trend (New)',
-         'Close (Daily)']
-      ];
-
-      data.forEach(row => {
-        rows.push([
-          row.time,
-          formatValue(row.weekly_di_old),
-          formatValue(row.weekly_di_new),
-          formatValue(row.daily_di_old),
-          formatValue(row.daily_di_new),
-          formatValue(row['4h_di_old']),
-          formatValue(row['4h_di_new']),
-          formatValue(row.DI_index_old),
-          formatValue(row.di_ema_13_old),
-          formatValue(row.di_sma_30_old),
-          row.trend_old || '-',
-          formatValue(row.DI_index_new),
-          formatValue(row.di_ema_13_new),
-          formatValue(row.di_sma_30_new),
-          row.trend_new || '-',
-          formatValue(row.close)
-        ]);
-      });
-
-      // Создаем Workbook
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-
-      // Добавляем worksheet в workbook
-      XLSX.utils.book_append_sheet(wb, ws, symbol);
-
-      // Сохраняем файл
-      XLSX.writeFile(wb, `${symbol}_DI_Index_${new Date().toISOString().split('T')[0]}.xlsx`);
-    }
-
-    function compareValues(val1, val2) {
-      if (val1 === null || val2 === null || isNaN(val1) || isNaN(val2)) return false;
-      return Math.abs(val1 - val2) > 0.01; // Различие больше 0.01 считаем значимым
-    }
-
     function createTable(symbol, data) {
       const container = document.createElement('div');
       container.className = 'coin-container';
 
-      // Добавляем кнопку экспорта
       const exportButton = document.createElement('button');
       exportButton.className = 'btn btn-sm btn-secondary';
       exportButton.innerHTML = 'Экспорт в Excel';
@@ -421,31 +219,16 @@
       table.innerHTML = `
         <thead>
           <tr>
-            <th rowspan="3">Дата</th>
-            <th colspan="6" class="group-header comparison-group">DI Компоненты</th>
-            <th colspan="4" class="group-header comparison-group">Старый метод</th>
-            <th colspan="4" class="group-header">Новый метод</th>
-            <th rowspan="3">Close (Daily)</th>
-          </tr>
-          <tr>
-            <th colspan="2">Weekly</th>
-            <th colspan="2">Daily</th>
-            <th colspan="2" class="comparison-group">4h</th>
-            <th colspan="4" class="group-header comparison-group">Расчет</th>
+            <th rowspan="2">Дата</th>
+            <th colspan="3" class="group-header">DI Компоненты</th>
             <th colspan="4" class="group-header">Расчет</th>
+            <th rowspan="2">Close (Daily)</th>
           </tr>
           <tr>
-            <th>Old</th>
-            <th>New</th>
-            <th>Old</th>
-            <th>New</th>
-            <th>Old</th>
-            <th class="comparison-group">New</th>
-            <th>DI Index</th>
-            <th>13 EMA</th>
-            <th>30 SMA</th>
-            <th class="comparison-group">Trend</th>
-            <th>DI Index</th>
+            <th>Weekly</th>
+            <th>Daily</th>
+            <th>4h</th>
+            <th>Total</th>
             <th>13 EMA</th>
             <th>30 SMA</th>
             <th>Trend</th>
@@ -453,38 +236,17 @@
         </thead>
         <tbody>
           ${data.map(row => {
-            const weekly_diff = compareValues(row.weekly_di_old, row.weekly_di_new);
-            const daily_diff = compareValues(row.daily_di_old, row.daily_di_new);
-            const fourh_diff = compareValues(row['4h_di_old'], row['4h_di_new']);
-            const di_diff = compareValues(row.DI_index_old, row.DI_index_new);
-            const ema_diff = compareValues(row.di_ema_13_old, row.di_ema_13_new);
-            const sma_diff = compareValues(row.di_sma_30_old, row.di_sma_30_new);
-            const trend_diff = row.trend_old !== row.trend_new;
-
-            // Convert 4h values to a string for the onclick handler
             const values4h = JSON.stringify(get4hValuesForDate(row)).replace(/'/g, "\\'");
-
             return `
               <tr>
                 <td>${row.time}</td>
-                <td class="${weekly_diff ? 'diff-highlight' : ''}">${formatValue(row.weekly_di_old)}</td>
-                <td class="${weekly_diff ? 'diff-highlight' : ''}">${formatValue(row.weekly_di_new)}</td>
-                <td class="${daily_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_di_old)}</td>
-                <td class="${daily_diff ? 'diff-highlight' : ''}">${formatValue(row.daily_di_new)}</td>
-                <td class="${fourh_diff ? 'diff-highlight' : ''}" style="cursor: pointer" onclick='show4hValues(${values4h}, "${row.time}")'>${formatValue(row['4h_di_old'])}</td>
-                <td class="${fourh_diff ? 'diff-highlight' : ''} comparison-group" style="cursor: pointer" onclick='show4hValues(${values4h}, "${row.time}")'>${formatValue(row['4h_di_new'])}</td>
-                <td class="${di_diff ? 'diff-highlight' : ''}">${formatValue(row.DI_index_old)}</td>
-                <td class="${ema_diff ? 'diff-highlight' : ''}">${formatValue(row.di_ema_13_old)}</td>
-                <td class="${sma_diff ? 'diff-highlight' : ''}">${formatValue(row.di_sma_30_old)}</td>
-                <td class="${trend_diff ? 'diff-highlight' : ''} comparison-group">
-                  ${row.trend_old ? (row.trend_old === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}
-                </td>
-                <td class="${di_diff ? 'diff-highlight' : ''}">${formatValue(row.DI_index_new)}</td>
-                <td class="${ema_diff ? 'diff-highlight' : ''}">${formatValue(row.di_ema_13_new)}</td>
-                <td class="${sma_diff ? 'diff-highlight' : ''}">${formatValue(row.di_sma_30_new)}</td>
-                <td class="${trend_diff ? 'diff-highlight' : ''}">
-                  ${row.trend_new ? (row.trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}
-                </td>
+                <td>${formatValue(row.weekly_di_new)}</td>
+                <td>${formatValue(row.daily_di_new)}</td>
+                <td style="cursor: pointer" onclick='show4hValues(${values4h}, "${row.time}")'>${formatValue(row['4h_di_new'])}</td>
+                <td>${formatValue(row.total_new)}</td>
+                <td>${formatValue(row.di_ema_13_new)}</td>
+                <td>${formatValue(row.di_sma_30_new)}</td>
+                <td>${row.trend_new ? (row.trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
                 <td>${formatValue(row.close)}</td>
               </tr>
             `;
@@ -496,12 +258,46 @@
       return container;
     }
 
-    function batchProcess(symbols, batchSize = 5) {
-      const batches = [];
-      for (let i = 0; i < symbols.length; i += batchSize) {
-        batches.push(symbols.slice(i, i + batchSize));
+    function downloadExcel(data, symbol) {
+      const rows = [
+        ['Дата', 
+         'Weekly DI', 'Daily DI', '4h DI',
+         'Total', '13 EMA', '30 SMA', 'Trend',
+         'Close (Daily)']
+      ];
+
+      data.forEach(row => {
+        rows.push([
+          row.time,
+          formatValue(row.weekly_di_new),
+          formatValue(row.daily_di_new),
+          formatValue(row['4h_di_new']),
+          formatValue(row.total_new),
+          formatValue(row.di_ema_13_new),
+          formatValue(row.di_sma_30_new),
+          row.trend_new || '-',
+          formatValue(row.close)
+        ]);
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      XLSX.utils.book_append_sheet(wb, ws, symbol);
+      XLSX.writeFile(wb, `${symbol}_DI_Index_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    function selectAll() {
+      const symbolsSelect = document.getElementById('symbols');
+      for (let option of symbolsSelect.options) {
+        option.selected = true;
       }
-      return batches;
+    }
+
+    function deselectAll() {
+      const symbolsSelect = document.getElementById('symbols');
+      for (let option of symbolsSelect.options) {
+        option.selected = false;
+      }
     }
 
     async function loadSelectedData() {
@@ -522,7 +318,7 @@
           throw new Error('Пожалуйста, выберите хотя бы одну криптовалюту');
         }
 
-        const batches = batchProcess(selectedSymbols, 3); // Уменьшаем размер пакета до 3
+        const batches = batchProcess(selectedSymbols, 3);
         let successCount = 0;
         let errorCount = 0;
         let allData = {};
@@ -531,7 +327,6 @@
           const batch = batches[i];
           progressDiv.textContent = `Загрузка пакета ${i + 1} из ${batches.length} (${batch.join(', ')})...`;
 
-          // Добавляем механизм повторных попыток
           let retryCount = 0;
           const maxRetries = 3;
 
@@ -539,10 +334,7 @@
             try {
               const response = await fetch(`/api/di_index?symbols=${batch.join(',')}`);
               if (!response.ok) {
-                if (response.status === 502) {
-                  throw new Error('Сервер временно недоступен, повторная попытка...');
-                }
-                throw new Error(`Ошибка HTTP: ${response.status}`);
+                throw new Error(`HTTP error: ${response.status}`);
               }
 
               const json = await response.json();
@@ -558,23 +350,22 @@
                   errorCount++;
                 }
               }
-              break; // Успешно получили данные, выходим из цикла повторных попыток
+              break;
 
             } catch (error) {
               retryCount++;
               if (retryCount === maxRetries) {
-                console.error(`Ошибка обработки пакета ${i + 1} после ${maxRetries} попыток:`, error);
+                console.error(`Error processing batch ${i + 1}:`, error);
                 errorDiv.textContent += `Ошибка в пакете ${i + 1} (${batch.join(', ')}): ${error.message}\n`;
                 errorCount += batch.length;
               } else {
-                console.log(`Попытка ${retryCount} из ${maxRetries} для пакета ${i + 1}...`);
-                await new Promise(resolve => setTimeout(resolve, 1000 * retryCount)); // Увеличиваем задержку с каждой попыткой
+                console.log(`Retry ${retryCount} of ${maxRetries} for batch ${i + 1}...`);
+                await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
               }
             }
           }
         }
 
-        // Обновляем таблицу настроения рынка только если есть успешно загруженные данные
         if (Object.keys(allData).length > 0) {
           const sentimentData = calculateMarketSentiment(allData);
           updateSentimentTable(sentimentData);
@@ -583,7 +374,7 @@
         progressDiv.textContent = `Загружено успешно: ${successCount} монет, с ошибками: ${errorCount} монет`;
 
       } catch (error) {
-        console.error("Ошибка загрузки данных:", error);
+        console.error("Error loading data:", error);
         errorDiv.textContent = `Ошибка загрузки данных: ${error.message}`;
         progressDiv.textContent = '';
       } finally {
@@ -591,41 +382,120 @@
       }
     }
 
-    // Загружаем данные при загрузке страницы
     window.onload = loadSelectedData;
 
-
     function downloadMarketSentimentExcel() {
-      // Форматируем данные для Excel
       const rows = [
         ['Дата', 'Количество бычьих сигналов', 'Всего монет с данными', 'Процент бычьих сигналов', '13 EMA (%)', '13 SMA (%)']
       ];
 
-      // Получаем данные из таблицы
       const tbody = document.getElementById('sentimentTableBody');
       const tableRows = tbody.getElementsByTagName('tr');
 
       Array.from(tableRows).forEach(row => {
         const cells = row.getElementsByTagName('td');
         rows.push([
-          cells[0].textContent, // Дата
-          cells[1].textContent, // Количество бычьих сигналов
-          cells[2].textContent, // Всего монет
-          cells[3].textContent, // Процент
-          cells[4].textContent, // 13 EMA
-          cells[5].textContent  // 13 SMA
+          cells[0].textContent,
+          cells[1].textContent,
+          cells[2].textContent,
+          cells[3].textContent,
+          cells[4].textContent,
+          cells[5].textContent
         ]);
       });
 
-      // Создаем Workbook
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(rows);
-
-      // Добавляем worksheet в workbook
       XLSX.utils.book_append_sheet(wb, ws, "Market Sentiment");
-
-      // Сохраняем файл
       XLSX.writeFile(wb, `Market_Sentiment_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+        function calculateMarketSentiment(allData) {
+      const sentimentByDate = {};
+
+      for (const [symbol, data] of Object.entries(allData)) {
+        if (!Array.isArray(data)) continue;
+
+        data.forEach(row => {
+          const date = row.time;
+          if (!sentimentByDate[date]) {
+            sentimentByDate[date] = { bullCount: 0, totalCount: 0 };
+          }
+          if (row.trend_new !== null) {
+            sentimentByDate[date].totalCount++;
+            if (row.trend_new === 'bull') {
+              sentimentByDate[date].bullCount++;
+            }
+          }
+        });
+      }
+
+      const sortedData = Object.entries(sentimentByDate)
+        .map(([date, data]) => ({
+          date,
+          bullCount: data.bullCount,
+          totalCount: data.totalCount,
+          percentage: (data.bullCount / data.totalCount * 100).toFixed(2)
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      const percentages = sortedData.map(item => parseFloat(item.percentage));
+      const ma13 = [];
+      const sma13 = [];
+      const alpha = 2 / (13 + 1);
+
+      for (let i = 0; i < percentages.length; i++) {
+        if (isNaN(percentages[i])) {
+          ma13.push(null);
+          sma13.push(null);
+        } else if (i === 0) {
+          ma13.push(parseFloat(percentages[i]));
+          sma13.push(parseFloat(percentages[i]));
+        } else {
+          const prevEMA = ma13[i - 1];
+          if (prevEMA === null || isNaN(prevEMA)) {
+            ma13.push(parseFloat(percentages[i]));
+          } else {
+            const ema = (percentages[i] * alpha) + (prevEMA * (1 - alpha));
+            ma13.push(ema);
+          }
+
+          const start = Math.max(0, i - 12);
+          const slice = percentages.slice(start, i + 1);
+          const validNumbers = slice.filter(n => !isNaN(n));
+          sma13.push(validNumbers.length > 0 ? 
+            validNumbers.reduce((a, b) => a + b, 0) / validNumbers.length : 
+            null
+          );
+        }
+      }
+
+      return sortedData.map((item, index) => ({
+        ...item,
+        ma13: ma13[index] === null ? null : ma13[index].toFixed(2),
+        sma13: sma13[index] === null ? null : sma13[index].toFixed(2)
+      })).reverse();
+    }
+
+    function updateSentimentTable(sentimentData) {
+      const tbody = document.getElementById('sentimentTableBody');
+      tbody.innerHTML = sentimentData.map(row => `
+        <tr>
+          <td>${row.date}</td>
+          <td>${row.bullCount}</td>
+          <td>${row.totalCount}</td>
+          <td>${row.percentage}%</td>
+          <td>${row.ma13 !== null ? row.ma13 + '%' : '-'}</td>
+          <td>${row.sma13 !== null ? row.sma13 + '%' : '-'}</td>
+        </tr>
+      `).join('');
+    }
+    function batchProcess(symbols, batchSize = 5) {
+      const batches = [];
+      for (let i = 0; i < symbols.length; i += batchSize) {
+        batches.push(symbols.slice(i, i + batchSize));
+      }
+      return batches;
     }
   </script>
 </body>

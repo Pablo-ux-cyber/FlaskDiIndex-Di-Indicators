@@ -94,21 +94,13 @@ def process_symbol(symbol, debug=False):
                 if date not in results_by_date:
                     results_by_date[date] = {
                         "time": date,
-                        "daily_di_old": None,
                         "daily_di_new": None,
-                        "weekly_di_old": None,
                         "weekly_di_new": None,
-                        "4h_values_old": [],  # List to store all 4h values
                         "4h_values_new": [],  # List to store all 4h values
-                        "4h_di_old": None,    # Latest 4h value
                         "4h_di_new": None,    # Latest 4h value
-                        "DI_index_old": None,
-                        "DI_index_new": None,
-                        "di_ema_13_old": None,
+                        "total_new": None,
                         "di_ema_13_new": None,
-                        "di_sma_30_old": None,
                         "di_sma_30_new": None,
-                        "trend_old": None,
                         "trend_new": None,
                         "close": entry["close"]
                     }
@@ -116,21 +108,15 @@ def process_symbol(symbol, debug=False):
                 # Update daily/weekly values
                 if data_type == "daily":
                     results_by_date[date].update({
-                        "daily_di_old": entry["daily_di_old"],
-                        "daily_di_new": entry["daily_di_new"],
-                        "DI_index_old": entry["DI_index_old"],
-                        "DI_index_new": entry["DI_index_new"],
-                        "di_ema_13_old": entry["di_ema_13_old"],
+                        "daily_di_new": entry["total_new"],
+                        "total_new": entry["total_new"],
                         "di_ema_13_new": entry["di_ema_13_new"],
-                        "di_sma_30_old": entry["di_sma_30_old"],
                         "di_sma_30_new": entry["di_sma_30_new"],
-                        "trend_old": entry["trend_old"],
                         "trend_new": entry["trend_new"]
                     })
                 elif data_type == "weekly":
                     results_by_date[date].update({
-                        "weekly_di_old": entry["weekly_di_old"],
-                        "weekly_di_new": entry["weekly_di_new"]
+                        "weekly_di_new": entry["total_new"]
                     })
 
         # Then process 4h data
@@ -138,22 +124,16 @@ def process_symbol(symbol, debug=False):
             date = entry["time"][:10]
             if date in results_by_date:
                 # Store the full 4h value
-                results_by_date[date]["4h_values_old"].append({
-                    "time": entry["time"],
-                    "value": entry["4h_di_old"]
-                })
                 results_by_date[date]["4h_values_new"].append({
                     "time": entry["time"],
-                    "value": entry["4h_di_new"]
+                    "value": entry["total_new"]
                 })
 
                 # Update the latest 4h value for the day
-                results_by_date[date]["4h_di_old"] = entry["4h_di_old"]
-                results_by_date[date]["4h_di_new"] = entry["4h_di_new"]
+                results_by_date[date]["4h_di_new"] = entry["total_new"]
 
         # Sort 4h values by time for each day
         for date_data in results_by_date.values():
-            date_data["4h_values_old"].sort(key=lambda x: x["time"])
             date_data["4h_values_new"].sort(key=lambda x: x["time"])
 
         results_list = list(results_by_date.values())
@@ -505,7 +485,6 @@ def nan_to_none(val):
     if isinstance(val, float) and math.isnan(val):
         return None
     return val
-
 
 
 def process_symbol_batch(symbols, debug=False):
