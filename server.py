@@ -188,10 +188,14 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     if data.get("Response") != "Success":
         raise Exception(f"Error getting daily data: {data}")
 
-    # Convert timestamp to datetime and adjust to end of day (23:59:59 UTC)
+    # Convert timestamp to datetime and adjust to end of day (00:00:00 UTC следующего дня)
     df = pd.DataFrame(data['Data']['Data'])
     df['time'] = pd.to_datetime(df['time'], unit='s')
-    df['time'] = df['time'] + pd.Timedelta(hours=23, minutes=59, seconds=59)
+
+    # Логируем исходное время для проверки
+    if len(df) > 0:
+        logger.debug(f"Original timestamps for {symbol} daily data:")
+        logger.debug(df['time'].head())
 
     # Отфильтровываем будущие даты и сегодняшний день
     today = pd.Timestamp.now().normalize() + pd.Timedelta(days=1)
@@ -518,6 +522,7 @@ def nan_to_none(val):
     if isinstance(val, float) and math.isnan(val):
         return None
     return val
+
 
 
 def process_symbol_batch(symbols, debug=False):
