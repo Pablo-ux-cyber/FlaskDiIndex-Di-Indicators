@@ -188,13 +188,18 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     if data.get("Response") != "Success":
         raise Exception(f"Error getting daily data: {data}")
 
-    # Convert timestamp to datetime and adjust to end of day
+    # Convert timestamp to datetime and adjust to end of day (23:59:59 UTC)
     df = pd.DataFrame(data['Data']['Data'])
     df['time'] = pd.to_datetime(df['time'], unit='s')
+    df['time'] = df['time'] + pd.Timedelta(hours=23, minutes=59, seconds=59)
 
-    # Отфильтровываем будущие даты и сегодняшний день, так как он еще не закончился
-    today = pd.Timestamp.now().normalize()
+    # Отфильтровываем будущие даты и сегодняшний день
+    today = pd.Timestamp.now().normalize() + pd.Timedelta(days=1)
     df = df[df['time'] < today]
+
+    # Логируем время свечей для проверки
+    logger.debug(f"Sample of daily candle times for {symbol}:")
+    logger.debug(df['time'].head())
 
     # Устанавливаем атрибут timeframe
     df.attrs['timeframe'] = 'daily'
@@ -446,6 +451,7 @@ def calculate_di_index(df, debug=False):
     # В соответствии с TradingView Pine Script используем сам DI Index для всех периодов
     if "timeframe" in df.attrs:
         if df.attrs["timeframe"] == "weekly":
+            # Для weekly берем фиолетовую полосу как есть
             df["weekly_di_old"] = df["DI_index_old"]
             df["weekly_di_new"] = df["DI_index_new"]
             df["daily_di_old"] = None
@@ -453,13 +459,19 @@ def calculate_di_index(df, debug=False):
             df["4h_di_old"] = None
             df["4h_di_new"] = None
         elif df.attrs["timeframe"] == "daily":
+            # Для daily тоже берем фиолетовую полосу как есть
             df["weekly_di_old"] = None
             df["weekly_di_new"] = None
             df["daily_di_old"] = df["DI_index_old"]
             df["daily_di_new"] = df["DI_index_new"]
             df["4h_di_old"] = None
             df["4h_di_new"] = None
+
+            if debug:
+                logger.debug("Daily DI values and their times:")
+                logger.debug(df[["time", "daily_di_old", "daily_di_new"]].head())
         else:  # 4h
+            # Для 4h берем фиолетовую полосу как есть
             df["weekly_di_old"] = None
             df["weekly_di_new"] = None
             df["daily_di_old"] = None
@@ -496,11 +508,6 @@ def calculate_di_index(df, debug=False):
             "trend_new": row["trend_new"],
             "close": nan_to_none(row["close"])
         })
-
-    if debug:
-        logger.debug(f"Sample of data after DI calculation with timeframe {df.attrs.get('timeframe', 'unknown')}:")
-        logger.debug(df[["time", "DI_index_old", "DI_index_new", "weekly_di_old", "weekly_di_new", 
-                        "daily_di_old", "daily_di_new", "4h_di_old", "4h_di_new"]].head())
 
     return result
 
