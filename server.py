@@ -202,7 +202,7 @@ def calculate_di_index(df):
 
     # Calculate DI Value (sum of all components)
     df["di_value"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                      df["OBV_index"] + df["mfi_index"] + df["AD_index"])
+                     df["OBV_index"] + df["mfi_index"] + df["AD_index"])
 
     # Round DI values to integers
     df["di_value"] = df["di_value"].round()
@@ -257,13 +257,6 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     if not isinstance(df_daily.index, pd.DatetimeIndex):
         df_daily.set_index('time', inplace=True)
 
-    # Calculate the start of the current week
-    current_time = pd.Timestamp.now()
-    week_start = current_time.normalize() - pd.Timedelta(days=current_time.weekday())
-
-    # Filter out incomplete weeks
-    df_daily = df_daily[df_daily.index < week_start]
-
     # Use W-MON for Monday-based weekly grouping
     df_weekly = df_daily.resample('W-MON').agg({
         'open': 'first',
@@ -274,12 +267,6 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
         'volumeto': 'sum'
     })
 
-    logger.debug(f"Weekly data time range for {symbol}:")
-    logger.debug(f"First date: {df_weekly.index.min()}")
-    logger.debug(f"Last date: {df_weekly.index.max()}")
-    logger.debug(f"Current time: {current_time}")
-    logger.debug(f"Current week start: {week_start}")
-
     # Reset index to get time as a column
     df_weekly.reset_index(inplace=True)
 
@@ -287,7 +274,6 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     df_weekly.attrs['timeframe'] = 'weekly'
 
     return df_weekly
-
 
 def get_cache_key(symbol, data_type):
     """Generate cache key for given symbol and data type"""
@@ -313,7 +299,7 @@ def set_cached_data(symbol, data_type, data):
         'time': time.time()
     }
 
-def process_symbol(symbol):
+def process_symbol(symbol, debug=False):
     """Process a single symbol"""
     try:
         logger.debug(f"Processing symbol: {symbol}")
@@ -332,26 +318,14 @@ def process_symbol(symbol):
         results_by_date = {}
         weekly_values = {}  # Store weekly values for lookup
 
-        # Get current date (without time) for filtering
-        current_date = pd.Timestamp.now().normalize()
-        previous_date = (current_date - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
-        logger.debug(f"Current date: {current_date}, using data up to: {previous_date}")
-
         # First, process weekly data to build lookup table
         for entry in weekly_di:
             date = entry["time"][:10]  # Get just the date part
-            if date > previous_date:  # Skip current incomplete period
-                continue
             weekly_values[date] = entry["weekly_di_new"]
 
         # Process all dates from daily data
         for entry in daily_di:
             date = entry["time"][:10]  # Get just the date part
-
-            # Skip incomplete periods
-            if date > previous_date:
-                continue
-
             if date not in results_by_date:
                 results_by_date[date] = {
                     "time": date,
@@ -380,11 +354,6 @@ def process_symbol(symbol):
         # Process 4h data
         for entry in fourh_di:
             date = entry["time"][:10]
-
-            # Skip incomplete periods
-            if date > previous_date:
-                continue
-
             if date in results_by_date:
                 results_by_date[date]["4h_values_new"].append({
                     "time": entry["time"],
@@ -393,7 +362,7 @@ def process_symbol(symbol):
                 # Update the latest 4h value for the day
                 results_by_date[date]["4h_di_new"] = entry["4h_di_new"]
 
-        # Calculate total and create results list
+        # Calculate total and indicators for each date
         results_list = []
         for date in sorted(results_by_date.keys()):
             data = results_by_date[date]
@@ -422,10 +391,16 @@ def process_symbol(symbol):
             else:
                 data["trend_new"] = None
 
-        # Sort results by date in descending order
-        results_list.sort(key=lambda x: x["time"], reverse=True)
+        # Test case logging for 01.01.2024
+        test_date = "2024-01-01"
+        if test_date in results_by_date:
+            logger.debug("\nFinal Test case values for 2024-01-01:")
+            test_data = results_by_date[test_date]
+            logger.debug(f"Weekly DI: {test_data['weekly_di_new']}")
+            logger.debug(f"Daily DI: {test_data['daily_di_new']}")
+            logger.debug(f"4h DI: {test_data['4h_di_new']}")
+            logger.debug(f"Total: {test_data['total_new']}")
 
-        logger.debug(f"Processed data up to {previous_date}")
         return symbol, results_list
 
     except Exception as e:
@@ -453,23 +428,26 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     if data.get("Response") != "Success":
         raise Exception(f"Error getting daily data: {data}")
 
-    # Convert timestamp to datetime and adjust to end of day
+    # Convert timestamp to datetime and adjust to end of day (00:00:00 UTC следующего дня)
     df = pd.DataFrame(data['Data']['Data'])
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
-    # Filter out incomplete days and future dates
-    current_time = pd.Timestamp.now()
-    # Используем предыдущий день как последний завершенный
-    last_complete_day = current_time.normalize() - pd.Timedelta(days=1)
-    df = df[df['time'] <= last_complete_day]
+    # Логируем исходное время для проверки
+    if len(df) > 0:
+        logger.debug(f"Original timestamps for {symbol} daily data:")
+        logger.debug(df['time'].head())
 
-    logger.debug(f"Daily data time range for {symbol}:")
-    logger.debug(f"First date: {df['time'].min()}")
-    logger.debug(f"Last date: {df['time'].max()}")
-    logger.debug(f"Current time: {current_time}")
-    logger.debug(f"Last complete day: {last_complete_day}")
+    # Отфильтровываем будущие даты и сегодняшний день
+    today = pd.Timestamp.now().normalize() + pd.Timedelta(days=1)
+    df = df[df['time'] < today]
 
+    # Логируем время свечей для проверки
+    logger.debug(f"Sample of daily candle times for {symbol}:")
+    logger.debug(df['time'].head())
+
+    # Устанавливаем атрибут timeframe
     df.attrs['timeframe'] = 'daily'
+
     set_cached_data(symbol, "daily_data", df)
     return df
 
@@ -485,26 +463,24 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     if data.get("Response") != "Success":
         raise Exception(f"Error getting 4-hour data: {data}")
 
-    # Convert timestamp to datetime
+    # Convert timestamp to datetime with timezone info
     df = pd.DataFrame(data['Data']['Data'])
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
-    # Filter out incomplete 4h periods and future dates
-    current_time = pd.Timestamp.now()
-    current_hour = current_time.hour
-    # Находим последний завершенный 4-часовой период
-    last_complete_4h = current_time.normalize() + pd.Timedelta(hours=((current_hour - 4) // 4) * 4)
-    df = df[df['time'] <= last_complete_4h]
+    # Group by date to ensure we have all 4h intervals
+    df['date'] = df['time'].dt.date
+    df['hour'] = df['time'].dt.hour
 
-    logger.debug(f"4h data time range for {symbol}:")
-    logger.debug(f"First date: {df['time'].min()}")
-    logger.debug(f"Last date: {df['time'].max()}")
-    logger.debug(f"Current time: {current_time}")
-    logger.debug(f"Last complete 4h period: {last_complete_4h}")
+    # Log the data distribution
+    logger.debug(f"4h data distribution for {symbol}:")
+    logger.debug(df.groupby(['date', 'hour']).size().reset_index(name='count'))
 
+    # Устанавливаем атрибут timeframe
     df.attrs['timeframe'] = '4h'
+
     set_cached_data(symbol, "4h_data", df)
     return df
+
 
 def nan_to_none(val):
     if isinstance(val, float) and math.isnan(val):
@@ -520,7 +496,7 @@ def process_symbol_batch(symbols, debug=False):
             def process_with_delay(symbol):
                 try:
                     time.sleep(0.5)  # 500ms задержка между запросами
-                    return process_symbol(symbol)
+                    return process_symbol(symbol, debug)
                 except Exception as e:
                     logger.error(f"Error processing {symbol}: {str(e)}", exc_info=True)
                     return symbol, {"error": str(e)}
