@@ -404,10 +404,10 @@ def calculate_di_index(df, debug=False):
 
     # Calculate old and new DI indices
     df["DI_index_old"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                         df["OBV_index_old"] + df["mfi_index_old"] + df["AD_index"])
+                       df["OBV_index_old"] + df["mfi_index_old"] + df["AD_index"])
 
     df["DI_index_new"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                         df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
+                       df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
 
     # Calculate EMAs and SMAs for both methods
     df["di_ema_13_old"] = ta.ema(df["DI_index_old"], length=13)
@@ -428,8 +428,8 @@ def calculate_di_index(df, debug=False):
 
     # Calculate Weekly, Daily, and 4h DI for both methods
     if len(df) >= 7:  # For weekly calculation
-        df["weekly_di_old"] = df["DI_index_old"].rolling(window=7, min_periods=7).mean()
-        df["weekly_di_new"] = df["DI_index_new"].rolling(window=7, min_periods=7).mean()
+        df["weekly_di_old"] = df["DI_index_old"]
+        df["weekly_di_new"] = df["DI_index_new"]
     else:
         df["weekly_di_old"] = df["DI_index_old"]
         df["weekly_di_new"] = df["DI_index_new"]
@@ -442,16 +442,13 @@ def calculate_di_index(df, debug=False):
     df["4h_di_new"] = df["DI_index_new"]
 
     if debug:
-        logger.debug("Sample of 4h values:")
-        logger.debug(df[["time", "4h_di_old", "4h_di_new"]].head())
-
-    def format_time(dt):
-        return dt.strftime("%Y-%m-%d %H:%M:%S") if isinstance(dt, pd.Timestamp) else str(dt)
+        logger.debug("Sample of weekly and daily values:")
+        logger.debug(df[["time", "weekly_di_old", "weekly_di_new", "daily_di_old", "daily_di_new"]].head())
 
     result = []
     for _, row in df.iterrows():
         time_val = row["time"] if "time" in row.index else row.name
-        time_str = format_time(time_val)
+        time_str = time_val.strftime("%Y-%m-%d %H:%M:%S") if isinstance(time_val, pd.Timestamp) else str(time_val)
 
         result.append({
             "time": time_str,
@@ -471,6 +468,7 @@ def calculate_di_index(df, debug=False):
             "trend_new": row["trend_new"],
             "close": nan_to_none(row["close"])
         })
+
     return result
 
 def nan_to_none(val):
