@@ -73,6 +73,12 @@ def process_symbol(symbol, debug=False):
                 df_daily = get_daily_data(symbol=symbol)
                 df_4h = get_4h_data(symbol=symbol)
                 df_weekly = get_weekly_data(symbol=symbol)
+
+                # Add debug logging for dates
+                logger.debug("Sample dates from each timeframe:")
+                logger.debug(f"Daily dates: {df_daily['time'].head()}")
+                logger.debug(f"4h dates: {df_4h['time'].head()}")
+                logger.debug(f"Weekly dates: {df_weekly['time'].head()}")
                 break
             except Exception as e:
                 if attempt == max_retries - 1:
@@ -83,6 +89,13 @@ def process_symbol(symbol, debug=False):
         daily_di = calculate_di_index(df_daily, debug)
         fourh_di = calculate_di_index(df_4h, debug)
         weekly_di = calculate_di_index(df_weekly, debug)
+
+        # Add debug logging for calculated indices
+        if debug:
+            logger.debug("Sample of calculated indices:")
+            logger.debug(f"Daily DI first row: {daily_di[0] if daily_di else None}")
+            logger.debug(f"4h DI first row: {fourh_di[0] if fourh_di else None}")
+            logger.debug(f"Weekly DI first row: {weekly_di[0] if weekly_di else None}")
 
         # Process data - UPDATED to handle new structure
         results_by_date = {}
@@ -158,6 +171,10 @@ def process_symbol(symbol, debug=False):
 
         results_list = list(results_by_date.values())
         results_list.sort(key=lambda x: x["time"])
+
+        if debug:
+            logger.debug("Sample of final results:")
+            logger.debug(f"First row of results: {results_list[0] if results_list else None}")
 
         # Cache results
         set_cached_data(symbol, 'combined_indices', results_list)
