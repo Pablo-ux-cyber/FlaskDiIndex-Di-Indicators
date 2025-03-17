@@ -247,13 +247,13 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
 
     # Логируем даты до сброса индекса
     logger.debug(f"Weekly data dates before reset_index for {symbol}:")
-    logger.debug(df_weekly.head())
+    logger.debug(df_weekly)
 
     df_weekly.reset_index(inplace=True)
 
     # Логируем даты после сброса индекса
     logger.debug(f"Weekly data dates after reset_index for {symbol}:")
-    logger.debug(df_weekly.head())
+    logger.debug(df_weekly)
 
     # Рассчитываем индикаторы как в Pine Script
     df_weekly["DI_index"] = None  # Будет рассчитано в calculate_di_index
@@ -433,11 +433,12 @@ def calculate_di_index(df, debug=False):
     # Calculate Weekly, Daily, and 4h DI for both methods
     # Используем DI_index (фиолетовая полоса) для weekly данных
     if len(df) >= 7:  # For weekly calculation
-        # Группируем данные по неделям (понедельник-воскресенье)
+        # Группируем данные по неделям с понедельника по воскресенье
         df.set_index('time', inplace=True)
+        # Берем значения на конец воскресенья как в TradingView
         weekly_data = df.resample('W-MON').agg({
-            'DI_index_old': 'last',
-            'DI_index_new': 'last'
+            'DI_index_old': 'last',  # Значение DI на конец недели (воскресенье)
+            'DI_index_new': 'last'   # Значение DI на конец недели (воскресенье)
         }).dropna()
 
         # Логируем недельные значения для отладки
