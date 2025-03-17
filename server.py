@@ -336,7 +336,7 @@ def calculate_obv_index(df):
     df["OBV_index_new"] = df["OBV_bullbear_new"] + df["OBV_bias_new"]
 
     # Keep old method for comparison
-    df["obv_old"] = (df["volumefrom"] * df["change"].gt(0).astype(int) - 
+    df["obv_old"] = (df["volumefrom"] * df["change"].gt(0).astype(int) -
                      df["volumefrom"] * df["change"].lt(0).astype(int)).cumsum()
     df["obv_ema_old"] = ta.ema(df["obv_old"], length=13)
     df["OBV_bullbear_old"] = (df["obv_old"] > df["obv_ema_old"]).astype(int)
@@ -427,10 +427,10 @@ def calculate_di_index(df, debug=False):
 
     # Calculate DI indices (фиолетовая полоса)
     df["DI_index_old"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                      df["OBV_index_old"] + df["mfi_index_old"] + df["AD_index"])
+                          df["OBV_index_old"] + df["mfi_index_old"] + df["AD_index"])
 
     df["DI_index_new"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                      df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
+                          df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
 
     if debug:
         logger.debug(f"Components for DI Index calculation ({df.attrs.get('timeframe', 'unknown')}):")
@@ -468,72 +468,60 @@ def calculate_di_index(df, debug=False):
     )
 
     # В соответствии с TradingView Pine Script используем сам DI Index для всех периодов
-    if "timeframe" in df.attrs:
-        if df.attrs["timeframe"] == "weekly":
-            # Для weekly берем фиолетовую полосу (DI_index) как есть
-            df["weekly_di_old"] = df["DI_index_old"]
-            df["weekly_di_new"] = df["DI_index_new"]
-            df["daily_di_old"] = None
-            df["daily_di_new"] = None
-            df["4h_di_old"] = None
-            df["4h_di_new"] = None
-
-            if debug:
-                logger.debug("Weekly DI values and their times:")
-                logger.debug("Time format: %Y-%m-%d %H:%M:%S UTC")
-                logger.debug(df[["time", "weekly_di_old", "weekly_di_new"]].head())
-
-        elif df.attrs["timeframe"] == "daily":
-            # Для daily тоже берем фиолетовую полосу как есть
-            df["weekly_di_old"] = None
-            df["weekly_di_new"] = None
-            df["daily_di_old"] = df["DI_index_old"]
-            df["daily_di_new"] = df["DI_index_new"]
-            df["4h_di_old"] = None
-            df["4h_di_new"] = None
-
-            if debug:
-                logger.debug("Daily DI values and their times:")
-                logger.debug("Time format: %Y-%m-%d %H:%M:%S UTC")
-                logger.debug(df[["time", "daily_di_old", "daily_di_new"]].head())
-
-        else:  # 4h
-            # Для 4h берем фиолетовую полосу как есть
-            df["weekly_di_old"] = None
-            df["weekly_di_new"] = None
-            df["daily_di_old"] = None
-            df["daily_di_new"] = None
-            df["4h_di_old"] = df["DI_index_old"]
-            df["4h_di_new"] = df["DI_index_new"]
-
-            if debug:
-                logger.debug("4h DI values and their times:")
-                logger.debug("Time format: %Y-%m-%d %H:%M:%S UTC")
-                logger.debug(df[["time", "4h_di_old", "4h_di_new"]].head())
-
     result = []
     for _, row in df.iterrows():
         time_val = row["time"] if "time" in row.index else row.name
         time_str = time_val.strftime("%Y-%m-%d %H:%M:%S") if isinstance(time_val, pd.Timestamp) else str(time_val)
 
+        # For weekly data, use the DI_index_new values
+        if df.attrs.get("timeframe") == "weekly":
+            di_value = {
+                "weekly_di_old": None,  # Remove old weekly values
+                "weekly_di_new": nan_to_none(row["DI_index_new"]),  # Keep only new weekly values
+                "daily_di_old": None,
+                "daily_di_new": None,
+                "4h_di_old": None,
+                "4h_di_new": None
+            }
+        # For daily data, use the DI_index_new values
+        elif df.attrs.get("timeframe") == "daily":
+            di_value = {
+                "weekly_di_old": None,
+                "weekly_di_new": None,
+                "daily_di_old": None,  # Remove old daily values
+                "daily_di_new": nan_to_none(row["DI_index_new"]),  # Keep only new daily values
+                "4h_di_old": None,
+                "4h_di_new": None
+            }
+        # For 4h data, use the DI_index_new values
+        else:
+            di_value = {
+                "weekly_di_old": None,
+                "weekly_di_new": None,
+                "daily_di_old": None,
+                "daily_di_new": None,
+                "4h_di_old": None,  # Remove old 4h values
+                "4h_di_new": nan_to_none(row["DI_index_new"])  # Keep only new 4h values
+            }
+
         result.append({
             "time": time_str,
-            "weekly_di_old": nan_to_none(row["weekly_di_old"]),
-            "weekly_di_new": nan_to_none(row["weekly_di_new"]),
-            "daily_di_old": nan_to_none(row["daily_di_old"]),
-            "daily_di_new": nan_to_none(row["daily_di_new"]),
-            "4h_di_old": nan_to_none(row["4h_di_old"]),
-            "4h_di_new": nan_to_none(row["4h_di_new"]),
-            "DI_index_old": nan_to_none(row["DI_index_old"]),
-            "DI_index_new": nan_to_none(row["DI_index_new"]),
-            "di_ema_13_old": nan_to_none(row["di_ema_13_old"]),
-            "di_ema_13_new": nan_to_none(row["di_ema_13_new"]),
-            "di_sma_30_old": nan_to_none(row["di_sma_30_old"]),
-            "di_sma_30_new": nan_to_none(row["di_sma_30_new"]),
-            "trend_old": row["trend_old"],
-            "trend_new": row["trend_new"],
+            **di_value,
+            "DI_index_old": None,  # Remove old DI index
+            "DI_index_new": nan_to_none(row["DI_index_new"]),  # Keep only new DI index
+            "di_ema_13_old": None,  # Remove old EMA
+            "di_ema_13_new": nan_to_none(row["di_ema_13_new"]),  # Keep only new EMA
+            "di_sma_30_old": None,  # Remove old SMA
+            "di_sma_30_new": nan_to_none(row["di_sma_30_new"]),  # Keep only new SMA
+            "trend_old": None,  # Remove old trend
+            "trend_new": row["trend_new"],  # Keep only new trend
             "close": nan_to_none(row["close"])
         })
+
+    if debug:
+        logger.debug(f"Final data structure for timeframe {df.attrs.get('timeframe', 'unknown')}:")
+        sample_result = pd.DataFrame(result[:5])
+        logger.debug(sample_result[["time", "weekly_di_new", "daily_di_new", "4h_di_new", "DI_index_new"]].to_string())
 
     return result
 
@@ -595,7 +583,8 @@ def di_index():
         if not symbol_list:
             return jsonify({"error": "No valid symbols provided"}), 400
 
-        # Validate symbols first        for symbol in symbol_list:
+        # Validate symbols first
+        for symbol in symbol_list:
             if not validate_symbol(symbol):
                 logger.error(f"Invalid cryptocurrency symbol: {symbol}")
                 return jsonify({"error": f"Invalid cryptocurrency symbol: {symbol}"}), 400
@@ -606,7 +595,7 @@ def di_index():
         return jsonify(results)
 
     except Exception as e:
-        logger.error(f"Error in di_index endpoint: {str(e)}", exc_info=True)
+        logger.error(f"Error in diindex endpoint: {str(e)}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 @di_index_blueprint.route('/')
