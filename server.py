@@ -253,10 +253,14 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
 
     # Логируем даты после сброса индекса
     logger.debug(f"Weekly data dates after reset_index for {symbol}:")
-    logger.debug(df_weekly['time'].head())
+    logger.debug(df_weekly.head())
+
+    # Рассчитываем индикаторы как в Pine Script
+    df_weekly["DI_index"] = None  # Будет рассчитано в calculate_di_index
 
     set_cached_data(symbol, "weekly_data", df_weekly)
     return df_weekly
+
 
 def calculate_ma_index(df):
     df["micro"] = ta.ema(df["close"], length=6)
@@ -402,12 +406,12 @@ def calculate_di_index(df, debug=False):
     df = calculate_mfi_index(df)
     df = calculate_ad_index(df)
 
-    # Calculate old and new DI indices
+    # Calculate old and new DI indices (фиолетовая полоса)
     df["DI_index_old"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                       df["OBV_index_old"] + df["mfi_index_old"] + df["AD_index"])
+                      df["OBV_index_old"] + df["mfi_index_old"] + df["AD_index"])
 
     df["DI_index_new"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                       df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
+                      df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
 
     # Calculate EMAs and SMAs for both methods
     df["di_ema_13_old"] = ta.ema(df["DI_index_old"], length=13)
@@ -427,9 +431,28 @@ def calculate_di_index(df, debug=False):
     )
 
     # Calculate Weekly, Daily, and 4h DI for both methods
+    # Используем DI_index (фиолетовая полоса) для weekly данных
     if len(df) >= 7:  # For weekly calculation
-        df["weekly_di_old"] = df["DI_index_old"]
-        df["weekly_di_new"] = df["DI_index_new"]
+        # Группируем данные по неделям (понедельник-воскресенье)
+        df.set_index('time', inplace=True)
+        weekly_data = df.resample('W-MON').agg({
+            'DI_index_old': 'last',
+            'DI_index_new': 'last'
+        }).dropna()
+
+        # Логируем недельные значения для отладки
+        if debug:
+            logger.debug("Weekly data after resampling:")
+            logger.debug(weekly_data[['DI_index_old', 'DI_index_new']].head())
+
+        df.reset_index(inplace=True)
+        weekly_data.reset_index(inplace=True)
+
+        # Присваиваем значения обратно в основной DataFrame
+        df = pd.merge(df, weekly_data.rename(columns={
+            'DI_index_old': 'weekly_di_old',
+            'DI_index_new': 'weekly_di_new'
+        }), on='time', how='left')
     else:
         df["weekly_di_old"] = df["DI_index_old"]
         df["weekly_di_new"] = df["DI_index_new"]
@@ -437,7 +460,7 @@ def calculate_di_index(df, debug=False):
     df["daily_di_old"] = df["DI_index_old"]
     df["daily_di_new"] = df["DI_index_new"]
 
-    # 4h DI is just the current DI value for that timeframe
+    # 4h DI - текущие значения DI индекса
     df["4h_di_old"] = df["DI_index_old"]
     df["4h_di_new"] = df["DI_index_new"]
 
