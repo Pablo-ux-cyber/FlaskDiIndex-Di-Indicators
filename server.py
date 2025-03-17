@@ -202,7 +202,7 @@ def calculate_di_index(df):
 
     # Calculate DI Value (sum of all components)
     df["di_value"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                      df["OBV_index"] + df["mfi_index"] + df["AD_index"])
+                     df["OBV_index"] + df["mfi_index"] + df["AD_index"])
 
     # Round DI values to integers
     df["di_value"] = df["di_value"].round()
@@ -299,7 +299,7 @@ def set_cached_data(symbol, data_type, data):
         'time': time.time()
     }
 
-def process_symbol(symbol):
+def process_symbol(symbol, debug=False):
     """Process a single symbol"""
     try:
         logger.debug(f"Processing symbol: {symbol}")
@@ -362,46 +362,34 @@ def process_symbol(symbol):
                 # Update the latest 4h value for the day
                 results_by_date[date]["4h_di_new"] = entry["4h_di_new"]
 
-        # Calculate totals only for dates with all components
+        # Calculate total and indicators for each date
         results_list = []
-        totals_for_ma = []  # List to store valid totals for MA calculation
-        dates_for_ma = []   # Corresponding dates for totals
-
         for date in sorted(results_by_date.keys()):
             data = results_by_date[date]
-
-            # Only calculate total if we have all three components
-            if (data["weekly_di_new"] is not None and
-                data["daily_di_new"] is not None and
-                data["4h_di_new"] is not None):
-                # Calculate total
-                data["total_new"] = (data["weekly_di_new"] +
-                                   data["daily_di_new"] +
-                                   data["4h_di_new"])
-                totals_for_ma.append(data["total_new"])
-                dates_for_ma.append(date)
-            else:
-                data["total_new"] = None
-
+            # Calculate total
+            components = [
+                data["weekly_di_new"],
+                data["daily_di_new"],
+                data["4h_di_new"]
+            ]
+            total = sum(x for x in components if x is not None)
+            data["total_new"] = total
             results_list.append(data)
 
-        # Calculate EMAs and SMAs only on valid totals
-        if totals_for_ma:
-            totals = pd.Series(totals_for_ma, index=dates_for_ma)
-            ema13 = ta.ema(totals, length=13)
-            sma30 = totals.rolling(window=30, min_periods=1).mean()
+        # Calculate EMAs and SMAs on the total values
+        totals = pd.Series([d["total_new"] for d in results_list])
+        ema13 = ta.ema(totals, length=13)
+        sma30 = totals.rolling(window=30, min_periods=30).mean()
 
-            # Update results with EMAs, SMAs and trends
-            for data in results_list:
-                date = data["time"]
-                if date in dates_for_ma:
-                    idx = dates_for_ma.index(date)
-                    data["di_ema_13_new"] = None if pd.isna(ema13.iloc[idx]) else round(ema13.iloc[idx], 2)
-                    data["di_sma_30_new"] = None if pd.isna(sma30.iloc[idx]) else round(sma30.iloc[idx], 2)
+        # Update results with EMAs, SMAs and trends
+        for i, data in enumerate(results_list):
+            data["di_ema_13_new"] = None if pd.isna(ema13.iloc[i]) else round(ema13.iloc[i], 2)
+            data["di_sma_30_new"] = None if pd.isna(sma30.iloc[i]) else round(sma30.iloc[i], 2)
 
-                    if (data["di_ema_13_new"] is not None and
-                        data["di_sma_30_new"] is not None):
-                        data["trend_new"] = "bull" if data["di_ema_13_new"] > data["di_sma_30_new"] else "bear"
+            if data["di_ema_13_new"] is not None and data["di_sma_30_new"] is not None:
+                data["trend_new"] = "bull" if data["di_ema_13_new"] > data["di_sma_30_new"] else "bear"
+            else:
+                data["trend_new"] = None
 
         # Test case logging for 01.01.2024
         test_date = "2024-01-01"
@@ -508,7 +496,7 @@ def process_symbol_batch(symbols, debug=False):
             def process_with_delay(symbol):
                 try:
                     time.sleep(0.5)  # 500ms задержка между запросами
-                    return process_symbol(symbol)  # Removed debug parameter
+                    return process_symbol(symbol, debug)
                 except Exception as e:
                     logger.error(f"Error processing {symbol}: {str(e)}", exc_info=True)
                     return symbol, {"error": str(e)}
