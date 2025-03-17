@@ -427,73 +427,57 @@ def calculate_di_index(df, debug=False):
         logger.debug("Final total:")
         logger.debug(df[["time", "total_new"]].head())
 
-    # Calculate EMAs and SMAs based on total_new
-    df["di_ema_13_new"] = ta.ema(df["total_new"], length=13)
-    df["di_sma_30_new"] = df["total_new"].rolling(window=30, min_periods=30).mean()
+    # Calculate total as sum of all components for each timeframe
+    if df.attrs.get("timeframe") == "weekly":
+        df["weekly_di_new"] = df["total_new"]
+        df["daily_di_new"] = None
+        df["4h_di_new"] = None
+    elif df.attrs.get("timeframe") == "daily":
+        df["weekly_di_new"] = None
+        df["daily_di_new"] = df["total_new"]
+        df["4h_di_new"] = None
+    else:  # 4h
+        df["weekly_di_new"] = None
+        df["daily_di_new"] = None
+        df["4h_di_new"] = df["total_new"]
+
+    # Calculate total as sum of non-null components
+    df["total_final"] = df.apply(
+        lambda row: sum(x for x in [row["weekly_di_new"], row["daily_di_new"], row["4h_di_new"]] 
+                       if x is not None and not pd.isna(x)),
+        axis=1
+    )
+
+    # Calculate EMAs and SMAs based on total_final
+    df["di_ema_13_new"] = ta.ema(df["total_final"], length=13)
+    df["di_sma_30_new"] = df["total_final"].rolling(window=30, min_periods=30).mean()
     df["trend_new"] = np.where(
         (df["di_ema_13_new"].notna() & df["di_sma_30_new"].notna()),
         np.where(df["di_ema_13_new"] > df["di_sma_30_new"], "bull", "bear"),
         None
     )
 
-    # В соответствии с TradingView Pine Script используем сам total для всех периодов
+    if debug:
+        logger.debug(f"Final data for timeframe {df.attrs.get('timeframe', 'unknown')}:")
+        logger.debug(df[["time", "weekly_di_new", "daily_di_new", "4h_di_new", "total_final", 
+                        "di_ema_13_new", "di_sma_30_new", "trend_new"]].head())
+
     result = []
     for _, row in df.iterrows():
         time_val = row["time"] if "time" in row.index else row.name
         time_str = time_val.strftime("%Y-%m-%d %H:%M:%S") if isinstance(time_val, pd.Timestamp) else str(time_val)
 
-        # For weekly data, use the total_new values
-        if df.attrs.get("timeframe") == "weekly":
-            di_value = {
-                "weekly_di_new": nan_to_none(row["total_new"]),  # Keep only new weekly values
-                "daily_di_new": None,
-                "4h_di_new": None
-            }
-        # For daily data, use the total_new values
-        elif df.attrs.get("timeframe") == "daily":
-            di_value = {
-                "weekly_di_new": None,
-                "daily_di_new": nan_to_none(row["total_new"]),  # Keep only new daily values
-                "4h_di_new": None
-            }
-        # For 4h data, use the total_new values
-        else:
-            di_value = {
-                "weekly_di_new": None,
-                "daily_di_new": None,
-                "4h_di_new": nan_to_none(row["total_new"])  # Keep only new 4h values
-            }
-
-        # Calculate total as sum of all components
-        total = 0
-        components = [di_value["weekly_di_new"], di_value["daily_di_new"], di_value["4h_di_new"]]
-        valid_components = [x for x in components if x is not None]
-        if valid_components:
-            total = sum(valid_components)
-
-        # Calculate EMA and SMA based on total
-        di_ema_13 = ta.ema(pd.Series([total]), length=13).iloc[0] if total is not None else None
-        di_sma_30 = pd.Series([total]).rolling(window=30, min_periods=30).mean().iloc[0] if total is not None else None
-
-        # Calculate trend based on new EMA and SMA
-        trend = None
-        if di_ema_13 is not None and di_sma_30 is not None:
-            trend = "bull" if di_ema_13 > di_sma_30 else "bear"
-
         result.append({
             "time": time_str,
-            **di_value,
-            "total_new": total,
-            "di_ema_13_new": di_ema_13,
-            "di_sma_30_new": di_sma_30,
-            "trend_new": trend,
+            "weekly_di_new": nan_to_none(row["weekly_di_new"]),
+            "daily_di_new": nan_to_none(row["daily_di_new"]),
+            "4h_di_new": nan_to_none(row["4h_di_new"]),
+            "total_new": nan_to_none(row["total_final"]),
+            "di_ema_13_new": nan_to_none(row["di_ema_13_new"]),
+            "di_sma_30_new": nan_to_none(row["di_sma_30_new"]),
+            "trend_new": row["trend_new"],
             "close": nan_to_none(row["close"])
         })
-
-    if debug:
-        logger.debug(f"Final data structure for timeframe {df.attrs.get('timeframe', 'unknown')}:")
-        sample_result = pd.DataFrame(result[:5])
-        logger.debug(sample_result[["time", "weekly_di_new", "daily_di_new", "4h_di_new", "total_new"]].to_string())
 
     return result
 
