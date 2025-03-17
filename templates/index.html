@@ -316,7 +316,8 @@
       tabContent.setAttribute('aria-labelledby', `${tabId}-tab`);
 
       // Добавляем таблицу в контент таба
-      tabContent.appendChild(createTable(symbol, data));
+      const table = createTable(symbol, data);
+      tabContent.appendChild(table);
 
       return { tabLink, tabContent };
     }
@@ -423,9 +424,9 @@
 
               for (const [symbol, data] of Object.entries(json)) {
                 if (Array.isArray(data)) {
-                  const { tabLink, tabContent } = createCoinTab(symbol, data);
+                  const { tabLink, tabContent: content } = createCoinTab(symbol, data);
                   tabList.appendChild(tabLink);
-                  tabContent.appendChild(tabContent); // Corrected this line
+                  tabContent.appendChild(content);
                   successCount++;
                 } else if (data.error) {
                   console.error(`Ошибка для ${symbol}:`, data.error);
