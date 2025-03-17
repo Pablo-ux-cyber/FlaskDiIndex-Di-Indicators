@@ -259,7 +259,6 @@
           <tr>
             <th rowspan="2">Дата</th>
             <th colspan="3" class="group-header">DI Компоненты</th>
-            <th colspan="3" class="group-header">Веса компонентов</th>
             <th colspan="4" class="group-header">Расчет</th>
             <th rowspan="2">Close (Daily)</th>
           </tr>
@@ -267,9 +266,6 @@
             <th>Weekly</th>
             <th>Daily</th>
             <th>4h</th>
-            <th>Волатильность</th>
-            <th>Объем</th>
-            <th>MA/Willy</th>
             <th>Total</th>
             <th>13 EMA</th>
             <th>30 SMA</th>
@@ -285,9 +281,6 @@
                 <td>${formatValue(row.weekly_di_new)}</td>
                 <td>${formatValue(row.daily_di_new)}</td>
                 <td style="cursor: pointer" onclick='show4hValues(${values4h}, "${row.time}")'>${formatValue(row['4h_di_new'])}</td>
-                <td>${formatValue(row.volatility_weight)}</td>
-                <td>${formatValue(row.volume_weight)}</td>
-                <td>${formatValue(row.ma_weight)}/${formatValue(row.willy_weight)}</td>
                 <td>${formatValue(row.total_new)}</td>
                 <td>${formatValue(row.di_ema_13_new)}</td>
                 <td>${formatValue(row.di_sma_30_new)}</td>
@@ -333,7 +326,6 @@
       const rows = [
         ['Дата', 
          'Weekly DI', 'Daily DI', '4h DI',
-         'Volatility Weight', 'Volume Weight', 'MA/Willy Weight',
          'Total', '13 EMA', '30 SMA', 'Trend',
          'Close (Daily)']
       ];
@@ -344,9 +336,6 @@
           formatValue(row.weekly_di_new),
           formatValue(row.daily_di_new),
           formatValue(row['4h_di_new']),
-          formatValue(row.volatility_weight),
-          formatValue(row.volume_weight),
-          `${formatValue(row.ma_weight)}/${formatValue(row.willy_weight)}`,
           formatValue(row.total_new),
           formatValue(row.di_ema_13_new),
           formatValue(row.di_sma_30_new),
