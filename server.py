@@ -235,7 +235,7 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     df_daily = get_daily_data(symbol, tsym, limit)
     df_daily.set_index('time', inplace=True)
 
-    # Изменяем ресемплинг на W-MON для группировки с понедельника по воскресенье
+    # Используем W-MON для группировки с понедельника по воскресенье
     df_weekly = df_daily.resample('W-MON').agg({
         'open': 'first',
         'high': 'max',
@@ -245,11 +245,14 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
         'volumeto': 'sum'
     }).dropna()
 
-    # Сдвигаем даты на понедельник, чтобы соответствовать формату TradingView
-    df_weekly.index = df_weekly.index - pd.Timedelta(days=6)
+    # Логируем даты до сброса индекса
+    logger.debug(f"Weekly data dates before reset_index for {symbol}:")
+    logger.debug(df_weekly.head())
+
     df_weekly.reset_index(inplace=True)
 
-    logger.debug(f"Sample of weekly data dates for {symbol}:")
+    # Логируем даты после сброса индекса
+    logger.debug(f"Weekly data dates after reset_index for {symbol}:")
     logger.debug(df_weekly['time'].head())
 
     set_cached_data(symbol, "weekly_data", df_weekly)
