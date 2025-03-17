@@ -315,30 +315,34 @@ def calculate_macd_index(df):
     return df
 
 def calculate_obv_index(df):
-    """Calculate OBV Index using both old and new methods"""
-    # Old method
-    df["change"] = df["close"].diff()
-    df["direction"] = 0
-    df.loc[df["change"] > 0, "direction"] = 1
-    df.loc[df["change"] < 0, "direction"] = -1
-    df["obv_old"] = (df["volumefrom"] * df["direction"]).fillna(0).cumsum()
-    df["obv_ema_old"] = ta.ema(df["obv_old"], length=13)
-    df["OBV_bullbear_old"] = (df["obv_old"] > df["obv_ema_old"]).astype(int)
-    df["OBV_bias_old"] = (df["obv_old"] > 0).astype(int)
-    df["OBV_index_old"] = df["OBV_bullbear_old"] + df["OBV_bias_old"]
+    """Calculate OBV Index using Pine Script logic"""
+    # Pine Script OBV calculation:
+    # obv_src = close
+    # obv_out = cum(change(obv_src) > 0 ? volume : change(obv_src) < 0 ? -volume : 0*volume)
+    df["obv_src"] = df["close"]
+    df["change"] = df["obv_src"].diff()
 
-    # New method (Pine Script style)
-    df["obv_new"] = df.apply(
-        lambda row: row["volumefrom"] if row["change"] > 0 else (-row["volumefrom"] if row["change"] < 0 else 0),
-        axis=1
-    ).fillna(0).cumsum()
+    df["obv_volume"] = np.where(
+        df["change"] > 0,
+        df["volumefrom"],
+        np.where(df["change"] < 0, -df["volumefrom"], 0)
+    )
+
+    # New method (matches Pine Script exactly)
+    df["obv_new"] = df["obv_volume"].cumsum()
     df["obv_ema_new"] = ta.ema(df["obv_new"], length=13)
     df["OBV_bullbear_new"] = (df["obv_new"] > df["obv_ema_new"]).astype(int)
     df["OBV_bias_new"] = (df["obv_new"] > 0).astype(int)
     df["OBV_index_new"] = df["OBV_bullbear_new"] + df["OBV_bias_new"]
 
-    # Use new method for final calculations
-    df["OBV_index"] = df["OBV_index_new"]
+    # Keep old method for comparison
+    df["obv_old"] = (df["volumefrom"] * df["change"].gt(0).astype(int) - 
+                     df["volumefrom"] * df["change"].lt(0).astype(int)).cumsum()
+    df["obv_ema_old"] = ta.ema(df["obv_old"], length=13)
+    df["OBV_bullbear_old"] = (df["obv_old"] > df["obv_ema_old"]).astype(int)
+    df["OBV_bias_old"] = (df["obv_old"] > 0).astype(int)
+    df["OBV_index_old"] = df["OBV_bullbear_old"] + df["OBV_bias_old"]
+
     return df
 
 def calculate_mfi_index(df):
@@ -431,9 +435,20 @@ def calculate_di_index(df, debug=False):
     if debug:
         logger.debug(f"Components for DI Index calculation ({df.attrs.get('timeframe', 'unknown')}):")
         logger.debug("Time format: %Y-%m-%d %H:%M:%S UTC")
-        logger.debug(df[["time", "MA_index", "Willy_index", "macd_index", 
-                        "OBV_index_old", "mfi_index_old", "AD_index", "DI_index_old",
-                        "OBV_index_new", "mfi_index_new", "DI_index_new"]].head())
+        logger.debug("MA_index values:")
+        logger.debug(df[["time", "MA_index"]].head())
+        logger.debug("Willy_index values:")
+        logger.debug(df[["time", "Willy_index"]].head())
+        logger.debug("macd_index values:")
+        logger.debug(df[["time", "macd_index"]].head())
+        logger.debug("OBV comparison:")
+        logger.debug(df[["time", "OBV_index_old", "OBV_index_new"]].head())
+        logger.debug("MFI comparison:")
+        logger.debug(df[["time", "mfi_index_old", "mfi_index_new"]].head())
+        logger.debug("AD_index values:")
+        logger.debug(df[["time", "AD_index"]].head())
+        logger.debug("Final DI_index comparison:")
+        logger.debug(df[["time", "DI_index_old", "DI_index_new"]].head())
 
     # Calculate EMAs and SMAs for both methods
     df["di_ema_13_old"] = ta.ema(df["DI_index_old"], length=13)
@@ -580,8 +595,7 @@ def di_index():
         if not symbol_list:
             return jsonify({"error": "No valid symbols provided"}), 400
 
-        # Validate symbols first
-        for symbol in symbol_list:
+        # Validate symbols first        for symbol in symbol_list:
             if not validate_symbol(symbol):
                 logger.error(f"Invalid cryptocurrency symbol: {symbol}")
                 return jsonify({"error": f"Invalid cryptocurrency symbol: {symbol}"}), 400
