@@ -520,7 +520,7 @@ def process_symbol_batch(symbols, debug=False):
             def process_with_delay(symbol):
                 try:
                     time.sleep(0.5)  # 500ms задержка между запросами
-                    return process_symbol(symbol, debug)
+                    return process_symbol(symbol)
                 except Exception as e:
                     logger.error(f"Error processing {symbol}: {str(e)}", exc_info=True)
                     return symbol, {"error": str(e)}
