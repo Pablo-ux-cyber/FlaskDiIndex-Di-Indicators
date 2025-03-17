@@ -371,12 +371,12 @@ def process_symbol(symbol):
             data = results_by_date[date]
 
             # Only calculate total if we have all three components
-            if (data["weekly_di_new"] is not None and 
-                data["daily_di_new"] is not None and 
+            if (data["weekly_di_new"] is not None and
+                data["daily_di_new"] is not None and
                 data["4h_di_new"] is not None):
                 # Calculate total
-                data["total_new"] = (data["weekly_di_new"] + 
-                                   data["daily_di_new"] + 
+                data["total_new"] = (data["weekly_di_new"] +
+                                   data["daily_di_new"] +
                                    data["4h_di_new"])
                 totals_for_ma.append(data["total_new"])
                 dates_for_ma.append(date)
@@ -399,7 +399,7 @@ def process_symbol(symbol):
                     data["di_ema_13_new"] = None if pd.isna(ema13.iloc[idx]) else round(ema13.iloc[idx], 2)
                     data["di_sma_30_new"] = None if pd.isna(sma30.iloc[idx]) else round(sma30.iloc[idx], 2)
 
-                    if (data["di_ema_13_new"] is not None and 
+                    if (data["di_ema_13_new"] is not None and
                         data["di_sma_30_new"] is not None):
                         data["trend_new"] = "bull" if data["di_ema_13_new"] > data["di_sma_30_new"] else "bear"
 
@@ -508,7 +508,7 @@ def process_symbol_batch(symbols, debug=False):
             def process_with_delay(symbol):
                 try:
                     time.sleep(0.5)  # 500ms задержка между запросами
-                    return process_symbol(symbol, debug)
+                    return process_symbol(symbol)  # Removed debug parameter
                 except Exception as e:
                     logger.error(f"Error processing {symbol}: {str(e)}", exc_info=True)
                     return symbol, {"error": str(e)}
