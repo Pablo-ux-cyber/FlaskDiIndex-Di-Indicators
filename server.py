@@ -29,7 +29,251 @@ API_KEY = os.getenv("CRYPTOCOMPARE_API_KEY", "2193d3ce789e90e474570058a3a96caa0d
 # Cache for storing cryptocurrency data
 CACHE = {}
 CACHE_DURATION = 7200  # 2 hours in seconds
-MAX_WORKERS = 5  # Increase maximum number of concurrent workers
+MAX_WORKERS = 5  # Maximum number of concurrent workers
+
+def calculate_ma_index(df):
+    """Calculate MA Index components exactly as in Pine Script"""
+    # MAs
+    df["micro"] = ta.ema(df["close"], length=6)
+    df["short"] = ta.ema(df["close"], length=13)
+    df["medium"] = ta.sma(df["close"], length=30)
+    df["long"] = ta.sma(df["close"], length=200)
+
+    # MA Bull conditions exactly as in Pine Script
+    df["MA_bull"] = (df["micro"] > df["short"]).astype(int)
+    df["MA_bull1"] = (df["short"] > df["medium"]).astype(int)
+    df["MA_bull2"] = (df["short"] > df["long"]).astype(int)
+    df["MA_bull3"] = (df["medium"] > df["long"]).astype(int)
+
+    df["MA_index"] = df["MA_bull"] + df["MA_bull1"] + df["MA_bull2"] + df["MA_bull3"]
+
+    # Test case logging for 01.01.2024
+    test_date = pd.Timestamp('2024-01-01')
+    if test_date in df.index:
+        logger.debug("\nMA Index Test case values for 2024-01-01:")
+        test_data = df.loc[test_date]
+        logger.debug(f"MA conditions: bull={test_data['MA_bull']}, bull1={test_data['MA_bull1']}, bull2={test_data['MA_bull2']}, bull3={test_data['MA_bull3']}")
+        logger.debug(f"MA_index final value: {test_data['MA_index']}")
+
+    return df
+
+def calculate_willy_index(df):
+    """Calculate Willy Index components exactly as in Pine Script"""
+    # Willy calculation
+    length = 21  # As defined in Pine Script
+    len_out = 13  # For EMA calculation of out
+
+    # Highest and lowest calculations over length period
+    df["upper"] = df["high"].rolling(window=length, min_periods=1).max()
+    df["lower"] = df["low"].rolling(window=length, min_periods=1).min()
+    df["range"] = df["upper"] - df["lower"]
+    df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+
+    # Calculate Williams %R exactly as in Pine Script
+    df["out"] = 100 * (df["close"] - df["upper"]) / df["range"]
+    df["out2"] = ta.ema(df["out"], length=len_out)
+
+    # Calculate components exactly as in Pine Script
+    df["Willy_stupid_os"] = (df["out2"] < -80).astype(int)
+    df["Willy_stupid_ob"] = (df["out2"] > -20).astype(int)
+    df["Willy_bullbear"] = (df["out"] > df["out2"]).astype(int)
+    df["Willy_bias"] = (df["out"] > -50).astype(int)
+
+    df["Willy_index"] = df["Willy_stupid_os"] + df["Willy_bullbear"] + df["Willy_bias"] - df["Willy_stupid_ob"]
+
+    # Test case logging for 01.01.2024
+    test_date = pd.Timestamp('2024-01-01')
+    if test_date in df.index:
+        logger.debug("\nWilly Index Test case values for 2024-01-01:")
+        test_data = df.loc[test_date]
+        logger.debug(f"Willy components: os={test_data['Willy_stupid_os']}, ob={test_data['Willy_stupid_ob']}")
+        logger.debug(f"Willy bullbear={test_data['Willy_bullbear']}, bias={test_data['Willy_bias']}")
+        logger.debug(f"Willy_index final value: {test_data['Willy_index']}")
+
+    return df
+
+def calculate_macd_index(df):
+    """Calculate MACD Index components exactly as in Pine Script"""
+    # MACD parameters as defined in Pine Script
+    fastLength = 12
+    slowLength = 26
+    signalLength = 9
+
+    # MACD calculation exactly as in Pine Script
+    df["fastMA"] = ta.ema(df["close"], length=fastLength)
+    df["slowMA"] = ta.ema(df["close"], length=slowLength)
+    df["macd"] = df["fastMA"] - df["slowMA"]
+    df["signal"] = ta.sma(df["macd"], length=signalLength)
+
+    # Calculate bull/bear conditions exactly as in Pine Script
+    df["macd_bullbear"] = (df["macd"] > df["signal"]).astype(int)
+    df["macd_bias"] = (df["macd"] > 0).astype(int)
+    df["macd_index"] = df["macd_bullbear"] + df["macd_bias"]
+
+    # Test case logging for 01.01.2024
+    test_date = pd.Timestamp('2024-01-01')
+    if test_date in df.index:
+        logger.debug("\nMACD Index Test case values for 2024-01-01:")
+        test_data = df.loc[test_date]
+        logger.debug(f"MACD components: bullbear={test_data['macd_bullbear']}, bias={test_data['macd_bias']}")
+        logger.debug(f"MACD_index final value: {test_data['macd_index']}")
+
+    return df
+
+def calculate_obv_index(df):
+    """Calculate OBV Index components exactly as in Pine Script"""
+    # OBV
+    df["change"] = df["close"].diff()
+
+    # Exact Pine Script logic implementation
+    df["obv_volume"] = np.where(
+        df["change"] > 0,
+        df["volumefrom"],
+        np.where(df["change"] < 0, -df["volumefrom"], 0)
+    )
+
+    df["obv_out"] = df["obv_volume"].cumsum()
+    df["obv_out2"] = ta.ema(df["obv_out"], length=13)
+
+    df["OBV_bullbear"] = (df["obv_out"] > df["obv_out2"]).astype(int)
+    df["OBV_bias"] = (df["obv_out"] > 0).astype(int)
+    df["OBV_index"] = df["OBV_bullbear"] + df["OBV_bias"]
+    return df
+
+def calculate_mfi_index(df):
+    """Calculate MFI Index components exactly as in Pine Script"""
+    # MFI parameters as defined in Pine Script
+    mfi_length = 14
+
+    # Source calculation - hlc3 (high, low, close average)
+    df["mfi_src"] = (df["high"] + df["low"] + df["close"]) / 3
+    df["mfi_change"] = df["mfi_src"].diff()
+
+    # Money flow calculations exactly as in Pine Script
+    df["mfi_upper"] = df["volumefrom"] * np.where(df["mfi_change"] > 0, df["mfi_src"], 0)
+    df["mfi_lower"] = df["volumefrom"] * np.where(df["mfi_change"] < 0, df["mfi_src"], 0)
+
+    # Calculate sums with minimum periods of 1 to match Pine Script behavior
+    df["mfi_upper_sum"] = df["mfi_upper"].rolling(window=mfi_length, min_periods=1).sum()
+    df["mfi_lower_sum"] = df["mfi_lower"].rolling(window=mfi_length, min_periods=1).sum()
+    df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+
+    # MFI calculation using RSI formula
+    df["mfi_mf"] = ta.rsi(df["mfi_upper_sum"] / df["mfi_lower_sum"], length=mfi_length)
+    df["mfi_mf2"] = ta.ema(df["mfi_mf"], length=13)
+
+    df["mfi_stupid_os"] = (df["mfi_mf"] < 20).astype(int)
+    df["mfi_stupid_ob"] = (df["mfi_mf"] > 80).astype(int)
+    df["mfi_bullbear"] = (df["mfi_mf"] > df["mfi_mf2"]).astype(int)
+    df["mfi_bias"] = (df["mfi_mf"] > 50).astype(int)
+
+    df["mfi_index"] = df["mfi_bullbear"] + df["mfi_bias"] + df["mfi_stupid_os"] - df["mfi_stupid_ob"]
+    return df
+
+def calculate_ad_index(df):
+    """Calculate AD Index components exactly as in Pine Script"""
+    # AD
+    condition = ((df["close"] == df["high"]) & (df["close"] == df["low"])) | (df["high"] == df["low"])
+    df["ad_calc"] = ((2 * df["close"] - df["low"] - df["high"]) / (df["high"] - df["low"])).where(~condition, 0) * df["volumefrom"]
+    df["ad"] = df["ad_calc"].cumsum()
+
+    df["ad2"] = ta.ema(df["ad"], length=13)
+    df["ad3"] = ta.sma(df["ad"], length=30)
+    df["ad4"] = ta.sma(df["ad"], length=200)
+
+    df["AD_bullbear_short"] = (df["ad"] > df["ad2"]).astype(int)
+    df["AD_bullbear_med"] = (df["ad"] > df["ad3"]).astype(int)
+    df["AD_bullbear_long"] = (df["ad2"] > df["ad3"]).astype(int)
+    df["AD_bias"] = (df["ad"] > 0).astype(int)
+    df["AD_bias_long"] = (df["ad3"] > df["ad4"]).astype(int)
+
+    df["AD_index"] = df["AD_bullbear_short"] + df["AD_bullbear_med"] + df["AD_bullbear_long"] + df["AD_bias"] + df["AD_bias_long"]
+    return df
+
+def calculate_di_index(df):
+    """Calculate DI index components and final value"""
+    # Calculate all components
+    df = calculate_ma_index(df)
+    df = calculate_willy_index(df)
+    df = calculate_macd_index(df)
+    df = calculate_obv_index(df)
+    df = calculate_mfi_index(df)
+    df = calculate_ad_index(df)
+
+    # Calculate DI Value (sum of all components)
+    df["di_value"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
+                     df["OBV_index"] + df["mfi_index"] + df["AD_index"])
+
+    # Round DI values to integers
+    df["di_value"] = df["di_value"].round()
+
+    # Initialize timeframe columns
+    df["weekly_di_new"] = None
+    df["daily_di_new"] = None
+    df["4h_di_new"] = None
+
+    # Assign DI value to appropriate timeframe column
+    timeframe = df.attrs.get("timeframe")
+    if timeframe == "weekly":
+        df["weekly_di_new"] = df["di_value"]
+    elif timeframe == "daily":
+        df["daily_di_new"] = df["di_value"]
+    else:  # 4h
+        df["4h_di_new"] = df["di_value"]
+
+    # Test case logging for 01.01.2024
+    test_date = pd.Timestamp('2024-01-01')
+    if test_date in df.index:
+        logger.debug(f"\nDI value test case for 2024-01-01 ({timeframe}):")
+        test_data = df.loc[test_date]
+        logger.debug(f"Final DI value: {test_data['di_value']}")
+        if timeframe == "weekly":
+            logger.debug(f"Weekly DI: {test_data['weekly_di_new']}")
+        elif timeframe == "daily":
+            logger.debug(f"Daily DI: {test_data['daily_di_new']}")
+        else:
+            logger.debug(f"4h DI: {test_data['4h_di_new']}")
+
+    result = []
+    for _, row in df.iterrows():
+        time_val = row["time"] if "time" in row.index else row.name
+        time_str = time_val.strftime("%Y-%m-%d %H:%M:%S") if isinstance(time_val, pd.Timestamp) else str(time_val)
+
+        result.append({
+            "time": time_str,
+            "weekly_di_new": nan_to_none(row["weekly_di_new"]),
+            "daily_di_new": nan_to_none(row["daily_di_new"]),
+            "4h_di_new": nan_to_none(row["4h_di_new"]),
+            "close": nan_to_none(row["close"])
+        })
+
+    return result
+
+def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
+    """Get weekly OHLCV data for given cryptocurrency"""
+    df_daily = get_daily_data(symbol, tsym, limit)
+
+    # Convert index to datetime if it's not already
+    if not isinstance(df_daily.index, pd.DatetimeIndex):
+        df_daily.set_index('time', inplace=True)
+
+    # Use W-MON for Monday-based weekly grouping
+    df_weekly = df_daily.resample('W-MON').agg({
+        'open': 'first',
+        'high': 'max',
+        'low': 'min',
+        'close': 'last',
+        'volumefrom': 'sum',
+        'volumeto': 'sum'
+    })
+
+    # Reset index to get time as a column
+    df_weekly.reset_index(inplace=True)
+
+    # Set timeframe attribute
+    df_weekly.attrs['timeframe'] = 'weekly'
+
+    return df_weekly
 
 def get_cache_key(symbol, data_type):
     """Generate cache key for given symbol and data type"""
@@ -60,29 +304,15 @@ def process_symbol(symbol, debug=False):
     try:
         logger.debug(f"Processing symbol: {symbol}")
 
-        # Check cache first
-        cached_result = get_cached_data(symbol, 'combined_indices')
-        if cached_result is not None:
-            logger.debug(f"Cache hit for {symbol}")
-            return symbol, cached_result
-
-        # Get data for all timeframes with retries
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                df_daily = get_daily_data(symbol=symbol)
-                df_4h = get_4h_data(symbol=symbol)
-                df_weekly = get_weekly_data(symbol=symbol)
-                break
-            except Exception as e:
-                if attempt == max_retries - 1:
-                    raise
-                time.sleep(1)  # Wait before retry
+        # Get data for all timeframes
+        df_daily = get_daily_data(symbol=symbol)
+        df_4h = get_4h_data(symbol=symbol)
+        df_weekly = get_weekly_data(symbol=symbol)
 
         # Calculate indices
-        daily_di = calculate_di_index(df_daily, debug)
-        fourh_di = calculate_di_index(df_4h, debug)
-        weekly_di = calculate_di_index(df_weekly, debug)
+        daily_di = calculate_di_index(df_daily)
+        fourh_di = calculate_di_index(df_4h)
+        weekly_di = calculate_di_index(df_weekly)
 
         # Process data
         results_by_date = {}
@@ -90,12 +320,12 @@ def process_symbol(symbol, debug=False):
 
         # First, process weekly data to build lookup table
         for entry in weekly_di:
-            date = entry["time"][:10]
+            date = entry["time"][:10]  # Get just the date part
             weekly_values[date] = entry["weekly_di_new"]
 
         # Process all dates from daily data
         for entry in daily_di:
-            date = entry["time"][:10]
+            date = entry["time"][:10]  # Get just the date part
             if date not in results_by_date:
                 results_by_date[date] = {
                     "time": date,
@@ -111,7 +341,7 @@ def process_symbol(symbol, debug=False):
                 }
             results_by_date[date]["daily_di_new"] = entry["daily_di_new"]
 
-        # Fill in weekly values, using previous date's value if missing
+        # Fill in weekly values, using previous week's value if missing
         dates = sorted(results_by_date.keys())
         prev_weekly = None
         for date in dates:
@@ -127,7 +357,7 @@ def process_symbol(symbol, debug=False):
             if date in results_by_date:
                 results_by_date[date]["4h_values_new"].append({
                     "time": entry["time"],
-                    "value": entry["4h_di_new"]
+                    "value_new": entry["4h_di_new"]
                 })
                 # Update the latest 4h value for the day
                 results_by_date[date]["4h_di_new"] = entry["4h_di_new"]
@@ -153,16 +383,24 @@ def process_symbol(symbol, debug=False):
 
         # Update results with EMAs, SMAs and trends
         for i, data in enumerate(results_list):
-            data["di_ema_13_new"] = None if pd.isna(ema13.iloc[i]) else ema13.iloc[i]
-            data["di_sma_30_new"] = None if pd.isna(sma30.iloc[i]) else sma30.iloc[i]
+            data["di_ema_13_new"] = None if pd.isna(ema13.iloc[i]) else round(ema13.iloc[i], 2)
+            data["di_sma_30_new"] = None if pd.isna(sma30.iloc[i]) else round(sma30.iloc[i], 2)
 
             if data["di_ema_13_new"] is not None and data["di_sma_30_new"] is not None:
                 data["trend_new"] = "bull" if data["di_ema_13_new"] > data["di_sma_30_new"] else "bear"
             else:
                 data["trend_new"] = None
 
-        # Cache results
-        set_cached_data(symbol, 'combined_indices', results_list)
+        # Test case logging for 01.01.2024
+        test_date = "2024-01-01"
+        if test_date in results_by_date:
+            logger.debug("\nFinal Test case values for 2024-01-01:")
+            test_data = results_by_date[test_date]
+            logger.debug(f"Weekly DI: {test_data['weekly_di_new']}")
+            logger.debug(f"Daily DI: {test_data['daily_di_new']}")
+            logger.debug(f"4h DI: {test_data['4h_di_new']}")
+            logger.debug(f"Total: {test_data['total_new']}")
+
         return symbol, results_list
 
     except Exception as e:
@@ -243,263 +481,11 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     set_cached_data(symbol, "4h_data", df)
     return df
 
-def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
-    """Get weekly OHLCV data for given cryptocurrency"""
-    cached_data = get_cached_data(symbol, "weekly_data")
-    if cached_data is not None and not cached_data.empty:
-        return cached_data
-
-    df_daily = get_daily_data(symbol, tsym, limit)
-    df_daily.set_index('time', inplace=True)
-
-    # Используем W-MON для группировки с понедельника по воскресенье
-    df_weekly = df_daily.resample('W-MON').agg({
-        'open': 'first',
-        'high': 'max',
-        'low': 'min',
-        'close': 'last',
-        'volumefrom': 'sum',
-        'volumeto': 'sum'
-    }).dropna()
-
-    # Логируем даты до сброса индекса
-    logger.debug(f"Weekly data dates before reset_index for {symbol}:")
-    logger.debug(df_weekly)
-
-    df_weekly.reset_index(inplace=True)
-
-    # Логируем даты после сброса индекса
-    logger.debug(f"Weekly data dates after reset_index for {symbol}:")
-    logger.debug(df_weekly)
-
-    # Устанавливаем атрибут timeframe
-    df_weekly.attrs['timeframe'] = 'weekly'
-
-    set_cached_data(symbol, "weekly_data", df_weekly)
-    return df_weekly
-
-
-def calculate_ma_index(df):
-    df["micro"] = ta.ema(df["close"], length=6)
-    df["short"] = ta.ema(df["close"], length=13)
-    df["medium"] = ta.sma(df["close"], length=30)
-    df["long"] = ta.sma(df["close"], length=200)
-
-    MA_bull = (df["micro"] > df["short"]).astype(int)
-    MA_bull1 = (df["short"] > df["medium"]).astype(int)
-    MA_bull2 = (df["short"] > df["long"]).astype(int)
-    MA_bull3 = (df["medium"] > df["long"]).astype(int)
-    df["MA_index"] = MA_bull + MA_bull1 + MA_bull2 + MA_bull3
-    return df
-
-def calculate_willy_index(df):
-    df["upper"] = df["high"].rolling(window=21, min_periods=21).max()
-    df["lower"] = df["low"].rolling(window=21, min_periods=21).min()
-    df["range"] = df["upper"] - df["lower"]
-    df["range"].replace(0, 1e-10, inplace=True)
-    df["out"] = 100 * (df["close"] - df["upper"]) / df["range"]
-    df["out2"] = ta.ema(df["out"], length=13)
-    df["Willy_stupid_os"] = (df["out2"] < -80).astype(int)
-    df["Willy_stupid_ob"] = (df["out2"] > -20).astype(int)
-    df["Willy_bullbear"] = (df["out"] > df["out2"]).astype(int)
-    df["Willy_bias"] = (df["out"] > -50).astype(int)
-    df["Willy_index"] = df["Willy_stupid_os"] + df["Willy_bullbear"] + df["Willy_bias"] - df["Willy_stupid_ob"]
-    return df
-
-def calculate_macd_index(df):
-    df["fastMA"] = ta.ema(df["close"], length=12)
-    df["slowMA"] = ta.ema(df["close"], length=26)
-    df["macd"] = df["fastMA"] - df["slowMA"]
-    df["signal"] = ta.sma(df["macd"], length=9)
-    df["macd_bullbear"] = (df["macd"] > df["signal"]).astype(int)
-    df["macd_bias"] = (df["macd"] > 0).astype(int)
-    df["macd_index"] = df["macd_bullbear"] + df["macd_bias"]
-    return df
-
-def calculate_obv_index(df):
-    """Calculate OBV Index using Pine Script logic"""
-    # Pine Script OBV calculation:
-    # obv_src = close
-    # obv_out = cum(change(obv_src) > 0 ? volume : change(obv_src) < 0 ? -volume : 0*volume)
-    df["obv_src"] = df["close"]
-    df["change"] = df["obv_src"].diff()
-
-    df["obv_volume"] = np.where(
-        df["change"] > 0,
-        df["volumefrom"],
-        np.where(df["change"] < 0, -df["volumefrom"], 0)
-    )
-
-    # New method (matches Pine Script exactly)
-    df["obv_new"] = df["obv_volume"].cumsum()
-    df["obv_ema_new"] = ta.ema(df["obv_new"], length=13)
-    df["OBV_bullbear_new"] = (df["obv_new"] > df["obv_ema_new"]).astype(int)
-    df["OBV_bias_new"] = (df["obv_new"] > 0).astype(int)
-    df["OBV_index_new"] = df["OBV_bullbear_new"] + df["OBV_bias_new"]
-
-    # Keep old method for comparison
-    df["obv_old"] = (df["volumefrom"] * df["change"].gt(0).astype(int) -
-                     df["volumefrom"] * df["change"].lt(0).astype(int)).cumsum()
-    df["obv_ema_old"] = ta.ema(df["obv_old"], length=13)
-    df["OBV_bullbear_old"] = (df["obv_old"] > df["obv_ema_old"]).astype(int)
-    df["OBV_bias_old"] = (df["obv_old"] > 0).astype(int)
-    df["OBV_index_old"] = df["OBV_bullbear_old"] + df["OBV_bias_old"]
-
-    return df
-
-def calculate_mfi_index(df):
-    """Calculate MFI Index using both old and new methods"""
-    mfi_length = 14
-    mfi_len = 13
-    df["mfi_src"] = (df["high"] + df["low"] + df["close"]) / 3
-    df["mfi_change"] = df["mfi_src"].diff()
-
-    # Old method
-    def safe_mfi_upper(row):
-        if pd.isna(row["mfi_change"]):
-            return np.nan
-        return row["volumefrom"] * row["mfi_src"] if row["mfi_change"] > 0 else 0
-
-    def safe_mfi_lower(row):
-        if pd.isna(row["mfi_change"]):
-            return np.nan
-        return row["volumefrom"] * row["mfi_src"] if row["mfi_change"] < 0 else 0
-
-    df["mfi_upper_calc"] = df.apply(safe_mfi_upper, axis=1)
-    df["mfi_lower_calc"] = df.apply(safe_mfi_lower, axis=1)
-
-    df["mfi_upper_sum"] = df["mfi_upper_calc"].rolling(window=mfi_length, min_periods=mfi_length).sum()
-    df["mfi_lower_sum"] = df["mfi_lower_calc"].rolling(window=mfi_length, min_periods=mfi_length).sum()
-    df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
-
-    df["mfi_ratio"] = df["mfi_upper_sum"] / df["mfi_lower_sum"]
-    df["mfi_mf_old"] = 100 - (100 / (1 + df["mfi_ratio"]))
-    df["mfi_mf2_old"] = ta.ema(df["mfi_mf_old"], length=mfi_len)
-
-    # Old method components
-    df["mfi_stupid_os_old"] = df["mfi_mf_old"].fillna(0).lt(20).astype(int)
-    df["mfi_stupid_ob_old"] = df["mfi_mf_old"].fillna(0).gt(80).astype(int)
-    df["mfi_bullbear_old"] = (df["mfi_mf_old"].fillna(0) > df["mfi_mf2_old"].fillna(0)).astype(int)
-    df["mfi_bias_old"] = df["mfi_mf_old"].fillna(0).gt(50).astype(int)
-    df["mfi_index_old"] = df["mfi_bullbear_old"] + df["mfi_bias_old"] + df["mfi_stupid_os_old"] - df["mfi_stupid_ob_old"]
-
-    # New method (Pine Script style using RSI)
-    # Fix: calculate RSI correctly on the money flow ratio
-    df["mfi_mf_new"] = ta.rsi(close=df["mfi_upper_sum"] / df["mfi_lower_sum"], length=mfi_length)
-    df["mfi_mf2_new"] = ta.ema(df["mfi_mf_new"], length=mfi_len)
-
-    # New method components
-    df["mfi_stupid_os_new"] = df["mfi_mf_new"].fillna(0).lt(20).astype(int)
-    df["mfi_stupid_ob_new"] = df["mfi_mf_new"].fillna(0).gt(80).astype(int)
-    df["mfi_bullbear_new"] = (df["mfi_mf_new"].fillna(0) > df["mfi_mf2_new"].fillna(0)).astype(int)
-    df["mfi_bias_new"] = df["mfi_mf_new"].fillna(0).gt(50).astype(int)
-    df["mfi_index_new"] = df["mfi_bullbear_new"] + df["mfi_bias_new"] + df["mfi_stupid_os_new"] - df["mfi_stupid_ob_new"]
-
-    # Use new method for final calculations
-    df["mfi_index"] = df["mfi_index_new"]
-    return df
-
-def calculate_ad_index(df):
-    condition = ((df["close"] == df["high"]) & (df["close"] == df["low"])) | (df["high"] == df["low"])
-    df["ad_calc"] = ((2 * df["close"] - df["low"] - df["high"]) / (df["high"] - df["low"])).where(~condition, 0) * df["volumefrom"]
-    df["ad"] = df["ad_calc"].cumsum()
-    ad2 = ta.ema(df["ad"], length=13)
-    ad3 = df["ad"].rolling(window=30, min_periods=30).mean()
-    ad4 = df["ad"].rolling(window=200, min_periods=200).mean()
-    df["AD_bullbear_short"] = (df["ad"] > ad2).astype(int)
-    df["AD_bullbear_med"] = (df["ad"] > ad3).astype(int)
-    df["AD_bullbear_long"] = (ad2 > ad3).astype(int)
-    df["AD_bias"] = (df["ad"] > 0).astype(int)
-    df["AD_bias_long"] = (ad3 > ad4).astype(int)
-    df["AD_index"] = df["AD_bullbear_short"] + df["AD_bullbear_med"] + df["AD_bullbear_long"] + df["AD_bias"] + df["AD_bias_long"]
-    return df
-
-def calculate_di_index(df, debug=False):
-    """Calculate DI index components and final value"""
-    if 'time' not in df.columns and df.index.name == 'time':
-        df = df.reset_index()
-
-    # Calculate all components
-    df = calculate_ma_index(df)
-    df = calculate_willy_index(df)
-    df = calculate_macd_index(df)
-    df = calculate_obv_index(df)
-    df = calculate_mfi_index(df)
-    df = calculate_ad_index(df)
-
-    # Calculate DI Index для текущего таймфрейма
-    df["di_value"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                      df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
-
-    if debug:
-        logger.debug(f"Components for DI Index calculation ({df.attrs.get('timeframe', 'unknown')}):")
-        logger.debug("Time format: %Y-%m-%d %H:%M:%S UTC")
-        logger.debug("MA_index values:")
-        logger.debug(df[["time", "MA_index"]].head())
-        logger.debug("Willy_index values:")
-        logger.debug(df[["time", "Willy_index"]].head())
-        logger.debug("macd_index values:")
-        logger.debug(df[["time", "macd_index"]].head())
-        logger.debug("OBV values:")
-        logger.debug(df[["time", "OBV_index_new"]].head())
-        logger.debug("MFI values:")
-        logger.debug(df[["time", "mfi_index_new"]].head())
-        logger.debug("AD_index values:")
-        logger.debug(df[["time", "AD_index"]].head())
-        logger.debug("Final DI value:")
-        logger.debug(df[["time", "di_value"]].head())
-
-    # Initialize all timeframe columns as None
-    df["weekly_di_new"] = None
-    df["daily_di_new"] = None
-    df["4h_di_new"] = None
-
-    # Assign DI value to appropriate timeframe column
-    if df.attrs.get("timeframe") == "weekly":
-        df["weekly_di_new"] = df["di_value"]
-    elif df.attrs.get("timeframe") == "daily":
-        df["daily_di_new"] = df["di_value"]
-    else:  # 4h
-        df["4h_di_new"] = df["di_value"]
-
-    result = []
-    for _, row in df.iterrows():
-        time_val = row["time"] if "time" in row.index else row.name
-        time_str = time_val.strftime("%Y-%m-%d %H:%M:%S") if isinstance(time_val, pd.Timestamp) else str(time_val)
-
-        # Calculate total as sum of available components
-        components = [
-            nan_to_none(row["weekly_di_new"]),
-            nan_to_none(row["daily_di_new"]),
-            nan_to_none(row["4h_di_new"])
-        ]
-        total = sum(x for x in components if x is not None)
-
-        result.append({
-            "time": time_str,
-            "weekly_di_new": nan_to_none(row["weekly_di_new"]),
-            "daily_di_new": nan_to_none(row["daily_di_new"]),
-            "4h_di_new": nan_to_none(row["4h_di_new"]),
-            "total_new": total,
-            "di_ema_13_new": nan_to_none(row["di_ema_13_new"]) if "di_ema_13_new" in row else None,
-            "di_sma_30_new": nan_to_none(row["di_sma_30_new"]) if "di_sma_30_new" in row else None,
-            "trend_new": row["trend_new"] if "trend_new" in row else None,
-            "close": nan_to_none(row["close"])
-        })
-
-    if debug:
-        logger.debug(f"Final data structure for timeframe {df.attrs.get('timeframe', 'unknown')}:")
-        sample_result = pd.DataFrame(result[:5])
-        logger.debug(sample_result[["time", "weekly_di_new", "daily_di_new", "4h_di_new", "total_new"]].to_string())
-
-    return result
 
 def nan_to_none(val):
     if isinstance(val, float) and math.isnan(val):
         return None
     return val
-
-
 
 def process_symbol_batch(symbols, debug=False):
     """Process a batch of symbols efficiently"""
