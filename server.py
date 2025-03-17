@@ -255,17 +255,19 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     df_daily = get_daily_data(symbol, tsym, limit)
     df_daily.set_index('time', inplace=True)
 
-    # Устанавливаем начало недели на воскресенье (как в TradingView)
-    df_weekly = df_daily.resample('W-SUN').agg({
-        'open': 'first',
-        'high': 'max',
-        'low': 'min',
-        'close': 'last',
+    # Группируем данные по неделям, начиная с понедельника (как в TradingView)
+    df_weekly = df_daily.resample('W-MON').agg({
+        'open': 'first',  # Берем open первого дня недели
+        'high': 'max',    # Максимум за неделю
+        'low': 'min',     # Минимум за неделю
+        'close': 'last',  # Close последнего дня недели
         'volumefrom': 'sum',
         'volumeto': 'sum'
     }).dropna()
 
-    # В этом случае не нужно сдвигать дату, так как она уже будет на воскресенье
+    # Важно: сдвигаем метку времени на начало недели (понедельник)
+    # так как по умолчанию resample ставит метку на конец периода
+    df_weekly.index = df_weekly.index - pd.Timedelta(days=6)
 
     logger.debug(f"Weekly data sample for {symbol}:")
     logger.debug(df_weekly.head())
