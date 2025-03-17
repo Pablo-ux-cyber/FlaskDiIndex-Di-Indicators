@@ -444,43 +444,53 @@
       // Берем проценты для расчета средних
       const percentages = sortedData.map(item => parseFloat(item.percentage));
       const ma13 = [];
-      const sma13 = [];
+      const sma30 = [];
       const alpha = 2 / (13 + 1);  // Коэффициент для 13 EMA
 
       // Считаем EMA и SMA на основе процентов
+      let emaSum = 0;
+      let smaSum = 0;
+      let smaCount = 0;
+
       for (let i = 0; i < percentages.length; i++) {
         if (isNaN(percentages[i])) {
           ma13.push(null);
-          sma13.push(null);
-        } else if (i === 0) {
-          ma13.push(parseFloat(percentages[i]));
-          sma13.push(parseFloat(percentages[i]));
+          sma30.push(null);
+          continue;
+        }
+
+        // Расчет EMA
+        if (i === 0) {
+          ma13.push(percentages[i]);
+          emaSum = percentages[i];
         } else {
-          // Расчет EMA
           const prevEMA = ma13[i - 1];
-          if (prevEMA === null || isNaN(prevEMA)) {
-            ma13.push(parseFloat(percentages[i]));
+          if (prevEMA === null) {
+            ma13.push(percentages[i]);
+            emaSum = percentages[i];
           } else {
             const ema = (percentages[i] * alpha) + (prevEMA * (1 - alpha));
             ma13.push(ema);
+            emaSum = ema;
           }
-
-          // Расчет SMA
-          const start = Math.max(0, i - 12);
-          const slice = percentages.slice(start, i + 1);
-          const validNumbers = slice.filter(n => !isNaN(n));
-          sma13.push(validNumbers.length > 0 ? 
-            validNumbers.reduce((a, b) => a + b, 0) / validNumbers.length : 
-            null
-          );
         }
+
+        // Расчет SMA
+        smaSum += percentages[i];
+        smaCount++;
+        if (smaCount > 30) {
+          // Remove oldest value when we exceed window
+          smaSum -= percentages[i - 30];
+          smaCount = 30;
+        }
+        sma30.push(smaCount < 30 ? null : smaSum / 30);
       }
 
-      // Добавляем значения EMA и SMA к результатам
+      // Добавляем значения EMA и SMA к результатам и сортируем в обратном порядке по дате
       return sortedData.map((item, index) => ({
         ...item,
         ma13: ma13[index] === null ? null : ma13[index].toFixed(2),  // 13 EMA
-        sma13: sma13[index] === null ? null : sma13[index].toFixed(2)  // 30 SMA
+        sma13: sma30[index] === null ? null : sma30[index].toFixed(2)  // 30 SMA
       })).reverse();
     }
 
