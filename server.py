@@ -407,7 +407,7 @@ def calculate_di_index(df, debug=False):
 
     # Calculate total (фиолетовая полоса) для нового метода
     df["total_new"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                      df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
+                       df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
 
     if debug:
         logger.debug(f"Components for total calculation ({df.attrs.get('timeframe', 'unknown')}):")
@@ -464,13 +464,29 @@ def calculate_di_index(df, debug=False):
                 "4h_di_new": nan_to_none(row["total_new"])  # Keep only new 4h values
             }
 
+        # Calculate total as sum of all components
+        total = 0
+        components = [di_value["weekly_di_new"], di_value["daily_di_new"], di_value["4h_di_new"]]
+        valid_components = [x for x in components if x is not None]
+        if valid_components:
+            total = sum(valid_components)
+
+        # Calculate EMA and SMA based on total
+        di_ema_13 = ta.ema(pd.Series([total]), length=13).iloc[0] if total is not None else None
+        di_sma_30 = pd.Series([total]).rolling(window=30, min_periods=30).mean().iloc[0] if total is not None else None
+
+        # Calculate trend based on new EMA and SMA
+        trend = None
+        if di_ema_13 is not None and di_sma_30 is not None:
+            trend = "bull" if di_ema_13 > di_sma_30 else "bear"
+
         result.append({
             "time": time_str,
             **di_value,
-            "total_new": nan_to_none(row["total_new"]),  # Rename DI_index_new to total_new
-            "di_ema_13_new": nan_to_none(row["di_ema_13_new"]),
-            "di_sma_30_new": nan_to_none(row["di_sma_30_new"]),
-            "trend_new": row["trend_new"],
+            "total_new": total,
+            "di_ema_13_new": di_ema_13,
+            "di_sma_30_new": di_sma_30,
+            "trend_new": trend,
             "close": nan_to_none(row["close"])
         })
 
@@ -485,6 +501,7 @@ def nan_to_none(val):
     if isinstance(val, float) and math.isnan(val):
         return None
     return val
+
 
 
 def process_symbol_batch(symbols, debug=False):
