@@ -76,9 +76,9 @@ def process_symbol(symbol, debug=False):
 
                 # Add debug logging for dates
                 logger.debug("Sample dates from each timeframe:")
-                logger.debug(f"Daily dates: {df_daily['time'].head()}")
-                logger.debug(f"4h dates: {df_4h['time'].head()}")
-                logger.debug(f"Weekly dates: {df_weekly['time'].head()}")
+                logger.debug(f"Daily dates: {df_daily.index if 'time' not in df_daily.columns else df_daily['time']}")
+                logger.debug(f"4h dates: {df_4h.index if 'time' not in df_4h.columns else df_4h['time']}")
+                logger.debug(f"Weekly dates: {df_weekly.index if 'time' not in df_weekly.columns else df_weekly['time']}")
                 break
             except Exception as e:
                 if attempt == max_retries - 1:
@@ -212,6 +212,9 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     # Отфильтровываем будущие даты и сегодняшний день, так как он еще не закончился
     today = pd.Timestamp.now().normalize()
     df = df[df['time'] < today]
+
+    logger.debug(f"Daily data sample for {symbol}:")
+    logger.debug(df[['time', 'close']].head())
 
     set_cached_data(symbol, "daily_data", df)
     return df
