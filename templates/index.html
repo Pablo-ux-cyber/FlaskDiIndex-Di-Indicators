@@ -46,7 +46,6 @@
       background-color: #e9ecef;
       font-weight: bold;
     }
-    /* Новые стили для табов */
     .nav-tabs {
       margin-bottom: 20px;
     }
@@ -129,11 +128,7 @@
           Общее настроение рынка
         </a>
       </li>
-      <li class="nav-item">
-        <a class="nav-link" id="coins-tab" data-toggle="tab" href="#coins" role="tab" aria-controls="coins" aria-selected="false">
-          Данные по монетам
-        </a>
-      </li>
+      <!-- Динамические табы для монет будут добавляться здесь -->
     </ul>
 
     <!-- Контент табов -->
@@ -163,13 +158,7 @@
           </table>
         </div>
       </div>
-
-      <!-- Таб с данными по монетам -->
-      <div class="tab-pane fade" id="coins" role="tabpanel" aria-labelledby="coins-tab">
-        <div id="tables-container">
-          <!-- Таблицы будут добавлены здесь -->
-        </div>
-      </div>
+      <!-- Динамические табы для монет будут добавляться здесь -->
     </div>
   </div>
 
@@ -179,51 +168,51 @@
     }
 
     function show4hValues(values, date) {
-        const existingModal = document.querySelector('#fourHourModal');
-        if (existingModal) {
-            existingModal.remove();
-        }
+      const existingModal = document.querySelector('#fourHourModal');
+      if (existingModal) {
+        existingModal.remove();
+      }
 
-        const modalHtml = `
+      const modalHtml = `
         <div class="modal fade" id="fourHourModal" tabindex="-1" role="dialog">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">4h значения за ${date}</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Время</th>
-                                    <th>Значение</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${values.map(entry => `
-                                    <tr>
-                                        <td>${entry.time}</td>
-                                        <td>${formatValue(entry.value_new)}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
-                    </div>
-                </div>
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">4h значения за ${date}</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Время</th>
+                      <th>Значение</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${values.map(entry => `
+                      <tr>
+                        <td>${entry.time}</td>
+                        <td>${formatValue(entry.value_new)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+              </div>
             </div>
+          </div>
         </div>`;
 
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        $('#fourHourModal').modal('show');
-        $('#fourHourModal').on('hidden.bs.modal', function (e) {
-            $(this).remove();
-        });
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+      $('#fourHourModal').modal('show');
+      $('#fourHourModal').on('hidden.bs.modal', function (e) {
+        $(this).remove();
+      });
     }
 
     function get4hValuesForDate(row) {
@@ -232,7 +221,6 @@
           console.error("Missing 4h values arrays");
           return [];
         }
-
         return row['4h_values_new'].sort((a, b) => a.time.localeCompare(b.time));
       } catch (error) {
         console.error("Error in get4hValuesForDate:", error);
@@ -263,6 +251,7 @@
       container.appendChild(headerDiv);
 
       const table = document.createElement('table');
+      table.className = 'table';
       table.setAttribute('data-sort-dir', 'asc');
 
       table.innerHTML = `
@@ -307,6 +296,31 @@
       return container;
     }
 
+    function createCoinTab(symbol, data) {
+      // Создаем таб
+      const tabId = `coin-${symbol}`;
+      const tabLink = document.createElement('li');
+      tabLink.className = 'nav-item';
+      tabLink.innerHTML = `
+        <a class="nav-link" id="${tabId}-tab" data-toggle="tab" href="#${tabId}" role="tab" 
+           aria-controls="${tabId}" aria-selected="false">
+          ${symbol}
+        </a>
+      `;
+
+      // Создаем контент таба
+      const tabContent = document.createElement('div');
+      tabContent.className = 'tab-pane fade';
+      tabContent.id = tabId;
+      tabContent.setAttribute('role', 'tabpanel');
+      tabContent.setAttribute('aria-labelledby', `${tabId}-tab`);
+
+      // Добавляем таблицу в контент таба
+      tabContent.appendChild(createTable(symbol, data));
+
+      return { tabLink, tabContent };
+    }
+
     function downloadExcel(data, symbol) {
       const rows = [
         ['Дата', 
@@ -349,16 +363,31 @@
       }
     }
 
+    function clearAllTabs() {
+      // Очищаем все табы монет
+      const tabList = document.getElementById('myTabs');
+      const tabContent = document.getElementById('myTabContent');
+
+      // Оставляем только таб с общим настроением рынка
+      const sentimentTab = document.getElementById('sentiment-tab').parentElement;
+      const sentimentContent = document.getElementById('sentiment');
+
+      tabList.innerHTML = '';
+      tabList.appendChild(sentimentTab);
+
+      tabContent.innerHTML = '';
+      tabContent.appendChild(sentimentContent);
+    }
+
     async function loadSelectedData() {
       const loadingDiv = document.getElementById('loading');
       const progressDiv = document.getElementById('progress');
       const errorDiv = document.getElementById('error');
-      const container = document.getElementById('tables-container');
 
       try {
         loadingDiv.style.display = 'block';
         errorDiv.textContent = '';
-        container.innerHTML = '';
+        clearAllTabs(); // Очищаем существующие табы
 
         const symbolsSelect = document.getElementById('symbols');
         const selectedSymbols = Array.from(symbolsSelect.selectedOptions).map(option => option.value);
@@ -366,6 +395,9 @@
         if (selectedSymbols.length === 0) {
           throw new Error('Пожалуйста, выберите хотя бы одну криптовалюту');
         }
+
+        const tabList = document.getElementById('myTabs');
+        const tabContent = document.getElementById('myTabContent');
 
         const batches = batchProcess(selectedSymbols, 3);
         let successCount = 0;
@@ -391,7 +423,9 @@
 
               for (const [symbol, data] of Object.entries(json)) {
                 if (Array.isArray(data)) {
-                  container.appendChild(createTable(symbol, data));
+                  const { tabLink, tabContent } = createCoinTab(symbol, data);
+                  tabList.appendChild(tabLink);
+                  tabContent.appendChild(tabContent); // Corrected this line
                   successCount++;
                 } else if (data.error) {
                   console.error(`Ошибка для ${symbol}:`, data.error);
@@ -421,6 +455,12 @@
         }
 
         progressDiv.textContent = `Загружено успешно: ${successCount} монет, с ошибками: ${errorCount} монет`;
+
+        // Активируем первый таб монеты после загрузки
+        const firstCoinTab = tabList.querySelector('li:nth-child(2) a');
+        if (firstCoinTab) {
+          firstCoinTab.click();
+        }
 
       } catch (error) {
         console.error("Error loading data:", error);
@@ -493,53 +533,43 @@
       // Берем проценты для расчета средних
       const percentages = sortedData.map(item => parseFloat(item.percentage));
       const ma13 = [];
-      const sma30 = [];
+      const sma13 = [];
       const alpha = 2 / (13 + 1);  // Коэффициент для 13 EMA
 
       // Считаем EMA и SMA на основе процентов
-      let emaSum = 0;
-      let smaSum = 0;
-      let smaCount = 0;
-
       for (let i = 0; i < percentages.length; i++) {
         if (isNaN(percentages[i])) {
           ma13.push(null);
-          sma30.push(null);
-          continue;
-        }
-
-        // Расчет EMA
-        if (i === 0) {
-          ma13.push(percentages[i]);
-          emaSum = percentages[i];
+          sma13.push(null);
+        } else if (i === 0) {
+          ma13.push(parseFloat(percentages[i]));
+          sma13.push(parseFloat(percentages[i]));
         } else {
+          // Расчет EMA
           const prevEMA = ma13[i - 1];
-          if (prevEMA === null) {
-            ma13.push(percentages[i]);
-            emaSum = percentages[i];
+          if (prevEMA === null || isNaN(prevEMA)) {
+            ma13.push(parseFloat(percentages[i]));
           } else {
             const ema = (percentages[i] * alpha) + (prevEMA * (1 - alpha));
             ma13.push(ema);
-            emaSum = ema;
           }
-        }
 
-        // Расчет SMA
-        smaSum += percentages[i];
-        smaCount++;
-        if (smaCount > 30) {
-          // Remove oldest value when we exceed window
-          smaSum -= percentages[i - 30];
-          smaCount = 30;
+          // Расчет SMA
+          const start = Math.max(0, i - 12);
+          const slice = percentages.slice(start, i + 1);
+          const validNumbers = slice.filter(n => !isNaN(n));
+          sma13.push(validNumbers.length > 0 ? 
+            validNumbers.reduce((a, b) => a + b, 0) / validNumbers.length : 
+            null
+          );
         }
-        sma30.push(smaCount < 30 ? null : smaSum / 30);
       }
 
-      // Добавляем значения EMA и SMA к результатам и сортируем в обратном порядке по дате
+      // Добавляем значения EMA и SMA к результатам
       return sortedData.map((item, index) => ({
         ...item,
         ma13: ma13[index] === null ? null : ma13[index].toFixed(2),  // 13 EMA
-        sma13: sma30[index] === null ? null : sma30[index].toFixed(2)  // 30 SMA
+        sma13: sma13[index] === null ? null : sma13[index].toFixed(2)  // 30 SMA
       })).reverse();
     }
 
@@ -556,6 +586,7 @@
         </tr>
       `).join('');
     }
+
     function batchProcess(symbols, batchSize = 5) {
       const batches = [];
       for (let i = 0; i < symbols.length; i += batchSize) {
