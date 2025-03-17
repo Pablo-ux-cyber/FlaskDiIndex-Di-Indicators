@@ -196,6 +196,9 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     today = pd.Timestamp.now().normalize()
     df = df[df['time'] < today]
 
+    # Устанавливаем атрибут timeframe
+    df.attrs['timeframe'] = 'daily'
+
     set_cached_data(symbol, "daily_data", df)
     return df
 
@@ -222,6 +225,9 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     # Log the data distribution
     logger.debug(f"4h data distribution for {symbol}:")
     logger.debug(df.groupby(['date', 'hour']).size().reset_index(name='count'))
+
+    # Устанавливаем атрибут timeframe
+    df.attrs['timeframe'] = '4h'
 
     set_cached_data(symbol, "4h_data", df)
     return df
@@ -254,6 +260,9 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     # Логируем даты после сброса индекса
     logger.debug(f"Weekly data dates after reset_index for {symbol}:")
     logger.debug(df_weekly)
+
+    # Устанавливаем атрибут timeframe
+    df_weekly.attrs['timeframe'] = 'weekly'
 
     set_cached_data(symbol, "weekly_data", df_weekly)
     return df_weekly
@@ -403,7 +412,7 @@ def calculate_di_index(df, debug=False):
     df = calculate_mfi_index(df)
     df = calculate_ad_index(df)
 
-    # Calculate old and new DI indices (фиолетовая полоса)
+    # Calculate DI indices (фиолетовая полоса)
     df["DI_index_old"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
                       df["OBV_index_old"] + df["mfi_index_old"] + df["AD_index"])
 
@@ -427,28 +436,30 @@ def calculate_di_index(df, debug=False):
         None
     )
 
-    # Для weekly данных используем сами значения DI_index
-    if "timeframe" in df.attrs and df.attrs["timeframe"] == "weekly":
-        df["weekly_di_old"] = df["DI_index_old"]
-        df["weekly_di_new"] = df["DI_index_new"]
-
-        if debug:
-            logger.debug("Weekly DI values:")
-            logger.debug(df[["time", "weekly_di_old", "weekly_di_new"]].head())
-    else:
-        df["weekly_di_old"] = None
-        df["weekly_di_new"] = None
-
-    df["daily_di_old"] = df["DI_index_old"]
-    df["daily_di_new"] = df["DI_index_new"]
-
-    # 4h DI - текущие значения DI индекса
-    df["4h_di_old"] = df["DI_index_old"]
-    df["4h_di_new"] = df["DI_index_new"]
-
-    if debug:
-        logger.debug("Sample of weekly and daily values:")
-        logger.debug(df[["time", "weekly_di_old", "weekly_di_new", "daily_di_old", "daily_di_new"]].head())
+    # Assign DI values based on timeframe
+    # В соответствии с TradingView Pine Script используем сам DI Index для всех периодов
+    if "timeframe" in df.attrs:
+        if df.attrs["timeframe"] == "weekly":
+            df["weekly_di_old"] = df["DI_index_old"]
+            df["weekly_di_new"] = df["DI_index_new"]
+            df["daily_di_old"] = None
+            df["daily_di_new"] = None
+            df["4h_di_old"] = None
+            df["4h_di_new"] = None
+        elif df.attrs["timeframe"] == "daily":
+            df["weekly_di_old"] = None
+            df["weekly_di_new"] = None
+            df["daily_di_old"] = df["DI_index_old"]
+            df["daily_di_new"] = df["DI_index_new"]
+            df["4h_di_old"] = None
+            df["4h_di_new"] = None
+        else:  # 4h
+            df["weekly_di_old"] = None
+            df["weekly_di_new"] = None
+            df["daily_di_old"] = None
+            df["daily_di_new"] = None
+            df["4h_di_old"] = df["DI_index_old"]
+            df["4h_di_new"] = df["DI_index_new"]
 
     result = []
     for _, row in df.iterrows():
@@ -474,12 +485,18 @@ def calculate_di_index(df, debug=False):
             "close": nan_to_none(row["close"])
         })
 
+    if debug:
+        logger.debug(f"Sample of data after DI calculation with timeframe {df.attrs.get('timeframe', 'unknown')}:")
+        logger.debug(df[["time", "DI_index_old", "DI_index_new", "weekly_di_old", "weekly_di_new", 
+                        "daily_di_old", "daily_di_new", "4h_di_old", "4h_di_new"]].head())
+
     return result
 
 def nan_to_none(val):
     if isinstance(val, float) and math.isnan(val):
         return None
     return val
+
 
 
 def process_symbol_batch(symbols, debug=False):
