@@ -190,8 +190,59 @@ def calculate_ad_index(df):
     df["AD_index"] = df["AD_bullbear_short"] + df["AD_bullbear_med"] + df["AD_bullbear_long"] + df["AD_bias"] + df["AD_bias_long"]
     return df
 
+def calculate_atr(df, length=14):
+    """Calculate Average True Range (ATR) indicator"""
+    df['tr0'] = abs(df['high'] - df['low'])
+    df['tr1'] = abs(df['high'] - df['close'].shift())
+    df['tr2'] = abs(df['low'] - df['close'].shift())
+    df['tr'] = df[['tr0', 'tr1', 'tr2']].max(axis=1)
+    df['atr'] = df['tr'].rolling(window=length, min_periods=1).mean()
+    return df
+
+def calculate_volatility_weight(atr, atr_ma):
+    """Calculate weight based on volatility"""
+    if pd.isna(atr) or pd.isna(atr_ma):
+        return 1.0
+    # If ATR is above its moving average, market is more volatile
+    volatility_ratio = atr / atr_ma if atr_ma != 0 else 1.0
+    return min(max(volatility_ratio, 0.5), 2.0)  # Limit weight between 0.5 and 2.0
+
+def calculate_volume_weight(current_volume, avg_volume):
+    """Calculate weight based on volume"""
+    if pd.isna(current_volume) or pd.isna(avg_volume):
+        return 1.0
+    volume_ratio = current_volume / avg_volume if avg_volume != 0 else 1.0
+    return min(max(volume_ratio, 0.5), 2.0)  # Limit weight between 0.5 and 2.0
+
+def calculate_adaptive_weights(df):
+    """Calculate adaptive weights for each component based on market conditions"""
+    # Calculate ATR and its moving average
+    df = calculate_atr(df)
+    df['atr_ma'] = df['atr'].rolling(window=30, min_periods=1).mean()
+
+    # Calculate volume moving average
+    df['volume_ma'] = df['volumefrom'].rolling(window=30, min_periods=1).mean()
+
+    # Calculate weights
+    df['volatility_weight'] = df.apply(
+        lambda x: calculate_volatility_weight(x['atr'], x['atr_ma']), axis=1
+    )
+    df['volume_weight'] = df.apply(
+        lambda x: calculate_volume_weight(x['volumefrom'], x['volume_ma']), axis=1
+    )
+
+    # Assign weights to components
+    df['ma_weight'] = 1.0 / df['volatility_weight']  # Higher weight in low volatility
+    df['willy_weight'] = df['volatility_weight']  # Higher weight in high volatility
+    df['macd_weight'] = 1.0  # Base weight for trend following
+    df['obv_weight'] = df['volume_weight']  # Higher weight with higher volume
+    df['mfi_weight'] = df['volume_weight']  # Higher weight with higher volume
+    df['ad_weight'] = df['volume_weight']  # Higher weight with higher volume
+
+    return df
+
 def calculate_di_index(df):
-    """Calculate DI index components and final value"""
+    """Calculate DI index components and final value with adaptive weights"""
     # Calculate all components
     df = calculate_ma_index(df)
     df = calculate_willy_index(df)
@@ -200,9 +251,18 @@ def calculate_di_index(df):
     df = calculate_mfi_index(df)
     df = calculate_ad_index(df)
 
-    # Calculate DI Value (sum of all components)
-    df["di_value"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                     df["OBV_index"] + df["mfi_index"] + df["AD_index"])
+    # Calculate adaptive weights
+    df = calculate_adaptive_weights(df)
+
+    # Calculate weighted DI Value
+    df["di_value"] = (
+        df["MA_index"] * df["ma_weight"] +
+        df["Willy_index"] * df["willy_weight"] +
+        df["macd_index"] * df["macd_weight"] +
+        df["OBV_index"] * df["obv_weight"] +
+        df["mfi_index"] * df["mfi_weight"] +
+        df["AD_index"] * df["ad_weight"]
+    )
 
     # Round DI values to integers
     df["di_value"] = df["di_value"].round()
@@ -221,18 +281,16 @@ def calculate_di_index(df):
     else:  # 4h
         df["4h_di_new"] = df["di_value"]
 
-    # Test case logging for 01.01.2024
+    # Add debug logging for test case
     test_date = pd.Timestamp('2024-01-01')
     if test_date in df.index:
         logger.debug(f"\nDI value test case for 2024-01-01 ({timeframe}):")
         test_data = df.loc[test_date]
+        logger.debug(f"Component weights:")
+        logger.debug(f"MA weight: {test_data['ma_weight']}")
+        logger.debug(f"Willy weight: {test_data['willy_weight']}")
+        logger.debug(f"Volume-based weights: {test_data['volume_weight']}")
         logger.debug(f"Final DI value: {test_data['di_value']}")
-        if timeframe == "weekly":
-            logger.debug(f"Weekly DI: {test_data['weekly_di_new']}")
-        elif timeframe == "daily":
-            logger.debug(f"Daily DI: {test_data['daily_di_new']}")
-        else:
-            logger.debug(f"4h DI: {test_data['4h_di_new']}")
 
     result = []
     for _, row in df.iterrows():
