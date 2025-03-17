@@ -425,15 +425,12 @@ def calculate_di_index(df, debug=False):
     df = calculate_mfi_index(df)
     df = calculate_ad_index(df)
 
-    # Calculate DI indices (фиолетовая полоса)
-    df["DI_index_old"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                          df["OBV_index_old"] + df["mfi_index_old"] + df["AD_index"])
-
-    df["DI_index_new"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                          df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
+    # Calculate total (фиолетовая полоса) для нового метода
+    df["total_new"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
+                      df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
 
     if debug:
-        logger.debug(f"Components for DI Index calculation ({df.attrs.get('timeframe', 'unknown')}):")
+        logger.debug(f"Components for total calculation ({df.attrs.get('timeframe', 'unknown')}):")
         logger.debug("Time format: %Y-%m-%d %H:%M:%S UTC")
         logger.debug("MA_index values:")
         logger.debug(df[["time", "MA_index"]].head())
@@ -441,87 +438,66 @@ def calculate_di_index(df, debug=False):
         logger.debug(df[["time", "Willy_index"]].head())
         logger.debug("macd_index values:")
         logger.debug(df[["time", "macd_index"]].head())
-        logger.debug("OBV comparison:")
-        logger.debug(df[["time", "OBV_index_old", "OBV_index_new"]].head())
-        logger.debug("MFI comparison:")
-        logger.debug(df[["time", "mfi_index_old", "mfi_index_new"]].head())
+        logger.debug("OBV values:")
+        logger.debug(df[["time", "OBV_index_new"]].head())
+        logger.debug("MFI values:")
+        logger.debug(df[["time", "mfi_index_new"]].head())
         logger.debug("AD_index values:")
         logger.debug(df[["time", "AD_index"]].head())
-        logger.debug("Final DI_index comparison:")
-        logger.debug(df[["time", "DI_index_old", "DI_index_new"]].head())
+        logger.debug("Final total:")
+        logger.debug(df[["time", "total_new"]].head())
 
-    # Calculate EMAs and SMAs for both methods
-    df["di_ema_13_old"] = ta.ema(df["DI_index_old"], length=13)
-    df["di_sma_30_old"] = df["DI_index_old"].rolling(window=30, min_periods=30).mean()
-    df["trend_old"] = np.where(
-        (df["di_ema_13_old"].notna() & df["di_sma_30_old"].notna()),
-        np.where(df["di_ema_13_old"] > df["di_sma_30_old"], "bull", "bear"),
-        None
-    )
-
-    df["di_ema_13_new"] = ta.ema(df["DI_index_new"], length=13)
-    df["di_sma_30_new"] = df["DI_index_new"].rolling(window=30, min_periods=30).mean()
+    # Calculate EMAs and SMAs based on total_new
+    df["di_ema_13_new"] = ta.ema(df["total_new"], length=13)
+    df["di_sma_30_new"] = df["total_new"].rolling(window=30, min_periods=30).mean()
     df["trend_new"] = np.where(
         (df["di_ema_13_new"].notna() & df["di_sma_30_new"].notna()),
         np.where(df["di_ema_13_new"] > df["di_sma_30_new"], "bull", "bear"),
         None
     )
 
-    # В соответствии с TradingView Pine Script используем сам DI Index для всех периодов
+    # В соответствии с TradingView Pine Script используем сам total для всех периодов
     result = []
     for _, row in df.iterrows():
         time_val = row["time"] if "time" in row.index else row.name
         time_str = time_val.strftime("%Y-%m-%d %H:%M:%S") if isinstance(time_val, pd.Timestamp) else str(time_val)
 
-        # For weekly data, use the DI_index_new values
+        # For weekly data, use the total_new values
         if df.attrs.get("timeframe") == "weekly":
             di_value = {
-                "weekly_di_old": None,  # Remove old weekly values
-                "weekly_di_new": nan_to_none(row["DI_index_new"]),  # Keep only new weekly values
-                "daily_di_old": None,
+                "weekly_di_new": nan_to_none(row["total_new"]),  # Keep only new weekly values
                 "daily_di_new": None,
-                "4h_di_old": None,
                 "4h_di_new": None
             }
-        # For daily data, use the DI_index_new values
+        # For daily data, use the total_new values
         elif df.attrs.get("timeframe") == "daily":
             di_value = {
-                "weekly_di_old": None,
                 "weekly_di_new": None,
-                "daily_di_old": None,  # Remove old daily values
-                "daily_di_new": nan_to_none(row["DI_index_new"]),  # Keep only new daily values
-                "4h_di_old": None,
+                "daily_di_new": nan_to_none(row["total_new"]),  # Keep only new daily values
                 "4h_di_new": None
             }
-        # For 4h data, use the DI_index_new values
+        # For 4h data, use the total_new values
         else:
             di_value = {
-                "weekly_di_old": None,
                 "weekly_di_new": None,
-                "daily_di_old": None,
                 "daily_di_new": None,
-                "4h_di_old": None,  # Remove old 4h values
-                "4h_di_new": nan_to_none(row["DI_index_new"])  # Keep only new 4h values
+                "4h_di_new": nan_to_none(row["total_new"])  # Keep only new 4h values
             }
 
         result.append({
             "time": time_str,
             **di_value,
-            "DI_index_old": None,  # Remove old DI index
-            "DI_index_new": nan_to_none(row["DI_index_new"]),  # Keep only new DI index
-            "di_ema_13_old": None,  # Remove old EMA
-            "di_ema_13_new": nan_to_none(row["di_ema_13_new"]),  # Keep only new EMA
-            "di_sma_30_old": None,  # Remove old SMA
-            "di_sma_30_new": nan_to_none(row["di_sma_30_new"]),  # Keep only new SMA
-            "trend_old": None,  # Remove old trend
-            "trend_new": row["trend_new"],  # Keep only new trend
+            "total_new": nan_to_none(row["total_new"]),  # Rename DI_index_new to total_new
+            "di_ema_13_new": nan_to_none(row["di_ema_13_new"]),
+            "di_sma_30_new": nan_to_none(row["di_sma_30_new"]),
+            "trend_new": row["trend_new"],
             "close": nan_to_none(row["close"])
         })
 
     if debug:
         logger.debug(f"Final data structure for timeframe {df.attrs.get('timeframe', 'unknown')}:")
         sample_result = pd.DataFrame(result[:5])
-        logger.debug(sample_result[["time", "weekly_di_new", "daily_di_new", "4h_di_new", "DI_index_new"]].to_string())
+        logger.debug(sample_result[["time", "weekly_di_new", "daily_di_new", "4h_di_new", "total_new"]].to_string())
 
     return result
 
