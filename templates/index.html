@@ -46,82 +46,131 @@
       background-color: #e9ecef;
       font-weight: bold;
     }
+    /* Новые стили для табов */
+    .nav-tabs {
+      margin-bottom: 20px;
+    }
+    .nav-tabs .nav-link {
+      color: #495057;
+      font-weight: 500;
+    }
+    .nav-tabs .nav-link.active {
+      color: #007bff;
+      border-color: #dee2e6 #dee2e6 #fff;
+    }
+    .tab-content {
+      padding: 20px 0;
+    }
+    .tab-pane {
+      display: none;
+    }
+    .tab-pane.active {
+      display: block;
+    }
   </style>
 </head>
 <body>
-  <h1>DI Index – Объединённые данные</h1>
+  <div class="container-fluid">
+    <h1 class="my-4">DI Index – Объединённые данные</h1>
 
-  <!-- Селектор символов -->
-  <div class="symbol-selector">
-    <label for="symbols">Выберите криптовалюты:</label>
-    <select id="symbols" multiple>
-      <option value="BTC" selected>Биткоин (BTC)</option>
-      <option value="ETH">Эфириум (ETH)</option>
-      <option value="XRP">XRP (XRP)</option>
-      <option value="BNB">BNB (BNB)</option>
-      <option value="SOL">Solana (SOL)</option>
-      <option value="ADA">Кардано (ADA)</option>
-      <option value="CRO">Cronos (CRO)</option>
-      <option value="DOGE">Dogecoin (DOGE)</option>
-      <option value="TRX">TRON (TRX)</option>
-      <option value="LEO">LEO Token (LEO)</option>
-      <option value="HBAR">Hedera (HBAR)</option>
-      <option value="LINK">Chainlink (LINK)</option>
-      <option value="XLM">Stellar (XLM)</option>
-      <option value="AVAX">Avalanche (AVAX)</option>
-      <option value="SUI">Sui (SUI)</option>
-      <option value="SHIB">Shiba Inu (SHIB)</option>
-      <option value="LTC">Лайткоин (LTC)</option>
-      <option value="BCH">Биткойн Кэш (BCH)</option>
-      <option value="TON">Toncoin (TON)</option>
-      <option value="OM">MANTRA OM (OM)</option>
-      <option value="DOT">Polkadot (DOT)</option>
-      <option value="BGB">Bitget Token (BGB)</option>
-      <option value="HYPE">Hyperliquid (HYPE)</option>
-      <option value="WBT">WhiteBIT Coin (WBT)</option>
-      <option value="XMR">Монеро (XMR)</option>
-      <option value="UNI">Uniswap (UNI)</option>
-      <option value="APT">Aptos (APT)</option>
-      <option value="NEAR">NEAR Protocol (NEAR)</option>
-      <option value="AAVE">Aave (AAVE)</option>
-      <option value="ETC">Ethereum Classic (ETC)</option>
-    </select>
-    <div class="control-buttons">
-      <button onclick="selectAll()">Выбрать все</button>
-      <button onclick="deselectAll()">Отменить выбор</button>
-      <button onclick="loadSelectedData()">Загрузить данные</button>
+    <!-- Селектор символов -->
+    <div class="symbol-selector">
+      <label for="symbols">Выберите криптовалюты:</label>
+      <select id="symbols" multiple>
+        <option value="BTC" selected>Биткоин (BTC)</option>
+        <option value="ETH">Эфириум (ETH)</option>
+        <option value="XRP">XRP (XRP)</option>
+        <option value="BNB">BNB (BNB)</option>
+        <option value="SOL">Solana (SOL)</option>
+        <option value="ADA">Кардано (ADA)</option>
+        <option value="CRO">Cronos (CRO)</option>
+        <option value="DOGE">Dogecoin (DOGE)</option>
+        <option value="TRX">TRON (TRX)</option>
+        <option value="LEO">LEO Token (LEO)</option>
+        <option value="HBAR">Hedera (HBAR)</option>
+        <option value="LINK">Chainlink (LINK)</option>
+        <option value="XLM">Stellar (XLM)</option>
+        <option value="AVAX">Avalanche (AVAX)</option>
+        <option value="SUI">Sui (SUI)</option>
+        <option value="SHIB">Shiba Inu (SHIB)</option>
+        <option value="LTC">Лайткоин (LTC)</option>
+        <option value="BCH">Биткойн Кэш (BCH)</option>
+        <option value="TON">Toncoin (TON)</option>
+        <option value="OM">MANTRA OM (OM)</option>
+        <option value="DOT">Polkadot (DOT)</option>
+        <option value="BGB">Bitget Token (BGB)</option>
+        <option value="HYPE">Hyperliquid (HYPE)</option>
+        <option value="WBT">WhiteBIT Coin (WBT)</option>
+        <option value="XMR">Монеро (XMR)</option>
+        <option value="UNI">Uniswap (UNI)</option>
+        <option value="APT">Aptos (APT)</option>
+        <option value="NEAR">NEAR Protocol (NEAR)</option>
+        <option value="AAVE">Aave (AAVE)</option>
+        <option value="ETC">Ethereum Classic (ETC)</option>
+      </select>
+      <div class="control-buttons">
+        <button class="btn btn-secondary" onclick="selectAll()">Выбрать все</button>
+        <button class="btn btn-secondary" onclick="deselectAll()">Отменить выбор</button>
+        <button class="btn btn-primary" onclick="loadSelectedData()">Загрузить данные</button>
+      </div>
     </div>
+
     <div id="loading" style="display: none;">
       Загрузка данных...<span class="loading-indicator"></span>
       <div id="progress"></div>
     </div>
-  </div>
 
-  <div id="error"></div>
+    <div id="error"></div>
 
-  <div class="market-sentiment">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <h2>Общее настроение рынка</h2>
-      <button class="btn btn-sm btn-secondary" onclick="downloadMarketSentimentExcel()">Экспорт в Excel</button>
+    <!-- Навигация по табам -->
+    <ul class="nav nav-tabs" id="myTabs" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link active" id="sentiment-tab" data-toggle="tab" href="#sentiment" role="tab" aria-controls="sentiment" aria-selected="true">
+          Общее настроение рынка
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="coins-tab" data-toggle="tab" href="#coins" role="tab" aria-controls="coins" aria-selected="false">
+          Данные по монетам
+        </a>
+      </li>
+    </ul>
+
+    <!-- Контент табов -->
+    <div class="tab-content" id="myTabContent">
+      <!-- Таб с общим настроением рынка -->
+      <div class="tab-pane fade show active" id="sentiment" role="tabpanel" aria-labelledby="sentiment-tab">
+        <div class="market-sentiment">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2>Общее настроение рынка</h2>
+            <button class="btn btn-secondary" onclick="downloadMarketSentimentExcel()">
+              Экспорт в Excel
+            </button>
+          </div>
+          <table class="table sentiment-table">
+            <thead>
+              <tr>
+                <th>Дата</th>
+                <th>Количество бычьих сигналов</th>
+                <th>Всего монет с данными</th>
+                <th>Процент бычьих сигналов</th>
+                <th>13 EMA (%)</th>
+                <th>13 SMA (%)</th>
+              </tr>
+            </thead>
+            <tbody id="sentimentTableBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Таб с данными по монетам -->
+      <div class="tab-pane fade" id="coins" role="tabpanel" aria-labelledby="coins-tab">
+        <div id="tables-container">
+          <!-- Таблицы будут добавлены здесь -->
+        </div>
+      </div>
     </div>
-    <table class="sentiment-table">
-      <thead>
-        <tr>
-          <th>Дата</th>
-          <th>Количество бычьих сигналов</th>
-          <th>Всего монет с данными</th>
-          <th>Процент бычьих сигналов</th>
-          <th>13 EMA (%)</th>
-          <th>13 SMA (%)</th>
-        </tr>
-      </thead>
-      <tbody id="sentimentTableBody">
-      </tbody>
-    </table>
-  </div>
-
-  <div id="tables-container">
-    <!-- Таблицы будут добавлены здесь -->
   </div>
 
   <script>
