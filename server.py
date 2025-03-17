@@ -430,6 +430,7 @@ def calculate_di_index(df, debug=False):
 
     if debug:
         logger.debug(f"Components for DI Index calculation ({df.attrs.get('timeframe', 'unknown')}):")
+        logger.debug("Time format: %Y-%m-%d %H:%M:%S UTC")
         logger.debug(df[["time", "MA_index", "Willy_index", "macd_index", 
                         "OBV_index_old", "mfi_index_old", "AD_index", "DI_index_old",
                         "OBV_index_new", "mfi_index_new", "DI_index_new"]].head())
@@ -451,7 +452,6 @@ def calculate_di_index(df, debug=False):
         None
     )
 
-    # Assign DI values based on timeframe
     # В соответствии с TradingView Pine Script используем сам DI Index для всех периодов
     if "timeframe" in df.attrs:
         if df.attrs["timeframe"] == "weekly":
@@ -465,7 +465,8 @@ def calculate_di_index(df, debug=False):
 
             if debug:
                 logger.debug("Weekly DI values and their times:")
-                logger.debug(df[["time", "weekly_di_old", "weekly_di_new", "DI_index_old", "DI_index_new"]].head())
+                logger.debug("Time format: %Y-%m-%d %H:%M:%S UTC")
+                logger.debug(df[["time", "weekly_di_old", "weekly_di_new"]].head())
 
         elif df.attrs["timeframe"] == "daily":
             # Для daily тоже берем фиолетовую полосу как есть
@@ -478,7 +479,9 @@ def calculate_di_index(df, debug=False):
 
             if debug:
                 logger.debug("Daily DI values and their times:")
+                logger.debug("Time format: %Y-%m-%d %H:%M:%S UTC")
                 logger.debug(df[["time", "daily_di_old", "daily_di_new"]].head())
+
         else:  # 4h
             # Для 4h берем фиолетовую полосу как есть
             df["weekly_di_old"] = None
@@ -490,6 +493,7 @@ def calculate_di_index(df, debug=False):
 
             if debug:
                 logger.debug("4h DI values and their times:")
+                logger.debug("Time format: %Y-%m-%d %H:%M:%S UTC")
                 logger.debug(df[["time", "4h_di_old", "4h_di_new"]].head())
 
     result = []
