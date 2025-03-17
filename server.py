@@ -419,6 +419,12 @@ def calculate_di_index(df, debug=False):
     df["DI_index_new"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
                       df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
 
+    if debug:
+        logger.debug(f"Components for DI Index calculation ({df.attrs.get('timeframe', 'unknown')}):")
+        logger.debug(df[["time", "MA_index", "Willy_index", "macd_index", 
+                        "OBV_index_old", "mfi_index_old", "AD_index", "DI_index_old",
+                        "OBV_index_new", "mfi_index_new", "DI_index_new"]].head())
+
     # Calculate EMAs and SMAs for both methods
     df["di_ema_13_old"] = ta.ema(df["DI_index_old"], length=13)
     df["di_sma_30_old"] = df["DI_index_old"].rolling(window=30, min_periods=30).mean()
@@ -461,6 +467,12 @@ def calculate_di_index(df, debug=False):
             df["4h_di_old"] = df["DI_index_old"]
             df["4h_di_new"] = df["DI_index_new"]
 
+        if debug:
+            logger.debug(f"Final DI values for timeframe {df.attrs['timeframe']}:")
+            logger.debug(df[["time", "weekly_di_old", "weekly_di_new", 
+                           "daily_di_old", "daily_di_new",
+                           "4h_di_old", "4h_di_new"]].head())
+
     result = []
     for _, row in df.iterrows():
         time_val = row["time"] if "time" in row.index else row.name
@@ -496,7 +508,6 @@ def nan_to_none(val):
     if isinstance(val, float) and math.isnan(val):
         return None
     return val
-
 
 
 def process_symbol_batch(symbols, debug=False):
