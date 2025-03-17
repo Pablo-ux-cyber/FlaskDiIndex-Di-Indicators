@@ -63,14 +63,15 @@ def calculate_willy_index(df):
     length = 21  # As defined in Pine Script
     len_out = 13  # For EMA calculation of out
 
-    # Highest and lowest calculations over length period
+    # In Pine Script highest() and lowest() look back exactly 'length' periods
     df["upper"] = df["high"].rolling(window=length, min_periods=1).max()
     df["lower"] = df["low"].rolling(window=length, min_periods=1).min()
     df["range"] = df["upper"] - df["lower"]
-    df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
 
-    # Calculate Williams %R exactly as in Pine Script
+    # Pine Script handles zero division differently
+    df.loc[df["range"] == 0, "range"] = np.nan
     df["out"] = 100 * (df["close"] - df["upper"]) / df["range"]
+    df["out"] = df["out"].fillna(-50)  # Pine Script default
     df["out2"] = ta.ema(df["out"], length=len_out)
 
     # Calculate components exactly as in Pine Script
@@ -80,16 +81,6 @@ def calculate_willy_index(df):
     df["Willy_bias"] = (df["out"] > -50).astype(int)
 
     df["Willy_index"] = df["Willy_stupid_os"] + df["Willy_bullbear"] + df["Willy_bias"] - df["Willy_stupid_ob"]
-
-    # Test case logging for 01.01.2024
-    test_date = pd.Timestamp('2024-01-01')
-    if test_date in df.index:
-        logger.debug("\nWilly Index Test case values for 2024-01-01:")
-        test_data = df.loc[test_date]
-        logger.debug(f"Willy components: os={test_data['Willy_stupid_os']}, ob={test_data['Willy_stupid_ob']}")
-        logger.debug(f"Willy bullbear={test_data['Willy_bullbear']}, bias={test_data['Willy_bias']}")
-        logger.debug(f"Willy_index final value: {test_data['Willy_index']}")
-
     return df
 
 def calculate_macd_index(df):
@@ -142,26 +133,30 @@ def calculate_obv_index(df):
 
 def calculate_mfi_index(df):
     """Calculate MFI Index components exactly as in Pine Script"""
-    # MFI parameters as defined in Pine Script
     mfi_length = 14
 
-    # Source calculation - hlc3 (high, low, close average)
+    # Source calculation exactly as in Pine Script
     df["mfi_src"] = (df["high"] + df["low"] + df["close"]) / 3
     df["mfi_change"] = df["mfi_src"].diff()
 
-    # Money flow calculations exactly as in Pine Script
+    # Money flow calculations with Pine Script logic
     df["mfi_upper"] = df["volumefrom"] * np.where(df["mfi_change"] > 0, df["mfi_src"], 0)
     df["mfi_lower"] = df["volumefrom"] * np.where(df["mfi_change"] < 0, df["mfi_src"], 0)
 
-    # Calculate sums with minimum periods of 1 to match Pine Script behavior
+    # Sums with exact Pine Script behavior
     df["mfi_upper_sum"] = df["mfi_upper"].rolling(window=mfi_length, min_periods=1).sum()
     df["mfi_lower_sum"] = df["mfi_lower"].rolling(window=mfi_length, min_periods=1).sum()
-    df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
 
-    # MFI calculation using RSI formula
-    df["mfi_mf"] = ta.rsi(df["mfi_upper_sum"] / df["mfi_lower_sum"], length=mfi_length)
+    # Handle zero division as in Pine Script
+    df.loc[df["mfi_lower_sum"] == 0, "mfi_lower_sum"] = np.nan
+
+    # MFI calculation with proper handling of NaN values
+    mfi_ratio = df["mfi_upper_sum"] / df["mfi_lower_sum"]
+    df["mfi_mf"] = 100 - (100 / (1 + mfi_ratio))
+    df["mfi_mf"] = df["mfi_mf"].fillna(50)  # Pine Script default
     df["mfi_mf2"] = ta.ema(df["mfi_mf"], length=13)
 
+    # Index components with proper NaN handling
     df["mfi_stupid_os"] = (df["mfi_mf"] < 20).astype(int)
     df["mfi_stupid_ob"] = (df["mfi_mf"] > 80).astype(int)
     df["mfi_bullbear"] = (df["mfi_mf"] > df["mfi_mf2"]).astype(int)
@@ -172,15 +167,26 @@ def calculate_mfi_index(df):
 
 def calculate_ad_index(df):
     """Calculate AD Index components exactly as in Pine Script"""
-    # AD
-    condition = ((df["close"] == df["high"]) & (df["close"] == df["low"])) | (df["high"] == df["low"])
-    df["ad_calc"] = ((2 * df["close"] - df["low"] - df["high"]) / (df["high"] - df["low"])).where(~condition, 0) * df["volumefrom"]
+    # Handle special cases exactly as in Pine Script
+    high_eq_low = (df["high"] == df["low"])
+    close_eq_high_and_low = (df["close"] == df["high"]) & (df["close"] == df["low"])
+
+    # AD calculation with proper handling of edge cases
+    df["ad_calc"] = np.where(
+        high_eq_low | close_eq_high_and_low,
+        0,
+        ((2 * df["close"] - df["low"] - df["high"]) / (df["high"] - df["low"])) * df["volumefrom"]
+    )
+
+    # Cumulative sum as in Pine Script
     df["ad"] = df["ad_calc"].cumsum()
 
+    # Moving averages with exact Pine Script parameters
     df["ad2"] = ta.ema(df["ad"], length=13)
     df["ad3"] = ta.sma(df["ad"], length=30)
     df["ad4"] = ta.sma(df["ad"], length=200)
 
+    # Bullish/Bearish conditions
     df["AD_bullbear_short"] = (df["ad"] > df["ad2"]).astype(int)
     df["AD_bullbear_med"] = (df["ad"] > df["ad3"]).astype(int)
     df["AD_bullbear_long"] = (df["ad2"] > df["ad3"]).astype(int)
@@ -202,7 +208,7 @@ def calculate_di_index(df):
 
     # Calculate DI Value (sum of all components)
     df["di_value"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                     df["OBV_index"] + df["mfi_index"] + df["AD_index"])
+                      df["OBV_index"] + df["mfi_index"] + df["AD_index"])
 
     # Round DI values to integers
     df["di_value"] = df["di_value"].round()
@@ -253,11 +259,12 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     """Get weekly OHLCV data for given cryptocurrency"""
     df_daily = get_daily_data(symbol, tsym, limit)
 
-    # Convert index to datetime if it's not already
+    # Ensure we have datetime index
     if not isinstance(df_daily.index, pd.DatetimeIndex):
         df_daily.set_index('time', inplace=True)
 
-    # Use W-MON for Monday-based weekly grouping
+    # Resample to weekly data starting from Monday
+    # This matches Pine Script's weekly aggregation
     df_weekly = df_daily.resample('W-MON').agg({
         'open': 'first',
         'high': 'max',
@@ -267,7 +274,10 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
         'volumeto': 'sum'
     })
 
-    # Reset index to get time as a column
+    # Handle missing data
+    df_weekly = df_weekly.fillna(method='ffill')  # Forward fill missing values
+
+    # Reset index to get time as column
     df_weekly.reset_index(inplace=True)
 
     # Set timeframe attribute
