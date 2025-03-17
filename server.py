@@ -86,32 +86,42 @@ def process_symbol(symbol, debug=False):
 
         # Process data
         results_by_date = {}
+        weekly_values = {}  # Store weekly values for lookup
 
-        # First, process daily and weekly data
-        for data_type, data_list in zip(["daily", "weekly"], [daily_di, weekly_di]):
-            for entry in data_list:
-                date = entry["time"][:10]  # Get just the date part
-                if date not in results_by_date:
-                    results_by_date[date] = {
-                        "time": date,
-                        "daily_di_new": None,
-                        "weekly_di_new": None,
-                        "4h_values_new": [],  # List to store all 4h values
-                        "4h_di_new": None,    # Latest 4h value
-                        "total_new": None,
-                        "di_ema_13_new": None,
-                        "di_sma_30_new": None,
-                        "trend_new": None,
-                        "close": entry["close"]
-                    }
+        # First, process weekly data to build lookup table
+        for entry in weekly_di:
+            date = entry["time"][:10]
+            weekly_values[date] = entry["weekly_di_new"]
 
-                # Update daily/weekly values
-                if data_type == "daily":
-                    results_by_date[date]["daily_di_new"] = entry["daily_di_new"]
-                elif data_type == "weekly":
-                    results_by_date[date]["weekly_di_new"] = entry["weekly_di_new"]
+        # Process all dates from daily data
+        for entry in daily_di:
+            date = entry["time"][:10]
+            if date not in results_by_date:
+                results_by_date[date] = {
+                    "time": date,
+                    "daily_di_new": None,
+                    "weekly_di_new": None,
+                    "4h_values_new": [],  # List to store all 4h values
+                    "4h_di_new": None,    # Latest 4h value
+                    "total_new": None,
+                    "di_ema_13_new": None,
+                    "di_sma_30_new": None,
+                    "trend_new": None,
+                    "close": entry["close"]
+                }
+            results_by_date[date]["daily_di_new"] = entry["daily_di_new"]
 
-        # Then process 4h data
+        # Fill in weekly values, using previous date's value if missing
+        dates = sorted(results_by_date.keys())
+        prev_weekly = None
+        for date in dates:
+            if date in weekly_values:
+                results_by_date[date]["weekly_di_new"] = weekly_values[date]
+                prev_weekly = weekly_values[date]
+            else:
+                results_by_date[date]["weekly_di_new"] = prev_weekly
+
+        # Process 4h data
         for entry in fourh_di:
             date = entry["time"][:10]
             if date in results_by_date:
@@ -124,7 +134,8 @@ def process_symbol(symbol, debug=False):
 
         # Calculate total and indicators for each date
         results_list = []
-        for date, data in results_by_date.items():
+        for date in sorted(results_by_date.keys()):
+            data = results_by_date[date]
             # Calculate total
             components = [
                 data["weekly_di_new"],
@@ -134,9 +145,6 @@ def process_symbol(symbol, debug=False):
             total = sum(x for x in components if x is not None)
             data["total_new"] = total
             results_list.append(data)
-
-        # Sort by date
-        results_list.sort(key=lambda x: x["time"])
 
         # Calculate EMAs and SMAs on the total values
         totals = pd.Series([d["total_new"] for d in results_list])
@@ -421,7 +429,7 @@ def calculate_di_index(df, debug=False):
 
     # Calculate DI Index для текущего таймфрейма
     df["di_value"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                     df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
+                      df["OBV_index_new"] + df["mfi_index_new"] + df["AD_index"])
 
     if debug:
         logger.debug(f"Components for DI Index calculation ({df.attrs.get('timeframe', 'unknown')}):")
