@@ -410,9 +410,10 @@
       XLSX.writeFile(wb, `Market_Sentiment_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
-        function calculateMarketSentiment(allData) {
+    function calculateMarketSentiment(allData) {
       const sentimentByDate = {};
 
+      // Собираем данные по датам
       for (const [symbol, data] of Object.entries(allData)) {
         if (!Array.isArray(data)) continue;
 
@@ -430,20 +431,23 @@
         });
       }
 
+      // Преобразуем в массив и считаем проценты
       const sortedData = Object.entries(sentimentByDate)
         .map(([date, data]) => ({
           date,
           bullCount: data.bullCount,
           totalCount: data.totalCount,
-          percentage: (data.bullCount / data.totalCount * 100).toFixed(2)
+          percentage: (data.bullCount / data.totalCount * 100).toFixed(2)  // Процент бычьих сигналов
         }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
+      // Берем проценты для расчета средних
       const percentages = sortedData.map(item => parseFloat(item.percentage));
       const ma13 = [];
       const sma13 = [];
-      const alpha = 2 / (13 + 1);
+      const alpha = 2 / (13 + 1);  // Коэффициент для 13 EMA
 
+      // Считаем EMA и SMA на основе процентов
       for (let i = 0; i < percentages.length; i++) {
         if (isNaN(percentages[i])) {
           ma13.push(null);
@@ -452,6 +456,7 @@
           ma13.push(parseFloat(percentages[i]));
           sma13.push(parseFloat(percentages[i]));
         } else {
+          // Расчет EMA
           const prevEMA = ma13[i - 1];
           if (prevEMA === null || isNaN(prevEMA)) {
             ma13.push(parseFloat(percentages[i]));
@@ -460,6 +465,7 @@
             ma13.push(ema);
           }
 
+          // Расчет SMA
           const start = Math.max(0, i - 12);
           const slice = percentages.slice(start, i + 1);
           const validNumbers = slice.filter(n => !isNaN(n));
@@ -470,10 +476,11 @@
         }
       }
 
+      // Добавляем значения EMA и SMA к результатам
       return sortedData.map((item, index) => ({
         ...item,
-        ma13: ma13[index] === null ? null : ma13[index].toFixed(2),
-        sma13: sma13[index] === null ? null : sma13[index].toFixed(2)
+        ma13: ma13[index] === null ? null : ma13[index].toFixed(2),  // 13 EMA
+        sma13: sma13[index] === null ? null : sma13[index].toFixed(2)  // 30 SMA
       })).reverse();
     }
 
