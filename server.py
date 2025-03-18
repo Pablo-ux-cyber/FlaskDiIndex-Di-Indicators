@@ -202,7 +202,7 @@ def calculate_di_index(df):
 
     # Calculate DI Value (sum of all components)
     df["di_value"] = (df["MA_index"] + df["Willy_index"] + df["macd_index"] +
-                     df["OBV_index"] + df["mfi_index"] + df["AD_index"])
+                      df["OBV_index"] + df["mfi_index"] + df["AD_index"])
 
     # Round DI values to integers
     df["di_value"] = df["di_value"].round()
@@ -311,9 +311,14 @@ def process_symbol(symbol, debug=False):
             date = entry["time"][:10]  # Get just the date part
             weekly_values[date] = entry["weekly_di_new"]
 
-        # Process all dates from daily data
-        for entry in daily_di:
-            date = entry["time"][:10]  # Get just the date part
+        # Process daily data to get structure and daily values
+        df_daily_dict = df_daily.to_dict('records')
+        daily_di_dict = {entry["time"][:10]: entry for entry in daily_di}
+
+        for daily_row in df_daily_dict:
+            date = pd.Timestamp(daily_row["time"]).strftime("%Y-%m-%d")
+            daily_entry = daily_di_dict.get(date, {})
+
             if date not in results_by_date:
                 results_by_date[date] = {
                     "time": date,
@@ -325,9 +330,10 @@ def process_symbol(symbol, debug=False):
                     "di_ema_13_new": None,
                     "di_sma_30_new": None,
                     "trend_new": None,
-                    "close": entry["close"]
+                    "open": daily_row.get("open"),  # Get open price from daily data
+                    "close": daily_row.get("close")  # Keep close for reference
                 }
-            results_by_date[date]["daily_di_new"] = entry["daily_di_new"]
+            results_by_date[date]["daily_di_new"] = daily_entry.get("daily_di_new")
 
         # Fill in weekly values, using previous week's value if missing
         dates = sorted(results_by_date.keys())
@@ -350,9 +356,9 @@ def process_symbol(symbol, debug=False):
                 # Update the latest 4h value for the day
                 results_by_date[date]["4h_di_new"] = entry["4h_di_new"]
 
-        # Calculate total and indicators for each date
+        # Convert to list and calculate additional fields
         results_list = []
-        for date in sorted(results_by_date.keys()):
+        for date in sorted(results_by_date.keys(), reverse=True):
             data = results_by_date[date]
             # Calculate total
             components = [
@@ -365,19 +371,20 @@ def process_symbol(symbol, debug=False):
             results_list.append(data)
 
         # Calculate EMAs and SMAs on the total values
-        totals = pd.Series([d["total_new"] for d in results_list])
-        ema13 = ta.ema(totals, length=13)
-        sma30 = totals.rolling(window=30, min_periods=30).mean()
+        if results_list:
+            totals = pd.Series([d["total_new"] for d in results_list])
+            ema13 = ta.ema(totals, length=13)
+            sma30 = totals.rolling(window=30, min_periods=1).mean()
 
-        # Update results with EMAs, SMAs and trends
-        for i, data in enumerate(results_list):
-            data["di_ema_13_new"] = None if pd.isna(ema13.iloc[i]) else round(ema13.iloc[i], 2)
-            data["di_sma_30_new"] = None if pd.isna(sma30.iloc[i]) else round(sma30.iloc[i], 2)
+            # Update results with EMAs, SMAs and trends
+            for i, data in enumerate(results_list):
+                data["di_ema_13_new"] = None if pd.isna(ema13.iloc[i]) else round(ema13.iloc[i], 2)
+                data["di_sma_30_new"] = None if pd.isna(sma30.iloc[i]) else round(sma30.iloc[i], 2)
 
-            if data["di_ema_13_new"] is not None and data["di_sma_30_new"] is not None:
-                data["trend_new"] = "bull" if data["di_ema_13_new"] > data["di_sma_30_new"] else "bear"
-            else:
-                data["trend_new"] = None
+                if data["di_ema_13_new"] is not None and data["di_sma_30_new"] is not None:
+                    data["trend_new"] = "bull" if data["di_ema_13_new"] > data["di_sma_30_new"] else "bear"
+                else:
+                    data["trend_new"] = None
 
         # Test case logging for 01.01.2024
         test_date = "2024-01-01"
