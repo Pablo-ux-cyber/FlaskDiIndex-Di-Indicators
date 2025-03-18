@@ -221,19 +221,6 @@ def calculate_di_index(df):
     else:  # 4h
         df["4h_di_new"] = df["di_value"]
 
-    # Test case logging for 01.01.2024
-    test_date = pd.Timestamp('2024-01-01')
-    if test_date in df.index:
-        logger.debug(f"\nDI value test case for 2024-01-01 ({timeframe}):")
-        test_data = df.loc[test_date]
-        logger.debug(f"Final DI value: {test_data['di_value']}")
-        if timeframe == "weekly":
-            logger.debug(f"Weekly DI: {test_data['weekly_di_new']}")
-        elif timeframe == "daily":
-            logger.debug(f"Daily DI: {test_data['daily_di_new']}")
-        else:
-            logger.debug(f"4h DI: {test_data['4h_di_new']}")
-
     result = []
     for _, row in df.iterrows():
         time_val = row["time"] if "time" in row.index else row.name
@@ -244,7 +231,8 @@ def calculate_di_index(df):
             "weekly_di_new": nan_to_none(row["weekly_di_new"]),
             "daily_di_new": nan_to_none(row["daily_di_new"]),
             "4h_di_new": nan_to_none(row["4h_di_new"]),
-            "close": nan_to_none(row["close"])
+            "open": nan_to_none(row["open"]),  # Added open price
+            "close": nan_to_none(row["close"])  # Keep close for reference
         })
 
     return result
