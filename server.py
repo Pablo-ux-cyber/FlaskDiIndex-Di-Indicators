@@ -311,12 +311,15 @@ def process_symbol(symbol, debug=False):
             date = entry["time"][:10]  # Get just the date part
             weekly_values[date] = entry["weekly_di_new"]
 
-        # Process daily data to get structure and daily values
-        df_daily_dict = df_daily.to_dict('records')
+        # Process daily data
+        daily_data = df_daily.copy()
+        if isinstance(daily_data.index, pd.DatetimeIndex):
+            daily_data = daily_data.reset_index()
+
         daily_di_dict = {entry["time"][:10]: entry for entry in daily_di}
 
-        for daily_row in df_daily_dict:
-            date = pd.Timestamp(daily_row["time"]).strftime("%Y-%m-%d")
+        for _, row in daily_data.iterrows():
+            date = pd.Timestamp(row["time"]).strftime("%Y-%m-%d")
             daily_entry = daily_di_dict.get(date, {})
 
             if date not in results_by_date:
@@ -330,8 +333,8 @@ def process_symbol(symbol, debug=False):
                     "di_ema_13_new": None,
                     "di_sma_30_new": None,
                     "trend_new": None,
-                    "open": daily_row.get("open"),  # Get open price from daily data
-                    "close": daily_row.get("close")  # Keep close for reference
+                    "open": row.get("open"),  # Get open price from daily data
+                    "close": row.get("close")  # Keep close for reference
                 }
             results_by_date[date]["daily_di_new"] = daily_entry.get("daily_di_new")
 
@@ -385,16 +388,6 @@ def process_symbol(symbol, debug=False):
                     data["trend_new"] = "bull" if data["di_ema_13_new"] > data["di_sma_30_new"] else "bear"
                 else:
                     data["trend_new"] = None
-
-        # Test case logging for 01.01.2024
-        test_date = "2024-01-01"
-        if test_date in results_by_date:
-            logger.debug("\nFinal Test case values for 2024-01-01:")
-            test_data = results_by_date[test_date]
-            logger.debug(f"Weekly DI: {test_data['weekly_di_new']}")
-            logger.debug(f"Daily DI: {test_data['daily_di_new']}")
-            logger.debug(f"4h DI: {test_data['4h_di_new']}")
-            logger.debug(f"Total: {test_data['total_new']}")
 
         return symbol, results_list
 
