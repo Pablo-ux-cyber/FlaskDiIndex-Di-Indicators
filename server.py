@@ -333,8 +333,8 @@ def process_symbol(symbol, debug=False):
                     "di_ema_13_new": None,
                     "di_sma_30_new": None,
                     "trend_new": None,
-                    "open": row.get("open"),  # Get open price from daily data
-                    "close": row.get("close")  # Keep close for reference
+                    "open": float(row["open"]) if pd.notnull(row["open"]) else None,  # Ensure proper type conversion
+                    "close": float(row["close"]) if pd.notnull(row["close"]) else None  # Keep close for reference
                 }
             results_by_date[date]["daily_di_new"] = daily_entry.get("daily_di_new")
 
@@ -375,19 +375,34 @@ def process_symbol(symbol, debug=False):
 
         # Calculate EMAs and SMAs on the total values
         if results_list:
-            totals = pd.Series([d["total_new"] for d in results_list])
-            ema13 = ta.ema(totals, length=13)
-            sma30 = totals.rolling(window=30, min_periods=1).mean()
+            # Create a new DataFrame for calculations
+            df_calcs = pd.DataFrame([{
+                'date': d['time'],
+                'total': d['total_new']
+            } for d in results_list]).set_index('date')
+
+            # Sort by date for correct calculation
+            df_calcs = df_calcs.sort_index()
+
+            # Calculate EMAs and SMAs
+            df_calcs['ema13'] = ta.ema(df_calcs['total'], length=13)
+            df_calcs['sma30'] = df_calcs['total'].rolling(window=30, min_periods=1).mean()
+
+            # Create a lookup dictionary
+            calcs_dict = df_calcs.to_dict('index')
 
             # Update results with EMAs, SMAs and trends
-            for i, data in enumerate(results_list):
-                data["di_ema_13_new"] = None if pd.isna(ema13.iloc[i]) else round(ema13.iloc[i], 2)
-                data["di_sma_30_new"] = None if pd.isna(sma30.iloc[i]) else round(sma30.iloc[i], 2)
+            for data in results_list:
+                date = data['time']
+                if date in calcs_dict:
+                    values = calcs_dict[date]
+                    data['di_ema_13_new'] = None if pd.isna(values['ema13']) else round(float(values['ema13']), 2)
+                    data['di_sma_30_new'] = None if pd.isna(values['sma30']) else round(float(values['sma30']), 2)
 
-                if data["di_ema_13_new"] is not None and data["di_sma_30_new"] is not None:
-                    data["trend_new"] = "bull" if data["di_ema_13_new"] > data["di_sma_30_new"] else "bear"
-                else:
-                    data["trend_new"] = None
+                    if data['di_ema_13_new'] is not None and data['di_sma_30_new'] is not None:
+                        data['trend_new'] = 'bull' if data['di_ema_13_new'] > data['di_sma_30_new'] else 'bear'
+                    else:
+                        data['trend_new'] = None
 
         return symbol, results_list
 
