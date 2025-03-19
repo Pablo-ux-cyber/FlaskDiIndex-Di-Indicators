@@ -287,6 +287,38 @@ def set_cached_data(symbol, data_type, data):
         'time': time.time()
     }
 
+def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
+    """Get 4-hour OHLCV data for given cryptocurrency"""
+    cached_data = get_cached_data(symbol, "4h_data")
+    if cached_data is not None and not cached_data.empty:
+        return cached_data
+
+    url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
+    response = requests.get(url)
+    data = response.json()
+    if data.get("Response") != "Success":
+        raise Exception(f"Error getting 4-hour data: {data}")
+
+    # Convert timestamp to datetime
+    df = pd.DataFrame(data['Data']['Data'])
+    df['time'] = pd.to_datetime(df['time'], unit='s')
+
+    # Убедимся, что последняя свеча каждого дня - это 20:00
+    df['date'] = df['time'].dt.date
+    df['hour'] = df['time'].dt.hour
+
+    # Фильтруем только свечи за 20:00 для каждого дня
+    df_filtered = df[df['hour'] == 20].copy()
+
+    # Устанавливаем атрибут timeframe
+    df_filtered.attrs['timeframe'] = '4h'
+
+    logger.debug(f"4h data filtered for {symbol}:")
+    logger.debug(df_filtered[['time', 'open', 'close']].head())
+
+    set_cached_data(symbol, "4h_data", df_filtered)
+    return df_filtered
+
 def process_symbol(symbol, debug=False):
     """Process a single symbol"""
     try:
@@ -304,94 +336,83 @@ def process_symbol(symbol, debug=False):
 
         # Process data
         results_by_date = {}
-        weekly_values = {}  # Store weekly values for lookup
 
-        # First, process weekly data to build lookup table
-        for entry in weekly_di:
-            date = entry["time"][:10]  # Get just the date part
-            weekly_values[date] = entry["weekly_di_new"]
-
-        # Process daily data
+        # Process daily data first to установить структуру дат
         daily_data = df_daily.copy()
         if isinstance(daily_data.index, pd.DatetimeIndex):
             daily_data = daily_data.reset_index()
 
+        # Создаем словарь для daily DI значений
         daily_di_dict = {entry["time"][:10]: entry for entry in daily_di}
 
-        for _, row in daily_data.iterrows():
-            date = pd.Timestamp(row["time"]).strftime("%Y-%m-%d")
-            daily_entry = daily_di_dict.get(date, {})
+        # Создаем словарь для weekly DI значений
+        weekly_values = {}
+        for entry in weekly_di:
+            date = entry["time"][:10]
+            weekly_values[date] = entry["weekly_di_new"]
 
-            if date not in results_by_date:
-                results_by_date[date] = {
-                    "time": date,
-                    "daily_di_new": None,
-                    "weekly_di_new": None,
-                    "4h_values_new": [],  # List to store all 4h values
-                    "4h_di_new": None,    # Latest 4h value
+        # Обрабатываем данные по дням
+        for _, row in daily_data.iterrows():
+            current_date = pd.Timestamp(row["time"])
+            date_str = current_date.strftime("%Y-%m-%d")
+            prev_date = (current_date - pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+
+            # Получаем DI значения за предыдущий день для current_date
+            daily_entry = daily_di_dict.get(prev_date, {})
+
+            if date_str not in results_by_date:
+                results_by_date[date_str] = {
+                    "time": date_str,
+                    "daily_di_new": daily_entry.get("daily_di_new"),  # DI за предыдущий день
+                    "weekly_di_new": weekly_values.get(date_str),  # Weekly DI за текущую дату
+                    "4h_values_new": [],
+                    "4h_di_new": None,
                     "total_new": None,
                     "di_ema_13_new": None,
                     "di_sma_30_new": None,
                     "trend_new": None,
-                    "open": float(row["open"]) if pd.notnull(row["open"]) else None,  # Ensure proper type conversion
-                    "close": float(row["close"]) if pd.notnull(row["close"]) else None  # Keep close for reference
+                    "open": float(row["open"]) if pd.notnull(row["open"]) else None,
+                    "close": float(row["close"]) if pd.notnull(row["close"]) else None
                 }
-            results_by_date[date]["daily_di_new"] = daily_entry.get("daily_di_new")
 
-        # Fill in weekly values, using previous week's value if missing
-        dates = sorted(results_by_date.keys())
-        prev_weekly = None
-        for date in dates:
-            if date in weekly_values:
-                results_by_date[date]["weekly_di_new"] = weekly_values[date]
-                prev_weekly = weekly_values[date]
-            else:
-                results_by_date[date]["weekly_di_new"] = prev_weekly
-
-        # Process 4h data
+        # Добавляем 4h значения
         for entry in fourh_di:
-            date = entry["time"][:10]
-            if date in results_by_date:
-                results_by_date[date]["4h_values_new"].append({
+            entry_date = pd.Timestamp(entry["time"])
+            next_day = (entry_date + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+
+            if next_day in results_by_date:
+                # 4h значения за 20:00 предыдущего дня относим к следующему дню
+                results_by_date[next_day]["4h_values_new"].append({
                     "time": entry["time"],
                     "value_new": entry["4h_di_new"]
                 })
-                # Update the latest 4h value for the day
-                results_by_date[date]["4h_di_new"] = entry["4h_di_new"]
+                results_by_date[next_day]["4h_di_new"] = entry["4h_di_new"]
 
-        # Convert to list and calculate additional fields
+        # Обработка и подсчет total
         results_list = []
         for date in sorted(results_by_date.keys(), reverse=True):
             data = results_by_date[date]
-            # Calculate total
             components = [
                 data["weekly_di_new"],
                 data["daily_di_new"],
                 data["4h_di_new"]
             ]
-            total = sum(x for x in components if x is not None)
-            data["total_new"] = total
+            data["total_new"] = sum(x for x in components if x is not None)
             results_list.append(data)
 
-        # Calculate EMAs and SMAs on the total values
+        # Расчет EMA и тренда
         if results_list:
-            # Create a new DataFrame for calculations
             df_calcs = pd.DataFrame([{
                 'date': d['time'],
                 'total': d['total_new']
             } for d in results_list]).set_index('date')
 
-            # Sort by date for correct calculation
             df_calcs = df_calcs.sort_index()
-
-            # Calculate EMAs and SMAs
             df_calcs['ema13'] = ta.ema(df_calcs['total'], length=13)
             df_calcs['sma30'] = df_calcs['total'].rolling(window=30, min_periods=1).mean()
 
-            # Create a lookup dictionary
             calcs_dict = df_calcs.to_dict('index')
 
-            # Update results with EMAs, SMAs and trends
             for data in results_list:
                 date = data['time']
                 if date in calcs_dict:
@@ -452,36 +473,6 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     df.attrs['timeframe'] = 'daily'
 
     set_cached_data(symbol, "daily_data", df)
-    return df
-
-def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
-    """Get 4-hour OHLCV data for given cryptocurrency"""
-    cached_data = get_cached_data(symbol, "4h_data")
-    if cached_data is not None and not cached_data.empty:
-        return cached_data
-
-    url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    if data.get("Response") != "Success":
-        raise Exception(f"Error getting 4-hour data: {data}")
-
-    # Convert timestamp to datetime with timezone info
-    df = pd.DataFrame(data['Data']['Data'])
-    df['time'] = pd.to_datetime(df['time'], unit='s')
-
-    # Group by date to ensure we have all 4h intervals
-    df['date'] = df['time'].dt.date
-    df['hour'] = df['time'].dt.hour
-
-    # Log the data distribution
-    logger.debug(f"4h data distribution for {symbol}:")
-    logger.debug(df.groupby(['date', 'hour']).size().reset_index(name='count'))
-
-    # Устанавливаем атрибут timeframe
-    df.attrs['timeframe'] = '4h'
-
-    set_cached_data(symbol, "4h_data", df)
     return df
 
 
