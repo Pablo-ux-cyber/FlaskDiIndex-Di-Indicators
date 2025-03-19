@@ -245,8 +245,8 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     if not isinstance(df_daily.index, pd.DatetimeIndex):
         df_daily.set_index('time', inplace=True)
 
-    # Use W-MON for Monday-based weekly grouping
-    df_weekly = df_daily.resample('W-MON').agg({
+    # Use W-SUN for Sunday-based weekly grouping to show current week's data on Sunday
+    df_weekly = df_daily.resample('W-SUN').agg({
         'open': 'first',
         'high': 'max',
         'low': 'min',
@@ -254,6 +254,9 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
         'volumefrom': 'sum',
         'volumeto': 'sum'
     })
+
+    # Shift the weekly data forward by one day so it starts from Monday
+    df_weekly.index = df_weekly.index + pd.Timedelta(days=1)
 
     # Reset index to get time as a column
     df_weekly.reset_index(inplace=True)
