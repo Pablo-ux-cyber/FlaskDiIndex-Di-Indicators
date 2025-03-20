@@ -238,17 +238,7 @@ def calculate_di_index(df):
     return result
 
 def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
-    """Get weekly OHLCV data for given cryptocurrency.
-
-    Weekly data calculation follows TradingView Pine Script logic:
-    - Shows data only for completed weeks (Monday 00:00:00 UTC to Sunday 23:59:59 UTC)
-    - Current incomplete week is not shown
-    - Data for a completed week becomes visible only after that week ends
-
-    Example: If today is Wednesday March 20, 2025:
-    - Last completed week: March 11, 2025 00:00:00 UTC - March 17, 2025 23:59:59 UTC
-    - Current week (March 18-24) is not shown until it completes
-    """
+    """Get weekly OHLCV data for given cryptocurrency"""
     df_daily = get_daily_data(symbol, tsym, limit)
 
     # Convert index to datetime if it's not already
@@ -260,25 +250,17 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     days_since_sunday = current_date.dayofweek + 1
     last_completed_sunday = current_date - pd.Timedelta(days=days_since_sunday)
 
-    logger.debug(f"\nWeekly data calculation for {symbol}:")
-    logger.debug(f"Current date: {current_date}")
-    logger.debug(f"Last completed Sunday: {last_completed_sunday}")
-
     # Filter data to include only completed weeks
     df_daily = df_daily[df_daily.index <= last_completed_sunday]
 
-    # Log the date range of data being processed
-    if not df_daily.empty:
-        logger.debug(f"Processing data from {df_daily.index.min()} to {df_daily.index.max()}")
-
     # Use W-MON for Monday-based weekly grouping
     df_weekly = df_daily.resample('W-MON').agg({
-        'open': 'first',      # Monday open price
-        'high': 'max',        # Week's highest price
-        'low': 'min',         # Week's lowest price
-        'close': 'last',      # Sunday close price
-        'volumefrom': 'sum',  # Total week volume
-        'volumeto': 'sum'     # Total week volume in quote currency
+        'open': 'first',
+        'high': 'max',
+        'low': 'min',
+        'close': 'last',
+        'volumefrom': 'sum',
+        'volumeto': 'sum'
     })
 
     # Reset index to get time as a column
@@ -288,13 +270,9 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     df_weekly.attrs['timeframe'] = 'weekly'
 
     # Log sample of weekly data for verification
-    logger.debug(f"\nSample of weekly data timestamps for {symbol}:")
+    logger.debug(f"Sample of weekly data timestamps for {symbol}:")
     if not df_weekly.empty:
         logger.debug(df_weekly['time'].head())
-        logger.debug("\nLast completed week details:")
-        last_week = df_weekly.iloc[-1]
-        logger.debug(f"Week starting: {last_week['time']}")
-        logger.debug(f"Open: {last_week['open']}, Close: {last_week['close']}")
 
     return df_weekly
 
