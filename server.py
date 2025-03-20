@@ -346,8 +346,8 @@ def process_symbol(symbol, debug=False):
                     "di_ema_13_new": None,
                     "di_sma_30_new": None,
                     "trend_new": None,
-                    "open": float(row["open"]) if pd.notnull(row["open"]) else None,  # Ensure proper type conversion
-                    "close": float(row["close"]) if pd.notnull(row["close"]) else None  # Keep close for reference
+                    "open": float(row["open"]) if pd.notnull(row["open"]) else None,
+                    "close": float(row["close"]) if pd.notnull(row["close"]) else None
                 }
             results_by_date[date]["daily_di_new"] = daily_entry.get("daily_di_new")
 
@@ -361,7 +361,7 @@ def process_symbol(symbol, debug=False):
             else:
                 results_by_date[date]["weekly_di_new"] = prev_weekly
 
-        # Process 4h data
+        # Process 4h data and calculate additional fields only when 4h data is available
         for entry in fourh_di:
             date = entry["time"][:10]
             if date in results_by_date:
@@ -372,27 +372,32 @@ def process_symbol(symbol, debug=False):
                 # Update the latest 4h value for the day
                 results_by_date[date]["4h_di_new"] = entry["4h_di_new"]
 
-        # Convert to list and calculate additional fields
-        results_list = []
-        for date in sorted(results_by_date.keys(), reverse=True):
-            data = results_by_date[date]
-            # Calculate total
-            components = [
-                data["weekly_di_new"],
-                data["daily_di_new"],
-                data["4h_di_new"]
-            ]
-            total = sum(x for x in components if x is not None)
-            data["total_new"] = total
-            results_list.append(data)
+                # Only calculate total and other indicators if we have 4h data
+                data = results_by_date[date]
+                components = [
+                    data["weekly_di_new"],
+                    data["daily_di_new"],
+                    data["4h_di_new"]
+                ]
+                if all(x is not None for x in components):
+                    data["total_new"] = sum(components)
 
-        # Calculate EMAs and SMAs on the total values
-        if results_list:
-            # Create a new DataFrame for calculations
-            df_calcs = pd.DataFrame([{
-                'date': d['time'],
-                'total': d['total_new']
-            } for d in results_list]).set_index('date')
+        # Calculate EMAs and SMAs only for dates with complete data
+        dates_with_complete_data = [
+            date for date in results_by_date.keys()
+            if results_by_date[date]["total_new"] is not None
+        ]
+
+        if dates_with_complete_data:
+            # Create DataFrame only for dates with complete data
+            df_calcs = pd.DataFrame([
+                {
+                    'date': date,
+                    'total': results_by_date[date]['total_new']
+                }
+                for date in dates_with_complete_data
+                if results_by_date[date]['total_new'] is not None
+            ]).set_index('date')
 
             # Sort by date for correct calculation
             df_calcs = df_calcs.sort_index()
@@ -401,21 +406,20 @@ def process_symbol(symbol, debug=False):
             df_calcs['ema13'] = ta.ema(df_calcs['total'], length=13)
             df_calcs['sma30'] = df_calcs['total'].rolling(window=30, min_periods=1).mean()
 
-            # Create a lookup dictionary
+            # Update results with EMAs and SMAs
             calcs_dict = df_calcs.to_dict('index')
-
-            # Update results with EMAs, SMAs and trends
-            for data in results_list:
-                date = data['time']
+            for date in dates_with_complete_data:
                 if date in calcs_dict:
                     values = calcs_dict[date]
-                    data['di_ema_13_new'] = None if pd.isna(values['ema13']) else round(float(values['ema13']), 2)
-                    data['di_sma_30_new'] = None if pd.isna(values['sma30']) else round(float(values['sma30']), 2)
+                    data = results_by_date[date]
+                    if data["total_new"] is not None:  # Double check we have total
+                        data['di_ema_13_new'] = None if pd.isna(values['ema13']) else round(float(values['ema13']), 2)
+                        data['di_sma_30_new'] = None if pd.isna(values['sma30']) else round(float(values['sma30']), 2)
+                        if data['di_ema_13_new'] is not None and data['di_sma_30_new'] is not None:
+                            data['trend_new'] = 'bull' if data['di_ema_13_new'] > data['di_sma_30_new'] else 'bear'
 
-                    if data['di_ema_13_new'] is not None and data['di_sma_30_new'] is not None:
-                        data['trend_new'] = 'bull' if data['di_ema_13_new'] > data['di_sma_30_new'] else 'bear'
-                    else:
-                        data['trend_new'] = None
+        # Convert to list and sort by date
+        results_list = [results_by_date[date] for date in sorted(results_by_date.keys(), reverse=True)]
 
         return symbol, results_list
 
