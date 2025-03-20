@@ -245,6 +245,14 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     if not isinstance(df_daily.index, pd.DatetimeIndex):
         df_daily.set_index('time', inplace=True)
 
+    # Get the current date and find the last completed Sunday
+    current_date = pd.Timestamp.now().normalize()
+    days_since_sunday = current_date.dayofweek + 1
+    last_completed_sunday = current_date - pd.Timedelta(days=days_since_sunday)
+
+    # Filter data to include only completed weeks
+    df_daily = df_daily[df_daily.index <= last_completed_sunday]
+
     # Use W-MON for Monday-based weekly grouping
     df_weekly = df_daily.resample('W-MON').agg({
         'open': 'first',
@@ -260,6 +268,11 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
 
     # Set timeframe attribute
     df_weekly.attrs['timeframe'] = 'weekly'
+
+    # Log sample of weekly data for verification
+    logger.debug(f"Sample of weekly data timestamps for {symbol}:")
+    if not df_weekly.empty:
+        logger.debug(df_weekly['time'].head())
 
     return df_weekly
 
