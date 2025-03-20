@@ -17,7 +17,8 @@
     tr:hover { background-color: #e0f7fa; }
     tr.no-4h { background-color: #fff3e0; }
     tr.no-4h:hover { background-color: #ffe0b2; }
-    caption { margin-bottom: 10px; font-size: 1.4em; font-weight: bold; }
+    caption { margin-bottom: 10px; font-size: 1.2em; font-weight: bold; }
+    h3 { font-size: 1.2em; }  /* Smaller table title */
     #error { color: red; font-weight: bold; margin-top: 20px; white-space: pre-wrap; }
     .symbol-selector { margin: 20px 0; }
     #loading { font-size: 1.2em; margin: 20px 0; }
@@ -34,17 +35,6 @@
     }
     .btn:hover {
       background-color: #5a6268;
-    }
-    .diff-highlight {
-      background-color: rgba(255, 244, 229, 0.3);
-    }
-    .comparison-group {
-      border-right: 2px solid #ddd;
-    }
-    thead tr th.group-header {
-      text-align: center;
-      background-color: #e9ecef;
-      font-weight: bold;
     }
     .nav-tabs {
       margin-bottom: 20px;
@@ -128,7 +118,6 @@
           Общее настроение рынка
         </a>
       </li>
-      <!-- Динамические табы для монет будут добавляться здесь -->
     </ul>
 
     <!-- Контент табов -->
@@ -158,7 +147,6 @@
           </table>
         </div>
       </div>
-      <!-- Динамические табы для монет будут добавляться здесь -->
     </div>
   </div>
 
@@ -259,32 +247,24 @@
           <tr>
             <th rowspan="2">Дата</th>
             <th colspan="3" class="group-header">DI Компоненты</th>
-            <th colspan="4" class="group-header">Расчет</th>
             <th rowspan="2">Open (Daily)</th>
           </tr>
           <tr>
             <th>Weekly</th>
             <th>Daily</th>
             <th>4h</th>
-            <th>Total</th>
-            <th>13 EMA</th>
-            <th>30 SMA</th>
-            <th>Trend</th>
           </tr>
         </thead>
         <tbody>
           ${data.map(row => {
+            const has4hData = row['4h_values_new'] && row['4h_values_new'].length > 0;
             const values4h = JSON.stringify(get4hValuesForDate(row)).replace(/'/g, "\\'");
             return `
-              <tr>
+              <tr class="${has4hData ? '' : 'no-4h'}">
                 <td>${row.time}</td>
                 <td>${formatValue(row.weekly_di_new)}</td>
                 <td>${formatValue(row.daily_di_new)}</td>
                 <td style="cursor: pointer" onclick='show4hValues(${values4h}, "${row.time}")'>${formatValue(row['4h_di_new'])}</td>
-                <td>${formatValue(row.total_new)}</td>
-                <td>${formatValue(row.di_ema_13_new)}</td>
-                <td>${formatValue(row.di_sma_30_new)}</td>
-                <td>${row.trend_new ? (row.trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
                 <td>${formatValue(row.open)}</td>
               </tr>
             `;
@@ -297,7 +277,6 @@
     }
 
     function createCoinTab(symbol, data) {
-      // Создаем таб
       const tabId = `coin-${symbol}`;
       const tabLink = document.createElement('li');
       tabLink.className = 'nav-item';
@@ -308,14 +287,12 @@
         </a>
       `;
 
-      // Создаем контент таба
       const tabContent = document.createElement('div');
       tabContent.className = 'tab-pane fade';
       tabContent.id = tabId;
       tabContent.setAttribute('role', 'tabpanel');
       tabContent.setAttribute('aria-labelledby', `${tabId}-tab`);
 
-      // Добавляем таблицу в контент таба
       const table = createTable(symbol, data);
       tabContent.appendChild(table);
 
@@ -324,10 +301,7 @@
 
     function downloadExcel(data, symbol) {
       const rows = [
-        ['Дата', 
-         'Weekly DI', 'Daily DI', '4h DI',
-         'Total', '13 EMA', '30 SMA', 'Trend',
-         'Open (Daily)']
+        ['Дата', 'Weekly DI', 'Daily DI', '4h DI', 'Open (Daily)']
       ];
 
       data.forEach(row => {
@@ -336,10 +310,6 @@
           formatValue(row.weekly_di_new),
           formatValue(row.daily_di_new),
           formatValue(row['4h_di_new']),
-          formatValue(row.total_new),
-          formatValue(row.di_ema_13_new),
-          formatValue(row.di_sma_30_new),
-          row.trend_new || '-',
           formatValue(row.open)
         ]);
       });
@@ -365,11 +335,9 @@
     }
 
     function clearAllTabs() {
-      // Очищаем все табы монет
       const tabList = document.getElementById('myTabs');
       const tabContent = document.getElementById('myTabContent');
 
-      // Оставляем только таб с общим настроением рынка
       const sentimentTab = document.getElementById('sentiment-tab').parentElement;
       const sentimentContent = document.getElementById('sentiment');
 
@@ -388,7 +356,7 @@
       try {
         loadingDiv.style.display = 'block';
         errorDiv.textContent = '';
-        clearAllTabs(); // Очищаем существующие табы
+        clearAllTabs();
 
         const symbolsSelect = document.getElementById('symbols');
         const selectedSymbols = Array.from(symbolsSelect.selectedOptions).map(option => option.value);
@@ -457,7 +425,6 @@
 
         progressDiv.textContent = `Загружено успешно: ${successCount} монет, с ошибками: ${errorCount} монет`;
 
-        // Активируем первый таб монеты после загрузки
         const firstCoinTab = tabList.querySelector('li:nth-child(2) a');
         if (firstCoinTab) {
           firstCoinTab.click();
@@ -503,7 +470,6 @@
     function calculateMarketSentiment(allData) {
       const sentimentByDate = {};
 
-      // Собираем данные по датам
       for (const [symbol, data] of Object.entries(allData)) {
         if (!Array.isArray(data)) continue;
 
@@ -521,23 +487,20 @@
         });
       }
 
-      // Преобразуем в массив и считаем проценты
       const sortedData = Object.entries(sentimentByDate)
         .map(([date, data]) => ({
           date,
           bullCount: data.bullCount,
           totalCount: data.totalCount,
-          percentage: (data.bullCount / data.totalCount * 100).toFixed(2)  // Процент бычьих сигналов
+          percentage: (data.bullCount / data.totalCount * 100).toFixed(2)
         }))
         .sort((a, b) => a.date.localeCompare(b.date));
 
-      // Берем проценты для расчета средних
       const percentages = sortedData.map(item => parseFloat(item.percentage));
       const ma13 = [];
       const sma13 = [];
-      const alpha = 2 / (13 + 1);  // Коэффициент для 13 EMA
+      const alpha = 2 / (13 + 1);
 
-      // Считаем EMA и SMA на основе процентов
       for (let i = 0; i < percentages.length; i++) {
         if (isNaN(percentages[i])) {
           ma13.push(null);
@@ -546,7 +509,6 @@
           ma13.push(parseFloat(percentages[i]));
           sma13.push(parseFloat(percentages[i]));
         } else {
-          // Расчет EMA
           const prevEMA = ma13[i - 1];
           if (prevEMA === null || isNaN(prevEMA)) {
             ma13.push(parseFloat(percentages[i]));
@@ -555,7 +517,6 @@
             ma13.push(ema);
           }
 
-          // Расчет SMA
           const start = Math.max(0, i - 12);
           const slice = percentages.slice(start, i + 1);
           const validNumbers = slice.filter(n => !isNaN(n));
@@ -566,11 +527,10 @@
         }
       }
 
-      // Добавляем значения EMA и SMA к результатам
       return sortedData.map((item, index) => ({
         ...item,
-        ma13: ma13[index] === null ? null : ma13[index].toFixed(2),  // 13 EMA
-        sma13: sma13[index] === null ? null : sma13[index].toFixed(2)  // 30 SMA
+        ma13: ma13[index] === null ? null : ma13[index].toFixed(2),
+        sma13: sma13[index] === null ? null : sma13[index].toFixed(2)
       })).reverse();
     }
 
