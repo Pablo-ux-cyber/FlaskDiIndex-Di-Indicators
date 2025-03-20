@@ -300,6 +300,39 @@ def set_cached_data(symbol, data_type, data):
         'time': time.time()
     }
 
+def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
+    """Get 4-hour OHLCV data for given cryptocurrency"""
+    cached_data = get_cached_data(symbol, "4h_data")
+    if cached_data is not None and not cached_data.empty:
+        return cached_data
+
+    url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
+    response = requests.get(url)
+    data = response.json()
+    if data.get("Response") != "Success":
+        raise Exception(f"Error getting 4-hour data: {data}")
+
+    # Convert timestamp to datetime with timezone info
+    df = pd.DataFrame(data['Data']['Data'])
+    df['time'] = pd.to_datetime(df['time'], unit='s')
+
+    # Sort by time to ensure correct order
+    df = df.sort_values('time')
+
+    # Group by date to ensure we have all 4h intervals
+    df['date'] = df['time'].dt.date
+    df['hour'] = df['time'].dt.hour
+
+    # Log the data distribution
+    logger.debug(f"4h data distribution for {symbol}:")
+    logger.debug(df.groupby(['date', 'hour']).size().reset_index(name='count'))
+
+    # Устанавливаем атрибут timeframe
+    df.attrs['timeframe'] = '4h'
+
+    set_cached_data(symbol, "4h_data", df)
+    return df
+
 def process_symbol(symbol, debug=False):
     """Process a single symbol"""
     try:
@@ -331,23 +364,40 @@ def process_symbol(symbol, debug=False):
 
         daily_di_dict = {entry["time"][:10]: entry for entry in daily_di}
 
+        # Process 4h data first to organize by date
+        fourh_by_date = {}
+        for entry in fourh_di:
+            date = entry["time"][:10]
+            if date not in fourh_by_date:
+                fourh_by_date[date] = []
+            fourh_by_date[date].append({
+                "time": entry["time"],
+                "value_new": entry["4h_di_new"]
+            })
+
         for _, row in daily_data.iterrows():
             date = pd.Timestamp(row["time"]).strftime("%Y-%m-%d")
             daily_entry = daily_di_dict.get(date, {})
 
             if date not in results_by_date:
+                # Get 4h values for this date, sorted by time
+                fourh_values = sorted(fourh_by_date.get(date, []), key=lambda x: x["time"])
+
+                # Use the first value (00:00:00) for the main table display
+                fourh_display_value = fourh_values[0]["value_new"] if fourh_values else None
+
                 results_by_date[date] = {
                     "time": date,
                     "daily_di_new": None,
                     "weekly_di_new": None,
-                    "4h_values_new": [],  # List to store all 4h values
-                    "4h_di_new": None,    # Latest 4h value
+                    "4h_values_new": fourh_values,  # Store all 4h values for the day
+                    "4h_di_new": fourh_display_value,  # Use 00:00:00 value for display
                     "total_new": None,
                     "di_ema_13_new": None,
                     "di_sma_30_new": None,
                     "trend_new": None,
-                    "open": float(row["open"]) if pd.notnull(row["open"]) else None,  # Ensure proper type conversion
-                    "close": float(row["close"]) if pd.notnull(row["close"]) else None  # Keep close for reference
+                    "open": float(row["open"]) if pd.notnull(row["open"]) else None,
+                    "close": float(row["close"]) if pd.notnull(row["close"]) else None
                 }
             results_by_date[date]["daily_di_new"] = daily_entry.get("daily_di_new")
 
@@ -361,26 +411,15 @@ def process_symbol(symbol, debug=False):
             else:
                 results_by_date[date]["weekly_di_new"] = prev_weekly
 
-        # Process 4h data
-        for entry in fourh_di:
-            date = entry["time"][:10]
-            if date in results_by_date:
-                results_by_date[date]["4h_values_new"].append({
-                    "time": entry["time"],
-                    "value_new": entry["4h_di_new"]
-                })
-                # Update the latest 4h value for the day
-                results_by_date[date]["4h_di_new"] = entry["4h_di_new"]
-
         # Convert to list and calculate additional fields
         results_list = []
         for date in sorted(results_by_date.keys(), reverse=True):
             data = results_by_date[date]
-            # Calculate total
+            # Calculate total using the 00:00:00 4h value
             components = [
                 data["weekly_di_new"],
                 data["daily_di_new"],
-                data["4h_di_new"]
+                data["4h_di_new"]  # Now using 00:00:00 value
             ]
             total = sum(x for x in components if x is not None)
             data["total_new"] = total
@@ -465,36 +504,6 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     df.attrs['timeframe'] = 'daily'
 
     set_cached_data(symbol, "daily_data", df)
-    return df
-
-def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
-    """Get 4-hour OHLCV data for given cryptocurrency"""
-    cached_data = get_cached_data(symbol, "4h_data")
-    if cached_data is not None and not cached_data.empty:
-        return cached_data
-
-    url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    if data.get("Response") != "Success":
-        raise Exception(f"Error getting 4-hour data: {data}")
-
-    # Convert timestamp to datetime with timezone info
-    df = pd.DataFrame(data['Data']['Data'])
-    df['time'] = pd.to_datetime(df['time'], unit='s')
-
-    # Group by date to ensure we have all 4h intervals
-    df['date'] = df['time'].dt.date
-    df['hour'] = df['time'].dt.hour
-
-    # Log the data distribution
-    logger.debug(f"4h data distribution for {symbol}:")
-    logger.debug(df.groupby(['date', 'hour']).size().reset_index(name='count'))
-
-    # Устанавливаем атрибут timeframe
-    df.attrs['timeframe'] = '4h'
-
-    set_cached_data(symbol, "4h_data", df)
     return df
 
 
