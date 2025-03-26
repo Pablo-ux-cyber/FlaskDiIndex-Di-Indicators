@@ -351,6 +351,7 @@ def process_symbol(symbol, debug=False):
         # Process data
         results_by_date = {}
         weekly_values = {}  # Store weekly values for lookup
+        today = pd.Timestamp.now().normalize()
 
         # First, process weekly data to build lookup table
         for entry in weekly_di:
@@ -362,8 +363,14 @@ def process_symbol(symbol, debug=False):
         if isinstance(daily_data.index, pd.DatetimeIndex):
             daily_data = daily_data.reset_index()
 
-        # Используем словарь для хранения daily значений, ключ - дата, за которую рассчитаны данные
-        daily_di_dict = {entry["time"][:10]: entry for entry in daily_di}
+        # Create dictionary for daily values, shifting them one day back
+        daily_di_dict = {}
+        for entry in daily_di:
+            entry_date = pd.Timestamp(entry["time"][:10])
+            # Если это не сегодняшний день, сдвигаем значение на день назад
+            if entry_date < today:
+                next_day = (entry_date + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
+                daily_di_dict[next_day] = entry
 
         # Process 4h data first to organize by date
         fourh_by_date = {}
@@ -377,9 +384,8 @@ def process_symbol(symbol, debug=False):
             })
 
         for _, row in daily_data.iterrows():
-            # Используем дату из данных напрямую, без сдвига
             date = pd.Timestamp(row["time"]).strftime("%Y-%m-%d")
-            daily_entry = daily_di_dict.get(date, {})
+            daily_entry = daily_di_dict.get(date)
 
             if date not in results_by_date:
                 # Get 4h values for this date, sorted by time
@@ -388,12 +394,17 @@ def process_symbol(symbol, debug=False):
                 # Use the last value (20:00:00) for the main table display
                 fourh_display_value = fourh_values[-1]["value_new"] if fourh_values else None
 
+                # For today, set daily_di_new to None
+                daily_di_value = None if pd.Timestamp(date).normalize() == today else (
+                    daily_entry["daily_di_new"] if daily_entry else None
+                )
+
                 results_by_date[date] = {
                     "time": date,
-                    "daily_di_new": daily_entry.get("daily_di_new"),  # Данные за текущий день
+                    "daily_di_new": daily_di_value,
                     "weekly_di_new": None,
-                    "4h_values_new": fourh_values,  # Store all 4h values for the day
-                    "4h_di_new": fourh_display_value,  # Use 20:00:00 value for display
+                    "4h_values_new": fourh_values,
+                    "4h_di_new": fourh_display_value,
                     "total_new": None,
                     "di_ema_13_new": None,
                     "di_sma_30_new": None,
