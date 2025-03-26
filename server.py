@@ -367,9 +367,8 @@ def process_symbol(symbol, debug=False):
         daily_di_dict = {}
         for entry in daily_di:
             entry_date = pd.Timestamp(entry["time"][:10])
-            # Смещаем значение на один день вперед (в строке за 24 марта будет значение за 25 марта)
-            next_day = (entry_date + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
-            daily_di_dict[next_day] = entry
+            # Используем ту же дату, за которую получены данные
+            daily_di_dict[entry_date.strftime("%Y-%m-%d")] = entry
 
         # Process 4h data first to organize by date
         fourh_by_date = {}
