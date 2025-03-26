@@ -7,6 +7,7 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
     body { font-family: Arial, sans-serif; }
@@ -72,6 +73,10 @@
       height: 400px;
       width: 100%;
       margin-top: 20px;
+    }
+    .chart-toolbar {
+      text-align: right;
+      margin: 10px 0;
     }
   </style>
 </head>
@@ -327,7 +332,15 @@
         gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
         gradient.addColorStop(1, 'rgba(75, 192, 192, 0)');
 
-        new Chart(canvas, {
+        // Создаем кнопки управления масштабом
+        const toolbar = document.createElement('div');
+        toolbar.className = 'chart-toolbar';
+        toolbar.innerHTML = `
+          <button class="btn btn-sm btn-secondary" onclick="resetZoom(this)">Сбросить масштаб</button>
+        `;
+        canvas.parentNode.insertBefore(toolbar, canvas);
+
+        const chart = new Chart(canvas, {
           type: 'line',
           data: {
             labels: labels,
@@ -366,6 +379,21 @@
               mode: 'index'
             },
             plugins: {
+              zoom: {
+                pan: {
+                  enabled: true,
+                  mode: 'xy'
+                },
+                zoom: {
+                  wheel: {
+                    enabled: true,
+                  },
+                  pinch: {
+                    enabled: true
+                  },
+                  mode: 'xy',
+                }
+              },
               title: {
                 display: true,
                 text: `${symbol} - DI Trend Analysis`
@@ -397,7 +425,16 @@
             }
           }
         });
+
+        // Сохраняем ссылку на график в кнопке сброса
+        toolbar.querySelector('button').chart = chart;
+    }
+
+    function resetZoom(button) {
+      if (button.chart) {
+        button.chart.resetZoom();
       }
+    }
 
     function createCoinTab(symbol, data) {
       const tabId = `coin-${symbol}`;
@@ -667,6 +704,15 @@
     function createMarketSentimentChart(sentimentData) {
       const chartContainer = document.createElement('div');
       chartContainer.className = 'chart-container';
+
+      // Добавляем кнопки управления масштабом
+      const toolbar = document.createElement('div');
+      toolbar.className = 'chart-toolbar';
+      toolbar.innerHTML = `
+        <button class="btn btn-sm btn-secondary" onclick="resetZoom(this)">Сбросить масштаб</button>
+      `;
+      chartContainer.appendChild(toolbar);
+
       const canvas = document.createElement('canvas');
       chartContainer.appendChild(canvas);
 
@@ -681,7 +727,7 @@
       gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
       gradient.addColorStop(1, 'rgba(75, 192, 192, 0)');
 
-      new Chart(canvas, {
+      const chart = new Chart(canvas, {
         type: 'line',
         data: {
           labels: labels,
@@ -720,6 +766,21 @@
             mode: 'index'
           },
           plugins: {
+            zoom: {
+              pan: {
+                enabled: true,
+                mode: 'xy'
+              },
+              zoom: {
+                wheel: {
+                  enabled: true,
+                },
+                pinch: {
+                  enabled: true
+                },
+                mode: 'xy',
+              }
+            },
             title: {
               display: true,
               text: 'Общее настроение рынка'
@@ -750,6 +811,9 @@
           }
         }
       });
+
+      // Сохраняем ссылку на график в кнопке сброса
+      toolbar.querySelector('button').chart = chart;
 
       return chartContainer;
     }
