@@ -483,29 +483,33 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     if data.get("Response") != "Success":
         raise Exception(f"Error getting daily data: {data}")
 
-    # Convert timestamp to datetime and adjust to end of day (00:00:00 UTC следующего дня)
+    # Convert timestamp to datetime
     df = pd.DataFrame(data['Data']['Data'])
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
-    # Логируем исходное время для проверки
+    # Логируем исходные данные для проверки
+    logger.debug(f"\nОригинальные временные метки для {symbol} (daily data):")
     if len(df) > 0:
-        logger.debug(f"Original timestamps for {symbol} daily data:")
         logger.debug(df['time'].head())
+        logger.debug(f"Последняя доступная дата: {df['time'].max()}")
 
-    # Отфильтровываем будущие даты и сегодняшний день
+    # Отфильтровываем текущий день и будущие даты
+    # Так как мы хотим показывать только полностью законченные дни,
+    # мы берем все дни до текущего (не включая текущий)
     today = pd.Timestamp.now().normalize()
     df = df[df['time'] < today]
 
-    # Логируем время свечей для проверки
-    logger.debug(f"Sample of daily candle times for {symbol}:")
-    logger.debug(df['time'].head())
+    # Логируем отфильтрованные данные
+    logger.debug(f"\nОтфильтрованные данные для {symbol} (daily):")
+    logger.debug(f"Количество дней: {len(df)}")
+    if len(df) > 0:
+        logger.debug(f"Диапазон дат: от {df['time'].min()} до {df['time'].max()}")
 
     # Устанавливаем атрибут timeframe
     df.attrs['timeframe'] = 'daily'
 
     set_cached_data(symbol, "daily_data", df)
     return df
-
 
 def nan_to_none(val):
     if isinstance(val, float) and math.isnan(val):
