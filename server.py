@@ -488,22 +488,21 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
     # Логируем исходные данные для проверки
-    logger.debug(f"\nОригинальные временные метки для {symbol} (daily data):")
+    logger.debug(f"\nПроверка обработки daily данных для {symbol}:")
     if len(df) > 0:
-        logger.debug(df['time'].head())
-        logger.debug(f"Последняя доступная дата: {df['time'].max()}")
+        logger.debug(f"Текущее время UTC: {pd.Timestamp.now()} ")
+        logger.debug(f"Последняя доступная дата в данных: {df['time'].max()}")
 
-    # Отфильтровываем текущий день и будущие даты
-    # Так как мы хотим показывать только полностью законченные дни,
-    # мы берем все дни до текущего (не включая текущий)
+    # Отфильтровываем текущий день
+    # Пример: если сейчас 26 марта, показываем данные по 25 марта и раньше
     today = pd.Timestamp.now().normalize()
     df = df[df['time'] < today]
 
-    # Логируем отфильтрованные данные
-    logger.debug(f"\nОтфильтрованные данные для {symbol} (daily):")
-    logger.debug(f"Количество дней: {len(df)}")
     if len(df) > 0:
-        logger.debug(f"Диапазон дат: от {df['time'].min()} до {df['time'].max()}")
+        logger.debug(f"После фильтрации, последняя дата: {df['time'].max()}")
+        logger.debug(f"Это значит, что в daily показываем данные за: {df['time'].max().strftime('%Y-%m-%d')}")
+        logger.debug(f"Фильтруем все даты до (не включая): {today}")
+
 
     # Устанавливаем атрибут timeframe
     df.attrs['timeframe'] = 'daily'
