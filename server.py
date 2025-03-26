@@ -383,15 +383,15 @@ def process_symbol(symbol, debug=False):
                 # Get 4h values for this date, sorted by time
                 fourh_values = sorted(fourh_by_date.get(date, []), key=lambda x: x["time"])
 
-                # Use the first value (00:00:00) for the main table display
-                fourh_display_value = fourh_values[0]["value_new"] if fourh_values else None
+                # Use the last value (20:00:00) for the main table display
+                fourh_display_value = fourh_values[-1]["value_new"] if fourh_values else None
 
                 results_by_date[date] = {
                     "time": date,
                     "daily_di_new": None,
                     "weekly_di_new": None,
                     "4h_values_new": fourh_values,  # Store all 4h values for the day
-                    "4h_di_new": fourh_display_value,  # Use 00:00:00 value for display
+                    "4h_di_new": fourh_display_value,  # Use 20:00:00 value for display
                     "total_new": None,
                     "di_ema_13_new": None,
                     "di_sma_30_new": None,
@@ -419,7 +419,7 @@ def process_symbol(symbol, debug=False):
             components = [
                 data["weekly_di_new"],
                 data["daily_di_new"],
-                data["4h_di_new"]  # Now using 00:00:00 value
+                data["4h_di_new"]  # Now using 20:00:00 value
             ]
             total = sum(x for x in components if x is not None)
             data["total_new"] = total
