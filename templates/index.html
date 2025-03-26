@@ -7,8 +7,6 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
-  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
     body { font-family: Arial, sans-serif; }
@@ -74,13 +72,6 @@
       height: 400px;
       width: 100%;
       margin-top: 20px;
-    }
-    .chart-toolbar {
-      text-align: right;
-      margin: 10px 0;
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
     }
   </style>
 </head>
@@ -266,16 +257,6 @@
       headerDiv.appendChild(exportButton);
       container.appendChild(headerDiv);
 
-      // Создаем и добавляем график перед таблицей
-      const chartContainer = document.createElement('div');
-      chartContainer.className = 'chart-container';
-      const canvas = document.createElement('canvas');
-      chartContainer.appendChild(canvas);
-      container.appendChild(chartContainer);
-
-      createTrendChart(canvas, data, symbol);
-
-      // Добавляем таблицу после графика
       const table = document.createElement('table');
       table.className = 'table';
       table.setAttribute('data-sort-dir', 'asc');
@@ -319,167 +300,102 @@
       `;
 
       container.appendChild(table);
+
+      const chartContainer = document.createElement('div');
+      chartContainer.className = 'chart-container';
+      const canvas = document.createElement('canvas');
+      chartContainer.appendChild(canvas);
+      container.appendChild(chartContainer);
+
+      createTrendChart(canvas, data, symbol);
+
       return container;
     }
 
     function createTrendChart(canvas, data, symbol) {
-        const chartData = [...data].reverse();
+      const chartData = [...data].reverse();
 
-        const labels = chartData.map(row => row.time);
-        const closeValues = chartData.map(row => parseFloat(row.close));
-        const ema13Values = chartData.map(row => parseFloat(row.di_ema_13_new));
-        const sma30Values = chartData.map(row => parseFloat(row.di_sma_30_new));
-        const trends = chartData.map(row => row.trend_new);
+      const labels = chartData.map(row => row.time);
+      const closeValues = chartData.map(row => parseFloat(row.close));
+      const ema13Values = chartData.map(row => parseFloat(row.di_ema_13_new));
+      const sma30Values = chartData.map(row => parseFloat(row.di_sma_30_new));
+      const trends = chartData.map(row => row.trend_new);
 
-        const ctx = canvas.getContext('2d');
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
-        gradient.addColorStop(1, 'rgba(75, 192, 192, 0)');
+      const ctx = canvas.getContext('2d');
+      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
+      gradient.addColorStop(1, 'rgba(75, 192, 192, 0)');
 
-        // Создаем панель инструментов с кнопками
-        const toolbar = document.createElement('div');
-        toolbar.className = 'chart-toolbar';
-        toolbar.innerHTML = `
-          <button class="btn btn-sm btn-secondary" onclick="zoomIn(this)">Увеличить</button>
-          <button class="btn btn-sm btn-secondary" onclick="zoomOut(this)">Уменьшить</button>
-          <button class="btn btn-sm btn-secondary" onclick="resetZoom(this)">Сбросить</button>
-          <button class="btn btn-sm btn-secondary" onclick="panLeft(this)">←</button>
-          <button class="btn btn-sm btn-secondary" onclick="panRight(this)">→</button>
-        `;
-        canvas.parentNode.insertBefore(toolbar, canvas);
-
-        const chart = new Chart(canvas, {
-          type: 'line',
-          data: {
-            labels: labels,
-            datasets: [
-              {
-                label: 'Close Price',
-                data: closeValues,
-                borderColor: 'rgb(75, 192, 192)',
-                backgroundColor: gradient,
-                fill: true,
-                tension: 0.1
-              },
-              {
-                label: '13 EMA',
-                data: ema13Values,
-                borderColor: 'rgb(255, 99, 132)',
-                borderWidth: 2,
-                fill: false,
-                tension: 0.1
-              },
-              {
-                label: '30 SMA',
-                data: sma30Values,
-                borderColor: 'rgb(54, 162, 235)',
-                borderWidth: 2,
-                fill: false,
-                tension: 0.1
-              }
-            ]
+      new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Close Price',
+              data: closeValues,
+              borderColor: 'rgb(75, 192, 192)',
+              backgroundColor: gradient,
+              fill: true,
+              tension: 0.1
+            },
+            {
+              label: '13 EMA',
+              data: ema13Values,
+              borderColor: 'rgb(255, 99, 132)',
+              borderWidth: 2,
+              fill: false,
+              tension: 0.1
+            },
+            {
+              label: '30 SMA',
+              data: sma30Values,
+              borderColor: 'rgb(54, 162, 235)',
+              borderWidth: 2,
+              fill: false,
+              tension: 0.1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            intersect: false,
+            mode: 'index'
           },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-              intersect: false,
-              mode: 'index'
+          plugins: {
+            title: {
+              display: true,
+              text: `${symbol} - Trend Analysis`
             },
-            plugins: {
-              zoom: {
-                pan: {
-                  enabled: true,
-                  mode: 'x',
-                  modifierKey: 'ctrl',
-                },
-                limits: {
-                  x: {min: 'original', max: 'original'},
-                  y: {min: 'original', max: 'original'}
-                },
-                zoom: {
-                  wheel: {
-                    enabled: true,
-                    speed: 0.1,
-                  },
-                  pinch: {
-                    enabled: true
-                  },
-                  mode: 'x',
-                  drag: {
-                    enabled: true,
-                    backgroundColor: 'rgba(75,192,192,0.1)',
-                    borderColor: 'rgb(75,192,192)',
-                    borderWidth: 1,
-                  },
-                }
-              },
-              title: {
-                display: true,
-                text: `${symbol} - Price and Trend Analysis`
-              },
-              tooltip: {
-                callbacks: {
-                  afterBody: function(context) {
-                    const index = context[0].dataIndex;
-                    const trend = trends[index];
-                    return `Trend: ${trend || 'N/A'}`;
-                  }
-                }
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: false,
-                title: {
-                  display: true,
-                  text: 'Price (USD)'
-                }
-              },
-              x: {
-                title: {
-                  display: true,
-                  text: 'Date'
+            tooltip: {
+              callbacks: {
+                afterBody: function(context) {
+                  const index = context[0].dataIndex;
+                  const trend = trends[index];
+                  return `Trend: ${trend || 'N/A'}`;
                 }
               }
             }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Price'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Date'
+              }
+            }
           }
-        });
-
-        // Сохраняем ссылку на график в кнопках
-        toolbar.querySelectorAll('button').forEach(button => {
-          button.chart = chart;
-        });
-    }
-
-    function zoomIn(button) {
-      if (button.chart) {
-        button.chart.zoom(1.1);
-      }
-    }
-
-    function zoomOut(button) {
-      if (button.chart) {
-        button.chart.zoom(0.9);
-      }
-    }
-
-    function resetZoom(button) {
-      if (button.chart) {
-        button.chart.resetZoom();
-      }
-    }
-
-    function panLeft(button) {
-      if (button.chart) {
-        button.chart.pan({x: 100}, undefined, 'default');
-      }
-    }
-
-    function panRight(button) {
-      if (button.chart) {
-        button.chart.pan({x: -100}, undefined, 'default');
-      }
+        }
+      });
     }
 
     function createCoinTab(symbol, data) {
@@ -747,134 +663,7 @@
       })).reverse();
     }
 
-    function createMarketSentimentChart(sentimentData) {
-      const chartContainer = document.createElement('div');
-      chartContainer.className = 'chart-container';
-
-      // Добавляем кнопки управления масштабом
-      const toolbar = document.createElement('div');
-      toolbar.className = 'chart-toolbar';
-      toolbar.innerHTML = `
-        <button class="btn btn-sm btn-secondary" onclick="resetZoom(this)">Сбросить масштаб</button>
-      `;
-      chartContainer.appendChild(toolbar);
-
-      const canvas = document.createElement('canvas');
-      chartContainer.appendChild(canvas);
-
-      const data = [...sentimentData].reverse();
-      const labels = data.map(row => row.date);
-      const percentages = data.map(row => parseFloat(row.percentage));
-      const ma13Values = data.map(row => row.ma13 ? parseFloat(row.ma13) : null);
-      const sma13Values = data.map(row => row.sma13 ? parseFloat(row.sma13) : null);
-
-      const ctx = canvas.getContext('2d');
-      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-      gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
-      gradient.addColorStop(1, 'rgba(75, 192, 192, 0)');
-
-      const chart = new Chart(canvas, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: 'Процент бычьих сигналов',
-              data: percentages,
-              borderColor: 'rgb(75, 192, 192)',
-              backgroundColor: gradient,
-              fill: true,
-              tension: 0.1
-            },
-            {
-              label: '13 EMA',
-              data: ma13Values,
-              borderColor: 'rgb(255, 99, 132)',
-              borderWidth: 2,
-              fill: false,
-              tension: 0.1
-            },
-            {
-              label: '13 SMA',
-              data: sma13Values,
-              borderColor: 'rgb(54, 162, 235)',
-              borderWidth: 2,
-              fill: false,
-              tension: 0.1
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: {
-            intersect: false,
-            mode: 'index'
-          },
-          plugins: {
-            zoom: {
-              pan: {
-                enabled: true,
-                mode: 'xy'
-              },
-              zoom: {
-                wheel: {
-                  enabled: true,
-                },
-                pinch: {
-                  enabled: true
-                },
-                mode: 'xy',
-              }
-            },
-            title: {
-              display: true,
-              text: 'Общее настроение рынка'
-            },
-            tooltip: {
-              callbacks: {
-                label: function(context) {
-                  return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
-                }
-              }
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: 'Процент'
-              },
-              max: 100            },
-            x: {
-              title: {
-                display: true,
-                text: 'Дата'
-              }
-            }
-          }
-        }
-      });
-
-      // Сохраняем ссылку на график в кнопке сброса
-      toolbar.querySelector('button').chart = chart;
-
-      return chartContainer;
-    }
-
     function updateSentimentTable(sentimentData) {
-      const sentimentDiv = document.querySelector('.market-sentiment');
-
-      // Добавляем график перед таблицей
-      const oldChart = sentimentDiv.querySelector('.chart-container');
-      if (oldChart) {
-        oldChart.remove();
-      }
-      const chartContainer = createMarketSentimentChart(sentimentData);
-      sentimentDiv.insertBefore(chartContainer, sentimentDiv.querySelector('.table'));
-
-      // Обновляем таблицу
       const tbody = document.getElementById('sentimentTableBody');
       tbody.innerHTML = sentimentData.map(row => `
         <tr>
