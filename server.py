@@ -337,10 +337,10 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
     # Sort by time to ensure correct order
-    df = df.sort_values('time')
+    df = df.sort_values('time', ascending=True)
 
-    # Drop duplicates if any
-    df = df.drop_duplicates(subset=['time'])
+    # Drop duplicates if any, keeping the most recent data
+    df = df.drop_duplicates(subset=['time'], keep='last')
 
     # Group by date to ensure we have all 4h intervals
     df['date'] = df['time'].dt.date
@@ -352,6 +352,11 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
 
     # Set timeframe attribute
     df.attrs['timeframe'] = '4h'
+
+    # Additional verification logs
+    logger.debug(f"First 4h data point: {df['time'].min()}")
+    logger.debug(f"Last 4h data point: {df['time'].max()}")
+    logger.debug(f"Total unique dates: {df['date'].nunique()}")
 
     set_cached_data(symbol, "4h_data", df)
     return df
