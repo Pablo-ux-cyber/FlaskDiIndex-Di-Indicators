@@ -381,10 +381,15 @@ def process_symbol(symbol, debug=False):
 
             # Проверяем, есть ли данные за текущий день
             today = pd.Timestamp.now().strftime("%Y-%m-%d")
-            if date == today and not daily_entry:
-                daily_di_value = None  # Если нет данных за сегодня - прочерк
+            if date == today:
+                # Для текущего дня проверяем наличие данных
+                if not daily_entry or 'daily_di_new' not in daily_entry:
+                    daily_di_value = None  # Если нет данных за сегодня - прочерк
+                else:
+                    daily_di_value = daily_entry.get('daily_di_new')
             else:
-                daily_di_value = daily_entry.get("daily_di_new")
+                # Для прошлых дней используем имеющиеся данные
+                daily_di_value = daily_entry.get('daily_di_new')
 
             if date not in results_by_date:
                 # Get 4h values for this date, sorted by time
@@ -507,11 +512,7 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     df = pd.DataFrame(data['Data']['Data'])
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
-    # Фильтруем только будущие даты
-    tomorrow = pd.Timestamp.now().normalize() + pd.Timedelta(days=1)
-    df = df[df['time'] < tomorrow]
-
-    # Логируем время свечей для проверки
+    # Не фильтруем данные по датам, чтобы получить все доступные данные
     logger.debug(f"Sample of daily candle times for {symbol}:")
     logger.debug(df['time'].head())
 
