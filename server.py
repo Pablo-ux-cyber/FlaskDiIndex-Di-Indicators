@@ -505,7 +505,10 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     df = pd.DataFrame(data['Data']['Data'])
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
-    # Не фильтруем данные по датам, чтобы получить все доступные данные
+    # Sort by time to ensure correct order
+    df = df.sort_values('time')
+
+    # Log sample of daily data for verification
     logger.debug(f"Sample of daily candle times for {symbol}:")
     logger.debug(df['time'].head())
 
