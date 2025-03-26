@@ -334,6 +334,7 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     return df
 
 def process_symbol(symbol, debug=False):
+    """Process a single symbol"""
     try:
         logger.debug(f"Processing symbol: {symbol}")
 
@@ -350,22 +351,20 @@ def process_symbol(symbol, debug=False):
         # Process data
         results_by_date = {}
         weekly_values = {}  # Store weekly values for lookup
-        today = pd.Timestamp.now().normalize()
 
-        # Process daily data first
-        daily_di_dict = {}
-        for entry in daily_di:
-            entry_date = pd.Timestamp(entry["time"][:10])
-            # Используем значения в том же дне (24 марта = значения за конец 24 марта)
-            if entry_date < today:  # Пропускаем текущий день
-                daily_di_dict[entry_date.strftime("%Y-%m-%d")] = entry["daily_di_new"]
-
-        # Process weekly data
+        # First, process weekly data to build lookup table
         for entry in weekly_di:
-            date = entry["time"][:10]
+            date = entry["time"][:10]  # Get just the date part
             weekly_values[date] = entry["weekly_di_new"]
 
-        # Process 4h data
+        # Process daily data
+        daily_data = df_daily.copy()
+        if isinstance(daily_data.index, pd.DatetimeIndex):
+            daily_data = daily_data.reset_index()
+
+        daily_di_dict = {entry["time"][:10]: entry for entry in daily_di}
+
+        # Process 4h data first to organize by date
         fourh_by_date = {}
         for entry in fourh_di:
             date = entry["time"][:10]
@@ -376,30 +375,23 @@ def process_symbol(symbol, debug=False):
                 "value_new": entry["4h_di_new"]
             })
 
-        # Process final results
-        daily_data = df_daily.copy()
-        if isinstance(daily_data.index, pd.DatetimeIndex):
-            daily_data = daily_data.reset_index()
-
         for _, row in daily_data.iterrows():
             date = pd.Timestamp(row["time"]).strftime("%Y-%m-%d")
+            daily_entry = daily_di_dict.get(date, {})
 
             if date not in results_by_date:
-                # Get 4h values for this date
+                # Get 4h values for this date, sorted by time
                 fourh_values = sorted(fourh_by_date.get(date, []), key=lambda x: x["time"])
 
-                # Use the last value (20:00:00) for display
+                # Use the last value (20:00:00) for the main table display
                 fourh_display_value = fourh_values[-1]["value_new"] if fourh_values else None
-
-                # Get daily value - will be None for current day
-                daily_value = None if pd.Timestamp(date) == today else daily_di_dict.get(date)
 
                 results_by_date[date] = {
                     "time": date,
-                    "daily_di_new": daily_value,
-                    "weekly_di_new": weekly_values.get(date),
-                    "4h_values_new": fourh_values,
-                    "4h_di_new": fourh_display_value,
+                    "daily_di_new": None,
+                    "weekly_di_new": None,
+                    "4h_values_new": fourh_values,  # Store all 4h values for the day
+                    "4h_di_new": fourh_display_value,  # Use 20:00:00 value for display
                     "total_new": None,
                     "di_ema_13_new": None,
                     "di_sma_30_new": None,
@@ -407,33 +399,51 @@ def process_symbol(symbol, debug=False):
                     "open": float(row["open"]) if pd.notnull(row["open"]) else None,
                     "close": float(row["close"]) if pd.notnull(row["close"]) else None
                 }
+            results_by_date[date]["daily_di_new"] = daily_entry.get("daily_di_new")
 
-        # Calculate totals and other metrics
+        # Fill in weekly values, using previous week's value if missing
+        dates = sorted(results_by_date.keys())
+        prev_weekly = None
+        for date in dates:
+            if date in weekly_values:
+                results_by_date[date]["weekly_di_new"] = weekly_values[date]
+                prev_weekly = weekly_values[date]
+            else:
+                results_by_date[date]["weekly_di_new"] = prev_weekly
+
+        # Convert to list and calculate additional fields
         results_list = []
         for date in sorted(results_by_date.keys(), reverse=True):
             data = results_by_date[date]
+            # Calculate total using the 00:00:00 4h value
             components = [
                 data["weekly_di_new"],
                 data["daily_di_new"],
-                data["4h_di_new"]
+                data["4h_di_new"]  # Now using 20:00:00 value
             ]
             total = sum(x for x in components if x is not None)
             data["total_new"] = total
             results_list.append(data)
 
-        # Calculate EMAs and SMAs
+        # Calculate EMAs and SMAs on the total values
         if results_list:
+            # Create a new DataFrame for calculations
             df_calcs = pd.DataFrame([{
                 'date': d['time'],
                 'total': d['total_new']
             } for d in results_list]).set_index('date')
 
+            # Sort by date for correct calculation
             df_calcs = df_calcs.sort_index()
+
+            # Calculate EMAs and SMAs
             df_calcs['ema13'] = ta.ema(df_calcs['total'], length=13)
             df_calcs['sma30'] = df_calcs['total'].rolling(window=30, min_periods=1).mean()
 
+            # Create a lookup dictionary
             calcs_dict = df_calcs.to_dict('index')
 
+            # Update results with EMAs, SMAs and trends
             for data in results_list:
                 date = data['time']
                 if date in calcs_dict:
@@ -473,19 +483,29 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     if data.get("Response") != "Success":
         raise Exception(f"Error getting daily data: {data}")
 
-    # Convert timestamp to datetime
+    # Convert timestamp to datetime and adjust to end of day (00:00:00 UTC следующего дня)
     df = pd.DataFrame(data['Data']['Data'])
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
-    # Отфильтровываем сегодняшний день, так как он еще не закончился
-    today = pd.Timestamp.now().normalize()
+    # Логируем исходное время для проверки
+    if len(df) > 0:
+        logger.debug(f"Original timestamps for {symbol} daily data:")
+        logger.debug(df['time'].head())
+
+    # Отфильтровываем будущие даты и сегодняшний день
+    today = pd.Timestamp.now().normalize() + pd.Timedelta(days=1)
     df = df[df['time'] < today]
+
+    # Логируем время свечей для проверки
+    logger.debug(f"Sample of daily candle times for {symbol}:")
+    logger.debug(df['time'].head())
 
     # Устанавливаем атрибут timeframe
     df.attrs['timeframe'] = 'daily'
 
     set_cached_data(symbol, "daily_data", df)
     return df
+
 
 def nan_to_none(val):
     if isinstance(val, float) and math.isnan(val):
