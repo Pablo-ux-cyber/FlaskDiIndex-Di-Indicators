@@ -492,10 +492,18 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
         logger.debug(f"Original timestamps for {symbol} daily data:")
         logger.debug(df['time'].head())
 
-    # Отфильтровываем только будущие даты
-    # Теперь показываем данные за текущий день, когда они доступны
-    tomorrow = pd.Timestamp.now().normalize() + pd.Timedelta(days=1)
-    df = df[df['time'] < tomorrow]
+    # Получаем текущее время в UTC
+    now = pd.Timestamp.now()
+    today = now.normalize()  # Начало текущего дня в UTC (00:00:00)
+
+    # Фильтруем данные:
+    # 1. Оставляем данные до сегодняшнего дня (включительно)
+    # 2. Для текущего дня проверяем, завершился ли он (00:00:00 UTC следующего дня)
+    # 3. Если текущий день не завершен, исключаем его из данных
+    if now.hour < 23:  # День еще не завершился
+        df = df[df['time'] < today]  # Показываем данные только до вчерашнего дня
+    else:
+        df = df[df['time'] <= today]  # Включаем сегодняшний день, т.к. он завершился
 
     # Логируем время свечей для проверки
     logger.debug(f"Sample of daily candle times for {symbol}:")
@@ -506,7 +514,6 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
 
     set_cached_data(symbol, "daily_data", df)
     return df
-
 
 def nan_to_none(val):
     if isinstance(val, float) and math.isnan(val):
