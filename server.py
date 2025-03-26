@@ -363,14 +363,12 @@ def process_symbol(symbol, debug=False):
         if isinstance(daily_data.index, pd.DatetimeIndex):
             daily_data = daily_data.reset_index()
 
-        # Create dictionary for daily values, shifting them one day back
+        # Create dictionary for daily values
         daily_di_dict = {}
         for entry in daily_di:
             entry_date = pd.Timestamp(entry["time"][:10])
-            # Если это не сегодняшний день, сдвигаем значение на день назад
-            if entry_date < today:
-                next_day = (entry_date + pd.Timedelta(days=1)).strftime("%Y-%m-%d")
-                daily_di_dict[next_day] = entry
+            # Оставляем значение в том же дне, за который оно рассчитано
+            daily_di_dict[entry_date.strftime("%Y-%m-%d")] = entry
 
         # Process 4h data first to organize by date
         fourh_by_date = {}
