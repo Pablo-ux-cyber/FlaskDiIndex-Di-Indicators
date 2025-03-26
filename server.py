@@ -318,14 +318,18 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
         raise Exception(f"Error getting 4-hour data: {data}")
 
     all_data.extend(data['Data']['Data'])
-    time_from = data['Data']['TimeFrom']
 
-    # Get previous period
-    url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&toTs={time_from}&api_key={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    if data.get("Response") == "Success":
-        all_data.extend(data['Data']['Data'])
+    # Check if we need older data
+    first_timestamp = data['Data']['TimeFrom']
+    target_date = int(datetime(2025, 1, 2).timestamp())  # Jan 2, 2025
+
+    if first_timestamp > target_date:
+        # Get previous period only if current data starts after our target date
+        url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&toTs={first_timestamp}&api_key={API_KEY}"
+        response = requests.get(url)
+        data = response.json()
+        if data.get("Response") == "Success":
+            all_data.extend(data['Data']['Data'])
 
     # Log API response details
     logger.debug(f"4h API response for {symbol}:")
