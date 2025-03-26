@@ -362,6 +362,7 @@ def process_symbol(symbol, debug=False):
         if isinstance(daily_data.index, pd.DatetimeIndex):
             daily_data = daily_data.reset_index()
 
+        # Используем словарь для хранения daily значений, ключ - дата, за которую рассчитаны данные
         daily_di_dict = {entry["time"][:10]: entry for entry in daily_di}
 
         # Process 4h data first to organize by date
@@ -376,6 +377,7 @@ def process_symbol(symbol, debug=False):
             })
 
         for _, row in daily_data.iterrows():
+            # Используем дату из данных напрямую, без сдвига
             date = pd.Timestamp(row["time"]).strftime("%Y-%m-%d")
             daily_entry = daily_di_dict.get(date, {})
 
@@ -388,7 +390,7 @@ def process_symbol(symbol, debug=False):
 
                 results_by_date[date] = {
                     "time": date,
-                    "daily_di_new": None,
+                    "daily_di_new": daily_entry.get("daily_di_new"),  # Данные за текущий день
                     "weekly_di_new": None,
                     "4h_values_new": fourh_values,  # Store all 4h values for the day
                     "4h_di_new": fourh_display_value,  # Use 20:00:00 value for display
@@ -399,7 +401,6 @@ def process_symbol(symbol, debug=False):
                     "open": float(row["open"]) if pd.notnull(row["open"]) else None,
                     "close": float(row["close"]) if pd.notnull(row["close"]) else None
                 }
-            results_by_date[date]["daily_di_new"] = daily_entry.get("daily_di_new")
 
         # Fill in weekly values, using previous week's value if missing
         dates = sorted(results_by_date.keys())
@@ -415,7 +416,7 @@ def process_symbol(symbol, debug=False):
         results_list = []
         for date in sorted(results_by_date.keys(), reverse=True):
             data = results_by_date[date]
-            # Calculate total using the 00:00:00 4h value
+            # Calculate total using the 20:00:00 4h value
             components = [
                 data["weekly_di_new"],
                 data["daily_di_new"],
