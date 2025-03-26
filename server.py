@@ -437,6 +437,14 @@ def process_symbol(symbol, debug=False):
             data["total_new"] = total
             results_list.append(data)
 
+            # Log values for checking
+            if date == today:
+                logger.debug(f"Values for today ({date}):")
+                logger.debug(f"Weekly: {data['weekly_di_new']}")
+                logger.debug(f"Daily: {data['daily_di_new']}")
+                logger.debug(f"4h: {data['4h_di_new']}")
+                logger.debug(f"Total: {data['total_new']}")
+
         # Calculate EMAs and SMAs on the total values
         if results_list:
             # Create a new DataFrame for calculations
