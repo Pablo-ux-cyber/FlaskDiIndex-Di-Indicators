@@ -492,18 +492,9 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
         logger.debug(f"Original timestamps for {symbol} daily data:")
         logger.debug(df['time'].head())
 
-    # Фильтруем данные до сегодняшнего дня
-    now = pd.Timestamp.now()
-    today = now.normalize()  # Начало текущего дня в UTC (00:00:00)
-
-    # Показываем данные только для завершенных дней
-    # CryptoCompare API возвращает данные за день в 00:00:00 UTC следующего дня
-    # Поэтому если данные за текущий день еще не завершены, они не будут включены в ответ API
-    df = df[df['time'] <= today]
-
-    # Логируем время свечей для проверки
-    logger.debug(f"Sample of daily candle times for {symbol}:")
-    logger.debug(df['time'].head())
+    # CryptoCompare API возвращает данные за день только после его завершения
+    # Поэтому нам не нужно делать дополнительную фильтрацию
+    # Данные за текущий день появятся только когда он закончится
 
     # Устанавливаем атрибут timeframe
     df.attrs['timeframe'] = 'daily'
