@@ -322,7 +322,7 @@
         const chartData = [...data].reverse();
 
         const labels = chartData.map(row => row.time);
-        const totalValues = chartData.map(row => parseFloat(row.total_new));
+        const closeValues = chartData.map(row => parseFloat(row.close));
         const ema13Values = chartData.map(row => parseFloat(row.di_ema_13_new));
         const sma30Values = chartData.map(row => parseFloat(row.di_sma_30_new));
         const trends = chartData.map(row => row.trend_new);
@@ -346,8 +346,8 @@
             labels: labels,
             datasets: [
               {
-                label: 'DI Total',
-                data: totalValues,
+                label: 'Close Price',
+                data: closeValues,
                 borderColor: 'rgb(75, 192, 192)',
                 backgroundColor: gradient,
                 fill: true,
@@ -396,7 +396,7 @@
               },
               title: {
                 display: true,
-                text: `${symbol} - DI Trend Analysis`
+                text: `${symbol} - Price and Trend Analysis`
               },
               tooltip: {
                 callbacks: {
@@ -413,7 +413,7 @@
                 beginAtZero: false,
                 title: {
                   display: true,
-                  text: 'DI Value'
+                  text: 'Price (USD)'
                 }
               },
               x: {
