@@ -38,6 +38,37 @@
     .btn:hover {
       background-color: #5a6268;
     }
+    .diff-highlight {
+      background-color: rgba(255, 244, 229, 0.3);
+    }
+    .comparison-group {
+      border-right: 2px solid #ddd;
+    }
+    thead tr th.group-header {
+      text-align: center;
+      background-color: #e9ecef;
+      font-weight: bold;
+    }
+    .nav-tabs {
+      margin-bottom: 20px;
+    }
+    .nav-tabs .nav-link {
+      color: #495057;
+      font-weight: 500;
+    }
+    .nav-tabs .nav-link.active {
+      color: #007bff;
+      border-color: #dee2e6 #dee2e6 #fff;
+    }
+    .tab-content {
+      padding: 20px 0;
+    }
+    .tab-pane {
+      display: none;
+    }
+    .tab-pane.active {
+      display: block;
+    }
     .chart-container {
       position: relative;
       height: 400px;
@@ -830,7 +861,7 @@
           <td>${row.totalCount}</td>
           <td>${row.percentage}%</td>
           <td>${row.ma13 !== null ? row.ma13 + '%' : '-'}</td>
-          <td>${row.sma13 !== null ? row.sma13 + '%' : '-'}</td>
+          <td>${row.sma13 !== null ? row.sma13 + '%' : '-'}td>
         </tr>
       `).join('');
     }    }
