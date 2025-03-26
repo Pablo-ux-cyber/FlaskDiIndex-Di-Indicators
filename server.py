@@ -483,7 +483,7 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     if data.get("Response") != "Success":
         raise Exception(f"Error getting daily data: {data}")
 
-    # Convert timestamp to datetime and adjust to end of day (00:00:00 UTC следующего дня)
+    # Convert timestamp to datetime
     df = pd.DataFrame(data['Data']['Data'])
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
@@ -492,9 +492,10 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
         logger.debug(f"Original timestamps for {symbol} daily data:")
         logger.debug(df['time'].head())
 
-    # Отфильтровываем будущие даты и сегодняшний день
-    today = pd.Timestamp.now().normalize() + pd.Timedelta(days=1)
-    df = df[df['time'] < today]
+    # Отфильтровываем только будущие даты
+    # Теперь показываем данные за текущий день, когда они доступны
+    tomorrow = pd.Timestamp.now().normalize() + pd.Timedelta(days=1)
+    df = df[df['time'] < tomorrow]
 
     # Логируем время свечей для проверки
     logger.debug(f"Sample of daily candle times for {symbol}:")
