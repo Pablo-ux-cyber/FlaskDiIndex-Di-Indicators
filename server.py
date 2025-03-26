@@ -306,24 +306,41 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     if cached_data is not None and not cached_data.empty:
         return cached_data
 
+    # Get data for multiple periods
+    all_data = []
+    now = int(time.time())
+
+    # First period (current)
     url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
     response = requests.get(url)
     data = response.json()
     if data.get("Response") != "Success":
         raise Exception(f"Error getting 4-hour data: {data}")
 
+    all_data.extend(data['Data']['Data'])
+    time_from = data['Data']['TimeFrom']
+
+    # Get previous period
+    url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&toTs={time_from}&api_key={API_KEY}"
+    response = requests.get(url)
+    data = response.json()
+    if data.get("Response") == "Success":
+        all_data.extend(data['Data']['Data'])
+
     # Log API response details
     logger.debug(f"4h API response for {symbol}:")
-    logger.debug(f"TimeFrom: {datetime.fromtimestamp(data['Data']['TimeFrom'])}")
-    logger.debug(f"TimeTo: {datetime.fromtimestamp(data['Data']['TimeTo'])}")
-    logger.debug(f"Data points received: {len(data['Data']['Data'])}")
+    logger.debug(f"Total data points received: {len(all_data)}")
+    logger.debug(f"Date range: {datetime.fromtimestamp(all_data[0]['time'])} - {datetime.fromtimestamp(all_data[-1]['time'])}")
 
     # Convert timestamp to datetime with timezone info
-    df = pd.DataFrame(data['Data']['Data'])
+    df = pd.DataFrame(all_data)
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
     # Sort by time to ensure correct order
     df = df.sort_values('time')
+
+    # Drop duplicates if any
+    df = df.drop_duplicates(subset=['time'])
 
     # Group by date to ensure we have all 4h intervals
     df['date'] = df['time'].dt.date
@@ -333,7 +350,7 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     logger.debug(f"4h data distribution for {symbol}:")
     logger.debug(df.groupby(['date', 'hour']).size().reset_index(name='count'))
 
-    # Устанавливаем атрибут timeframe
+    # Set timeframe attribute
     df.attrs['timeframe'] = '4h'
 
     set_cached_data(symbol, "4h_data", df)
