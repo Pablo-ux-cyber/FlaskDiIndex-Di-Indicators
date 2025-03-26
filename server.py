@@ -306,38 +306,60 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     if cached_data is not None and not cached_data.empty:
         return cached_data
 
-    # Get current period first
+    all_data = []
+
+    # First request - current period
     url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
     response = requests.get(url)
     data = response.json()
     if data.get("Response") != "Success":
         raise Exception(f"Error getting 4-hour data: {data}")
 
-    # Log first response details
-    logger.debug(f"\n4h API first response for {symbol}:")
-    logger.debug(f"First response TimeFrom: {datetime.fromtimestamp(data['Data']['TimeFrom'])}")
-    logger.debug(f"First response TimeTo: {datetime.fromtimestamp(data['Data']['TimeTo'])}")
-    logger.debug(f"First response data points: {len(data['Data']['Data'])}")
+    logger.debug("\nFirst request details:")
+    logger.debug(f"TimeFrom: {datetime.fromtimestamp(data['Data']['TimeFrom'])}")
+    logger.debug(f"TimeTo: {datetime.fromtimestamp(data['Data']['TimeTo'])}")
+    logger.debug(f"Data points: {len(data['Data']['Data'])}")
 
-    df = pd.DataFrame(data['Data']['Data'])
+    all_data.extend(data['Data']['Data'])
+
+    # Second request - previous period
+    toTs = data['Data']['TimeFrom']  # Use TimeFrom from first request as end time for second request
+    url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&toTs={toTs}&api_key={API_KEY}"
+    response = requests.get(url)
+    data = response.json()
+
+    if data.get("Response") == "Success":
+        logger.debug("\nSecond request details:")
+        logger.debug(f"TimeFrom: {datetime.fromtimestamp(data['Data']['TimeFrom'])}")
+        logger.debug(f"TimeTo: {datetime.fromtimestamp(data['Data']['TimeTo'])}")
+        logger.debug(f"Data points: {len(data['Data']['Data'])}")
+
+        # Extend only with new data points
+        new_data = [point for point in data['Data']['Data'] if point['time'] < toTs]
+        all_data.extend(new_data)
+        logger.debug(f"Added {len(new_data)} new points from second request")
+
+    # Convert to DataFrame and process
+    df = pd.DataFrame(all_data)
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
-    # Log data boundaries before processing
-    logger.debug("\nData boundaries before processing:")
+    # Log data boundaries
+    logger.debug("\nFinal data boundaries:")
     logger.debug(f"Earliest data: {df['time'].min()}")
     logger.debug(f"Latest data: {df['time'].max()}")
     logger.debug(f"Total points: {len(df)}")
 
-    # Sort by time
+    # Sort and remove duplicates
     df = df.sort_values('time', ascending=True)
+    df = df.drop_duplicates(subset=['time'], keep='last')
 
-    # Group by date to ensure we have all 4h intervals
+    # Group by date and hour
     df['date'] = df['time'].dt.date
     df['hour'] = df['time'].dt.hour
 
-    # Log the data distribution
-    logger.debug("\n4h data distribution by date and hour:")
+    # Log final distribution
     distribution = df.groupby(['date', 'hour']).size().reset_index(name='count')
+    logger.debug("\nFinal data distribution:")
     logger.debug(distribution)
 
     # Set timeframe attribute
