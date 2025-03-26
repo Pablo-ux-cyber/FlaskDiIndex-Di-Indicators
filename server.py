@@ -381,15 +381,8 @@ def process_symbol(symbol, debug=False):
 
             # Проверяем, есть ли данные за текущий день
             today = pd.Timestamp.now().strftime("%Y-%m-%d")
-            if date == today:
-                # Для текущего дня проверяем наличие данных
-                if not daily_entry or 'daily_di_new' not in daily_entry:
-                    daily_di_value = None  # Если нет данных за сегодня - прочерк
-                else:
-                    daily_di_value = daily_entry.get('daily_di_new')
-            else:
-                # Для прошлых дней используем имеющиеся данные
-                daily_di_value = daily_entry.get('daily_di_new')
+            # Берем данные за текущий день (date), а не за предыдущий
+            daily_di_value = daily_entry.get('daily_di_new')
 
             if date not in results_by_date:
                 # Get 4h values for this date, sorted by time
@@ -400,7 +393,7 @@ def process_symbol(symbol, debug=False):
 
                 results_by_date[date] = {
                     "time": date,
-                    "daily_di_new": daily_di_value,  # Используем обработанное значение
+                    "daily_di_new": daily_di_value,
                     "weekly_di_new": None,
                     "4h_values_new": fourh_values,  # Store all 4h values for the day
                     "4h_di_new": fourh_display_value,  # Use 20:00:00 value for display
