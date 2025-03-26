@@ -314,90 +314,90 @@
     }
 
     function createTrendChart(canvas, data, symbol) {
-      const chartData = [...data].reverse();
+        const chartData = [...data].reverse();
 
-      const labels = chartData.map(row => row.time);
-      const closeValues = chartData.map(row => parseFloat(row.close));
-      const ema13Values = chartData.map(row => parseFloat(row.di_ema_13_new));
-      const sma30Values = chartData.map(row => parseFloat(row.di_sma_30_new));
-      const trends = chartData.map(row => row.trend_new);
+        const labels = chartData.map(row => row.time);
+        const totalValues = chartData.map(row => parseFloat(row.total_new));
+        const ema13Values = chartData.map(row => parseFloat(row.di_ema_13_new));
+        const sma30Values = chartData.map(row => parseFloat(row.di_sma_30_new));
+        const trends = chartData.map(row => row.trend_new);
 
-      const ctx = canvas.getContext('2d');
-      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-      gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
-      gradient.addColorStop(1, 'rgba(75, 192, 192, 0)');
+        const ctx = canvas.getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
+        gradient.addColorStop(1, 'rgba(75, 192, 192, 0)');
 
-      new Chart(canvas, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: 'Close Price',
-              data: closeValues,
-              borderColor: 'rgb(75, 192, 192)',
-              backgroundColor: gradient,
-              fill: true,
-              tension: 0.1
-            },
-            {
-              label: '13 EMA',
-              data: ema13Values,
-              borderColor: 'rgb(255, 99, 132)',
-              borderWidth: 2,
-              fill: false,
-              tension: 0.1
-            },
-            {
-              label: '30 SMA',
-              data: sma30Values,
-              borderColor: 'rgb(54, 162, 235)',
-              borderWidth: 2,
-              fill: false,
-              tension: 0.1
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: {
-            intersect: false,
-            mode: 'index'
+        new Chart(canvas, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'DI Total',
+                data: totalValues,
+                borderColor: 'rgb(75, 192, 192)',
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.1
+              },
+              {
+                label: '13 EMA',
+                data: ema13Values,
+                borderColor: 'rgb(255, 99, 132)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.1
+              },
+              {
+                label: '30 SMA',
+                data: sma30Values,
+                borderColor: 'rgb(54, 162, 235)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.1
+              }
+            ]
           },
-          plugins: {
-            title: {
-              display: true,
-              text: `${symbol} - Trend Analysis`
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              intersect: false,
+              mode: 'index'
             },
-            tooltip: {
-              callbacks: {
-                afterBody: function(context) {
-                  const index = context[0].dataIndex;
-                  const trend = trends[index];
-                  return `Trend: ${trend || 'N/A'}`;
+            plugins: {
+              title: {
+                display: true,
+                text: `${symbol} - DI Trend Analysis`
+              },
+              tooltip: {
+                callbacks: {
+                  afterBody: function(context) {
+                    const index = context[0].dataIndex;
+                    const trend = trends[index];
+                    return `Trend: ${trend || 'N/A'}`;
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: false,
+                title: {
+                  display: true,
+                  text: 'DI Value'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Date'
                 }
               }
             }
-          },
-          scales: {
-            y: {
-              beginAtZero: false,
-              title: {
-                display: true,
-                text: 'Price'
-              }
-            },
-            x: {
-              title: {
-                display: true,
-                text: 'Date'
-              }
-            }
           }
-        }
-      });
-    }
+        });
+      }
 
     function createCoinTab(symbol, data) {
       const tabId = `coin-${symbol}`;
