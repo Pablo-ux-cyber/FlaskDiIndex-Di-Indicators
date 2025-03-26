@@ -260,7 +260,7 @@
             <th rowspan="2">Дата</th>
             <th colspan="3" class="group-header">DI Компоненты</th>
             <th colspan="4" class="group-header">Расчет</th>
-            <th rowspan="2">Open (Daily)</th>
+            <th rowspan="2">Close (Daily)</th>
           </tr>
           <tr>
             <th>Weekly</th>
@@ -285,7 +285,7 @@
                 <td>${formatValue(row.di_ema_13_new)}</td>
                 <td>${formatValue(row.di_sma_30_new)}</td>
                 <td>${row.trend_new ? (row.trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
-                <td>${formatValue(row.open)}</td>
+                <td>${formatValue(row.close)}</td>
               </tr>
             `;
           }).join('')}
@@ -327,7 +327,7 @@
         ['Дата', 
          'Weekly DI', 'Daily DI', '4h DI',
          'Total', '13 EMA', '30 SMA', 'Trend',
-         'Open (Daily)']
+         'Close (Daily)']
       ];
 
       data.forEach(row => {
@@ -340,7 +340,7 @@
           formatValue(row.di_ema_13_new),
           formatValue(row.di_sma_30_new),
           row.trend_new || '-',
-          formatValue(row.open)
+          formatValue(row.close)
         ]);
       });
 
