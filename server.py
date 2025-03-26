@@ -306,61 +306,42 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     if cached_data is not None and not cached_data.empty:
         return cached_data
 
-    # Get data for multiple periods
-    all_data = []
-    now = int(time.time())
-
-    # First period (current)
+    # Get current period first
     url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
     response = requests.get(url)
     data = response.json()
     if data.get("Response") != "Success":
         raise Exception(f"Error getting 4-hour data: {data}")
 
-    all_data.extend(data['Data']['Data'])
+    # Log first response details
+    logger.debug(f"\n4h API first response for {symbol}:")
+    logger.debug(f"First response TimeFrom: {datetime.fromtimestamp(data['Data']['TimeFrom'])}")
+    logger.debug(f"First response TimeTo: {datetime.fromtimestamp(data['Data']['TimeTo'])}")
+    logger.debug(f"First response data points: {len(data['Data']['Data'])}")
 
-    # Check if we need older data
-    first_timestamp = data['Data']['TimeFrom']
-    target_date = int(datetime(2025, 1, 2).timestamp())  # Jan 2, 2025
-
-    if first_timestamp > target_date:
-        # Get previous period only if current data starts after our target date
-        url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&toTs={first_timestamp}&api_key={API_KEY}"
-        response = requests.get(url)
-        data = response.json()
-        if data.get("Response") == "Success":
-            all_data.extend(data['Data']['Data'])
-
-    # Log API response details
-    logger.debug(f"4h API response for {symbol}:")
-    logger.debug(f"Total data points received: {len(all_data)}")
-    logger.debug(f"Date range: {datetime.fromtimestamp(all_data[0]['time'])} - {datetime.fromtimestamp(all_data[-1]['time'])}")
-
-    # Convert timestamp to datetime with timezone info
-    df = pd.DataFrame(all_data)
+    df = pd.DataFrame(data['Data']['Data'])
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
-    # Sort by time to ensure correct order
-    df = df.sort_values('time', ascending=True)
+    # Log data boundaries before processing
+    logger.debug("\nData boundaries before processing:")
+    logger.debug(f"Earliest data: {df['time'].min()}")
+    logger.debug(f"Latest data: {df['time'].max()}")
+    logger.debug(f"Total points: {len(df)}")
 
-    # Drop duplicates if any, keeping the most recent data
-    df = df.drop_duplicates(subset=['time'], keep='last')
+    # Sort by time
+    df = df.sort_values('time', ascending=True)
 
     # Group by date to ensure we have all 4h intervals
     df['date'] = df['time'].dt.date
     df['hour'] = df['time'].dt.hour
 
     # Log the data distribution
-    logger.debug(f"4h data distribution for {symbol}:")
-    logger.debug(df.groupby(['date', 'hour']).size().reset_index(name='count'))
+    logger.debug("\n4h data distribution by date and hour:")
+    distribution = df.groupby(['date', 'hour']).size().reset_index(name='count')
+    logger.debug(distribution)
 
     # Set timeframe attribute
     df.attrs['timeframe'] = '4h'
-
-    # Additional verification logs
-    logger.debug(f"First 4h data point: {df['time'].min()}")
-    logger.debug(f"Last 4h data point: {df['time'].max()}")
-    logger.debug(f"Total unique dates: {df['date'].nunique()}")
 
     set_cached_data(symbol, "4h_data", df)
     return df
