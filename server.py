@@ -483,32 +483,29 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     if data.get("Response") != "Success":
         raise Exception(f"Error getting daily data: {data}")
 
-    # Convert timestamp to datetime
+    # Convert timestamp to datetime and adjust to end of day (00:00:00 UTC следующего дня)
     df = pd.DataFrame(data['Data']['Data'])
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
-    # Логируем исходные данные для проверки
-    logger.debug(f"\nПроверка обработки daily данных для {symbol}:")
+    # Логируем исходное время для проверки
     if len(df) > 0:
-        logger.debug(f"Текущее время UTC: {pd.Timestamp.now()} ")
-        logger.debug(f"Последняя доступная дата в данных: {df['time'].max()}")
+        logger.debug(f"Original timestamps for {symbol} daily data:")
+        logger.debug(df['time'].head())
 
-    # Отфильтровываем текущий день
-    # Пример: если сейчас 26 марта, показываем данные по 25 марта и раньше
-    today = pd.Timestamp.now().normalize()
+    # Отфильтровываем будущие даты и сегодняшний день
+    today = pd.Timestamp.now().normalize() + pd.Timedelta(days=1)
     df = df[df['time'] < today]
 
-    if len(df) > 0:
-        logger.debug(f"После фильтрации, последняя дата: {df['time'].max()}")
-        logger.debug(f"Это значит, что в daily показываем данные за: {df['time'].max().strftime('%Y-%m-%d')}")
-        logger.debug(f"Фильтруем все даты до (не включая): {today}")
-
+    # Логируем время свечей для проверки
+    logger.debug(f"Sample of daily candle times for {symbol}:")
+    logger.debug(df['time'].head())
 
     # Устанавливаем атрибут timeframe
     df.attrs['timeframe'] = 'daily'
 
     set_cached_data(symbol, "daily_data", df)
     return df
+
 
 def nan_to_none(val):
     if isinstance(val, float) and math.isnan(val):
