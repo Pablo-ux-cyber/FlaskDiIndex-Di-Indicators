@@ -38,49 +38,22 @@
     .btn:hover {
       background-color: #5a6268;
     }
-    .diff-highlight {
-      background-color: rgba(255, 244, 229, 0.3);
-    }
-    .comparison-group {
-      border-right: 2px solid #ddd;
-    }
-    thead tr th.group-header {
-      text-align: center;
-      background-color: #e9ecef;
-      font-weight: bold;
-    }
-    .nav-tabs {
-      margin-bottom: 20px;
-    }
-    .nav-tabs .nav-link {
-      color: #495057;
-      font-weight: 500;
-    }
-    .nav-tabs .nav-link.active {
-      color: #007bff;
-      border-color: #dee2e6 #dee2e6 #fff;
-    }
-    .tab-content {
-      padding: 20px 0;
-    }
-    .tab-pane {
-      display: none;
-    }
-    .tab-pane.active {
-      display: block;
-    }
     .chart-container {
       position: relative;
       height: 400px;
       width: 100%;
       margin-top: 20px;
+      user-select: none;
+    }
+    .chart-container canvas {
+      transition: cursor 0.2s ease;
+    }
+    .chart-container canvas:active {
+      cursor: grabbing !important;
     }
     .chart-toolbar {
       text-align: right;
       margin: 10px 0;
-      display: flex;
-      justify-content: flex-end;
-      gap: 10px;
     }
   </style>
 </head>
@@ -340,11 +313,7 @@
         const toolbar = document.createElement('div');
         toolbar.className = 'chart-toolbar';
         toolbar.innerHTML = `
-          <button class="btn btn-sm btn-secondary" onclick="zoomIn(this)">Увеличить</button>
-          <button class="btn btn-sm btn-secondary" onclick="zoomOut(this)">Уменьшить</button>
-          <button class="btn btn-sm btn-secondary" onclick="resetZoom(this)">Сбросить</button>
-          <button class="btn btn-sm btn-secondary" onclick="panLeft(this)">←</button>
-          <button class="btn btn-sm btn-secondary" onclick="panRight(this)">→</button>
+          <button class="btn btn-sm btn-secondary" onclick="resetZoom(this)">Сбросить масштаб</button>
         `;
         canvas.parentNode.insertBefore(toolbar, canvas);
 
@@ -391,7 +360,8 @@
                 pan: {
                   enabled: true,
                   mode: 'x',
-                  modifierKey: 'ctrl',
+                  overScaleMode: 'x',
+                  threshold: 10,
                 },
                 limits: {
                   x: {min: 'original', max: 'original'},
@@ -406,12 +376,6 @@
                     enabled: true
                   },
                   mode: 'x',
-                  drag: {
-                    enabled: true,
-                    backgroundColor: 'rgba(75,192,192,0.1)',
-                    borderColor: 'rgb(75,192,192)',
-                    borderWidth: 1,
-                  },
                 }
               },
               title: {
@@ -446,39 +410,22 @@
           }
         });
 
-        // Сохраняем ссылку на график в кнопках
-        toolbar.querySelectorAll('button').forEach(button => {
-          button.chart = chart;
+        // Сохраняем ссылку на график в кнопке сброса
+        toolbar.querySelector('button').chart = chart;
+
+        // Добавляем стиль курсора
+        canvas.style.cursor = 'grab';
+        canvas.addEventListener('mousedown', () => {
+            canvas.style.cursor = 'grabbing';
         });
-    }
-
-    function zoomIn(button) {
-      if (button.chart) {
-        button.chart.zoom(1.1);
-      }
-    }
-
-    function zoomOut(button) {
-      if (button.chart) {
-        button.chart.zoom(0.9);
-      }
+        canvas.addEventListener('mouseup', () => {
+            canvas.style.cursor = 'grab';
+        });
     }
 
     function resetZoom(button) {
       if (button.chart) {
         button.chart.resetZoom();
-      }
-    }
-
-    function panLeft(button) {
-      if (button.chart) {
-        button.chart.pan({x: 100}, undefined, 'default');
-      }
-    }
-
-    function panRight(button) {
-      if (button.chart) {
-        button.chart.pan({x: -100}, undefined, 'default');
       }
     }
 
@@ -886,7 +833,7 @@
           <td>${row.sma13 !== null ? row.sma13 + '%' : '-'}</td>
         </tr>
       `).join('');
-    }
+    }    }
 
     function batchProcess(symbols, batchSize = 5) {
       const batches = [];
