@@ -312,6 +312,12 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     if data.get("Response") != "Success":
         raise Exception(f"Error getting 4-hour data: {data}")
 
+    # Log API response details
+    logger.debug(f"4h API response for {symbol}:")
+    logger.debug(f"TimeFrom: {datetime.fromtimestamp(data['Data']['TimeFrom'])}")
+    logger.debug(f"TimeTo: {datetime.fromtimestamp(data['Data']['TimeTo'])}")
+    logger.debug(f"Data points received: {len(data['Data']['Data'])}")
+
     # Convert timestamp to datetime with timezone info
     df = pd.DataFrame(data['Data']['Data'])
     df['time'] = pd.to_datetime(df['time'], unit='s')
