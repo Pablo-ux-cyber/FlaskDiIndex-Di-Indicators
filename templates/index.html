@@ -138,7 +138,6 @@
       <!-- Динамические табы для монет будут добавляться здесь -->
     </ul>
 
-    <!-- Контент табов -->
     <div class="tab-content" id="myTabContent">
       <!-- Таб с общим настроением рынка -->
       <div class="tab-pane fade show active" id="sentiment" role="tabpanel" aria-labelledby="sentiment-tab">
@@ -148,6 +147,10 @@
             <button class="btn btn-secondary" onclick="downloadMarketSentimentExcel()">
               Экспорт в Excel
             </button>
+          </div>
+          <!-- Добавляем контейнер для графика -->
+          <div class="chart-container">
+            <canvas id="marketSentimentChart"></canvas>
           </div>
           <table class="table sentiment-table">
             <thead>
@@ -257,6 +260,14 @@
       headerDiv.appendChild(exportButton);
       container.appendChild(headerDiv);
 
+      // Сначала добавляем график
+      const chartContainer = document.createElement('div');
+      chartContainer.className = 'chart-container';
+      const canvas = document.createElement('canvas');
+      chartContainer.appendChild(canvas);
+      container.appendChild(chartContainer);
+
+      // Затем добавляем таблицу
       const table = document.createElement('table');
       table.className = 'table';
       table.setAttribute('data-sort-dir', 'asc');
@@ -300,13 +311,6 @@
       `;
 
       container.appendChild(table);
-
-      const chartContainer = document.createElement('div');
-      chartContainer.className = 'chart-container';
-      const canvas = document.createElement('canvas');
-      chartContainer.appendChild(canvas);
-      container.appendChild(chartContainer);
-
       createTrendChart(canvas, data, symbol);
 
       return container;
@@ -675,6 +679,86 @@
           <td>${row.sma13 !== null ? row.sma13 + '%' : '-'}</td>
         </tr>
       `).join('');
+
+      // Создаем график настроения рынка
+      const canvas = document.getElementById('marketSentimentChart');
+      const ctx = canvas.getContext('2d');
+
+      // Переворачиваем данные для правильного отображения на графике
+      const chartData = [...sentimentData].reverse();
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
+      gradient.addColorStop(1, 'rgba(75, 192, 192, 0)');
+
+      new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: chartData.map(row => row.date),
+          datasets: [
+            {
+              label: 'Процент бычьих сигналов',
+              data: chartData.map(row => parseFloat(row.percentage)),
+              borderColor: 'rgb(75, 192, 192)',
+              backgroundColor: gradient,
+              fill: true,
+              tension: 0.1
+            },
+            {
+              label: '13 EMA',
+              data: chartData.map(row => row.ma13 !== null ? parseFloat(row.ma13) : null),
+              borderColor: 'rgb(255, 99, 132)',
+              borderWidth: 2,
+              fill: false,
+              tension: 0.1
+            },
+            {
+              label: '13 SMA',
+              data: chartData.map(row => row.sma13 !== null ? parseFloat(row.sma13) : null),
+              borderColor: 'rgb(54, 162, 235)',
+              borderWidth: 2,
+              fill: false,
+              tension: 0.1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: 'Анализ настроения рынка'
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Процент'
+              }
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Дата'
+              }
+            }
+          }
+        }
+      });
     }
 
     function batchProcess(symbols, batchSize = 5) {
