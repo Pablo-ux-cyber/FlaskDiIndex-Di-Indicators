@@ -161,7 +161,6 @@
                 <th>Процент бычьих сигналов</th>
                 <th>13 EMA (%)</th>
                 <th>13 SMA (%)</th>
-                <th>30 SMA (%)</th>
               </tr>
             </thead>
             <tbody id="sentimentTableBody">
@@ -577,8 +576,7 @@
 
     function downloadMarketSentimentExcel() {
       const rows = [
-        ['Дата', 'Количество бычьих сигналов', 'Всего монет с данными', 
-         'Процент бычьих сигналов', '13 EMA (%)', '13 SMA (%)', '30 SMA (%)']
+        ['Дата', 'Количество бычьих сигналов', 'Всего монет с данными', 'Процент бычьих сигналов', '13 EMA (%)', '13 SMA (%)']
       ];
 
       const tbody = document.getElementById('sentimentTableBody');
@@ -592,8 +590,7 @@
           cells[2].textContent,
           cells[3].textContent,
           cells[4].textContent,
-          cells[5].textContent,
-          cells[6].textContent
+          cells[5].textContent
         ]);
       });
 
@@ -635,18 +632,15 @@
       const percentages = sortedData.map(item => parseFloat(item.percentage));
       const ma13 = [];
       const sma13 = [];
-      const sma30 = [];
       const alpha = 2 / (13 + 1);
 
       for (let i = 0; i < percentages.length; i++) {
         if (isNaN(percentages[i])) {
           ma13.push(null);
           sma13.push(null);
-          sma30.push(null);
         } else if (i === 0) {
           ma13.push(parseFloat(percentages[i]));
           sma13.push(parseFloat(percentages[i]));
-          sma30.push(parseFloat(percentages[i]));
         } else {
           const prevEMA = ma13[i - 1];
           if (prevEMA === null || isNaN(prevEMA)) {
@@ -656,21 +650,11 @@
             ma13.push(ema);
           }
 
-          // Calculate 13 SMA
-          const start13 = Math.max(0, i - 12);
-          const slice13 = percentages.slice(start13, i + 1);
-          const validNumbers13 = slice13.filter(n => !isNaN(n));
-          sma13.push(validNumbers13.length > 0 ? 
-            validNumbers13.reduce((a, b) => a + b, 0) / validNumbers13.length : 
-            null
-          );
-
-          // Calculate 30 SMA
-          const start30 = Math.max(0, i - 29);
-          const slice30 = percentages.slice(start30, i + 1);
-          const validNumbers30 = slice30.filter(n => !isNaN(n));
-          sma30.push(validNumbers30.length > 0 ? 
-            validNumbers30.reduce((a, b) => a + b, 0) / validNumbers30.length : 
+          const start = Math.max(0, i - 12);
+          const slice = percentages.slice(start, i + 1);
+          const validNumbers = slice.filter(n => !isNaN(n));
+          sma13.push(validNumbers.length > 0 ? 
+            validNumbers.reduce((a, b) => a + b, 0) / validNumbers.length : 
             null
           );
         }
@@ -679,8 +663,7 @@
       return sortedData.map((item, index) => ({
         ...item,
         ma13: ma13[index] === null ? null : ma13[index].toFixed(2),
-        sma13: sma13[index] === null ? null : sma13[index].toFixed(2),
-        sma30: sma30[index] === null ? null : sma30[index].toFixed(2)
+        sma13: sma13[index] === null ? null : sma13[index].toFixed(2)
       })).reverse();
     }
 
@@ -694,14 +677,14 @@
           <td>${row.percentage}%</td>
           <td>${row.ma13 !== null ? row.ma13 + '%' : '-'}</td>
           <td>${row.sma13 !== null ? row.sma13 + '%' : '-'}</td>
-          <td>${row.sma30 !== null ? row.sma30 + '%' : '-'}</td>
         </tr>
       `).join('');
 
-      // Create market sentiment chart
+      // Создаем график настроения рынка
       const canvas = document.getElementById('marketSentimentChart');
       const ctx = canvas.getContext('2d');
 
+      // Переворачиваем данные для правильного отображения на графике
       const chartData = [...sentimentData].reverse();
 
       const gradient = ctx.createLinearGradient(0, 0, 0, 400);
@@ -733,14 +716,6 @@
               label: '13 SMA',
               data: chartData.map(row => row.sma13 !== null ? parseFloat(row.sma13) : null),
               borderColor: 'rgb(54, 162, 235)',
-              borderWidth: 2,
-              fill: false,
-              tension: 0.1
-            },
-            {
-              label: '30 SMA',
-              data: chartData.map(row => row.sma30 !== null ? parseFloat(row.sma30) : null),
-              borderColor: 'rgb(153, 102, 255)',
               borderWidth: 2,
               fill: false,
               tension: 0.1
