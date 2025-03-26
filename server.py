@@ -493,7 +493,7 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
         logger.debug(df['time'].head())
 
     # Отфильтровываем будущие даты и сегодняшний день
-    today = pd.Timestamp.now().normalize() + pd.Timedelta(days=1)
+    today = pd.Timestamp.now().normalize()
     df = df[df['time'] < today]
 
     # Логируем время свечей для проверки
