@@ -367,7 +367,7 @@ def process_symbol(symbol, debug=False):
         daily_di_dict = {}
         for entry in daily_di:
             entry_date = pd.Timestamp(entry["time"][:10])
-            # Используем ту же дату, за которую получены данные
+            # Используем значения за тот же день (24 марта = данные за 24 марта)
             daily_di_dict[entry_date.strftime("%Y-%m-%d")] = entry
 
         # Process 4h data first to organize by date
