@@ -257,6 +257,16 @@
       headerDiv.appendChild(exportButton);
       container.appendChild(headerDiv);
 
+      // Создаем и добавляем график перед таблицей
+      const chartContainer = document.createElement('div');
+      chartContainer.className = 'chart-container';
+      const canvas = document.createElement('canvas');
+      chartContainer.appendChild(canvas);
+      container.appendChild(chartContainer);
+
+      createTrendChart(canvas, data, symbol);
+
+      // Добавляем таблицу после графика
       const table = document.createElement('table');
       table.className = 'table';
       table.setAttribute('data-sort-dir', 'asc');
@@ -300,15 +310,6 @@
       `;
 
       container.appendChild(table);
-
-      const chartContainer = document.createElement('div');
-      chartContainer.className = 'chart-container';
-      const canvas = document.createElement('canvas');
-      chartContainer.appendChild(canvas);
-      container.appendChild(chartContainer);
-
-      createTrendChart(canvas, data, symbol);
-
       return container;
     }
 
@@ -663,7 +664,108 @@
       })).reverse();
     }
 
+    function createMarketSentimentChart(sentimentData) {
+      const chartContainer = document.createElement('div');
+      chartContainer.className = 'chart-container';
+      const canvas = document.createElement('canvas');
+      chartContainer.appendChild(canvas);
+
+      const data = [...sentimentData].reverse();
+      const labels = data.map(row => row.date);
+      const percentages = data.map(row => parseFloat(row.percentage));
+      const ma13Values = data.map(row => row.ma13 ? parseFloat(row.ma13) : null);
+      const sma13Values = data.map(row => row.sma13 ? parseFloat(row.sma13) : null);
+
+      const ctx = canvas.getContext('2d');
+      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
+      gradient.addColorStop(1, 'rgba(75, 192, 192, 0)');
+
+      new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Процент бычьих сигналов',
+              data: percentages,
+              borderColor: 'rgb(75, 192, 192)',
+              backgroundColor: gradient,
+              fill: true,
+              tension: 0.1
+            },
+            {
+              label: '13 EMA',
+              data: ma13Values,
+              borderColor: 'rgb(255, 99, 132)',
+              borderWidth: 2,
+              fill: false,
+              tension: 0.1
+            },
+            {
+              label: '13 SMA',
+              data: sma13Values,
+              borderColor: 'rgb(54, 162, 235)',
+              borderWidth: 2,
+              fill: false,
+              tension: 0.1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            intersect: false,
+            mode: 'index'
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: 'Общее настроение рынка'
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Процент'
+              },
+              max: 100
+            },
+            x: {
+              title: {
+                display: true,
+                text: 'Дата'
+              }
+            }
+          }
+        }
+      });
+
+      return chartContainer;
+    }
+
     function updateSentimentTable(sentimentData) {
+      const sentimentDiv = document.querySelector('.market-sentiment');
+
+      // Добавляем график перед таблицей
+      const oldChart = sentimentDiv.querySelector('.chart-container');
+      if (oldChart) {
+        oldChart.remove();
+      }
+      const chartContainer = createMarketSentimentChart(sentimentData);
+      sentimentDiv.insertBefore(chartContainer, sentimentDiv.querySelector('.table'));
+
+      // Обновляем таблицу
       const tbody = document.getElementById('sentimentTableBody');
       tbody.innerHTML = sentimentData.map(row => `
         <tr>
