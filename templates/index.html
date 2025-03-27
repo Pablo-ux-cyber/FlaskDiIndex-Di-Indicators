@@ -161,6 +161,7 @@
                 <th>Процент бычьих сигналов</th>
                 <th>13 EMA (%)</th>
                 <th>13 SMA (%)</th>
+                <th>10 SMA (%)</th>
               </tr>
             </thead>
             <tbody id="sentimentTableBody">
@@ -576,7 +577,7 @@
 
     function downloadMarketSentimentExcel() {
       const rows = [
-        ['Дата', 'Количество бычьих сигналов', 'Всего монет с данными', 'Процент бычьих сигналов', '13 EMA (%)', '13 SMA (%)']
+        ['Дата', 'Количество бычьих сигналов', 'Всего монет с данными', 'Процент бычьих сигналов', '13 EMA (%)', '13 SMA (%)', '10 SMA (%)']
       ];
 
       const tbody = document.getElementById('sentimentTableBody');
@@ -590,7 +591,8 @@
           cells[2].textContent,
           cells[3].textContent,
           cells[4].textContent,
-          cells[5].textContent
+          cells[5].textContent,
+          cells[6].textContent
         ]);
       });
 
@@ -632,16 +634,20 @@
       const percentages = sortedData.map(item => parseFloat(item.percentage));
       const ma13 = [];
       const sma13 = [];
+      const sma10 = [];
       const alpha = 2 / (13 + 1);
 
       for (let i = 0; i < percentages.length; i++) {
         if (isNaN(percentages[i])) {
           ma13.push(null);
           sma13.push(null);
+          sma10.push(null);
         } else if (i === 0) {
           ma13.push(parseFloat(percentages[i]));
           sma13.push(parseFloat(percentages[i]));
+          sma10.push(parseFloat(percentages[i]));
         } else {
+          // Calculate 13 EMA
           const prevEMA = ma13[i - 1];
           if (prevEMA === null || isNaN(prevEMA)) {
             ma13.push(parseFloat(percentages[i]));
@@ -650,11 +656,21 @@
             ma13.push(ema);
           }
 
-          const start = Math.max(0, i - 12);
-          const slice = percentages.slice(start, i + 1);
-          const validNumbers = slice.filter(n => !isNaN(n));
-          sma13.push(validNumbers.length > 0 ? 
-            validNumbers.reduce((a, b) => a + b, 0) / validNumbers.length : 
+          // Calculate 13 SMA
+          const start13 = Math.max(0, i - 12);
+          const slice13 = percentages.slice(start13, i + 1);
+          const validNumbers13 = slice13.filter(n => !isNaN(n));
+          sma13.push(validNumbers13.length > 0 ? 
+            validNumbers13.reduce((a, b) => a + b, 0) / validNumbers13.length : 
+            null
+          );
+
+          // Calculate 10 SMA
+          const start10 = Math.max(0, i - 9);
+          const slice10 = percentages.slice(start10, i + 1);
+          const validNumbers10 = slice10.filter(n => !isNaN(n));
+          sma10.push(validNumbers10.length > 0 ? 
+            validNumbers10.reduce((a, b) => a + b, 0) / validNumbers10.length : 
             null
           );
         }
@@ -663,7 +679,8 @@
       return sortedData.map((item, index) => ({
         ...item,
         ma13: ma13[index] === null ? null : ma13[index].toFixed(2),
-        sma13: sma13[index] === null ? null : sma13[index].toFixed(2)
+        sma13: sma13[index] === null ? null : sma13[index].toFixed(2),
+        sma10: sma10[index] === null ? null : sma10[index].toFixed(2)
       })).reverse();
     }
 
@@ -677,6 +694,7 @@
           <td>${row.percentage}%</td>
           <td>${row.ma13 !== null ? row.ma13 + '%' : '-'}</td>
           <td>${row.sma13 !== null ? row.sma13 + '%' : '-'}</td>
+          <td>${row.sma10 !== null ? row.sma10 + '%' : '-'}</td>
         </tr>
       `).join('');
 
@@ -716,6 +734,14 @@
               label: '13 SMA',
               data: chartData.map(row => row.sma13 !== null ? parseFloat(row.sma13) : null),
               borderColor: 'rgb(54, 162, 235)',
+              borderWidth: 2,
+              fill: false,
+              tension: 0.1
+            },
+            {
+              label: '10 SMA',
+              data: chartData.map(row => row.sma10 !== null ? parseFloat(row.sma10) : null),
+              borderColor: 'rgb(255, 206, 86)',
               borderWidth: 2,
               fill: false,
               tension: 0.1
