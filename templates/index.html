@@ -633,18 +633,18 @@
 
       const percentages = sortedData.map(item => parseFloat(item.percentage));
       const ma13 = [];
-      const sma13 = [];
+      const sma20 = [];
       const sma10 = [];
       const alpha = 2 / (13 + 1);
 
       for (let i = 0; i < percentages.length; i++) {
         if (isNaN(percentages[i])) {
           ma13.push(null);
-          sma13.push(null);
+          sma20.push(null);
           sma10.push(null);
         } else if (i === 0) {
           ma13.push(parseFloat(percentages[i]));
-          sma13.push(parseFloat(percentages[i]));
+          sma20.push(parseFloat(percentages[i]));
           sma10.push(parseFloat(percentages[i]));
         } else {
           // Calculate 13 EMA
@@ -660,7 +660,7 @@
           const start20 = Math.max(0, i - 19);
           const slice20 = percentages.slice(start20, i + 1);
           const validNumbers20 = slice20.filter(n => !isNaN(n));
-          sma13.push(validNumbers20.length > 0 ? 
+          sma20.push(validNumbers20.length > 0 ? 
             validNumbers20.reduce((a, b) => a + b, 0) / validNumbers20.length : 
             null
           );
@@ -679,7 +679,7 @@
       return sortedData.map((item, index) => ({
         ...item,
         ma13: ma13[index] === null ? null : ma13[index].toFixed(2),
-        sma13: sma13[index] === null ? null : sma13[index].toFixed(2),
+        sma20: sma20[index] === null ? null : sma20[index].toFixed(2),
         sma10: sma10[index] === null ? null : sma10[index].toFixed(2)
       })).reverse();
     }
@@ -693,7 +693,7 @@
           <td>${row.totalCount}</td>
           <td>${row.percentage}%</td>
           <td>${row.ma13 !== null ? row.ma13 + '%' : '-'}</td>
-          <td>${row.sma13 !== null ? row.sma13 + '%' : '-'}</td>
+          <td>${row.sma20 !== null ? row.sma20 + '%' : '-'}</td>
           <td>${row.sma10 !== null ? row.sma10 + '%' : '-'}</td>
         </tr>
       `).join('');
