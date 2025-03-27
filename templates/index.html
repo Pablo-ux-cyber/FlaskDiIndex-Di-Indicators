@@ -160,7 +160,7 @@
                 <th>Всего монет с данными</th>
                 <th>Процент бычьих сигналов</th>
                 <th>13 EMA (%)</th>
-                <th>13 SMA (%)</th>
+                <th>20 SMA (%)</th>
                 <th>10 SMA (%)</th>
               </tr>
             </thead>
@@ -577,7 +577,7 @@
 
     function downloadMarketSentimentExcel() {
       const rows = [
-        ['Дата', 'Количество бычьих сигналов', 'Всего монет с данными', 'Процент бычьих сигналов', '13 EMA (%)', '13 SMA (%)', '10 SMA (%)']
+        ['Дата', 'Количество бычьих сигналов', 'Всего монет с данными', 'Процент бычьих сигналов', '13 EMA (%)', '20 SMA (%)', '10 SMA (%)']
       ];
 
       const tbody = document.getElementById('sentimentTableBody');
@@ -656,12 +656,12 @@
             ma13.push(ema);
           }
 
-          // Calculate 13 SMA
-          const start13 = Math.max(0, i - 12);
-          const slice13 = percentages.slice(start13, i + 1);
-          const validNumbers13 = slice13.filter(n => !isNaN(n));
-          sma13.push(validNumbers13.length > 0 ? 
-            validNumbers13.reduce((a, b) => a + b, 0) / validNumbers13.length : 
+          // Calculate 20 SMA
+          const start20 = Math.max(0, i - 19);
+          const slice20 = percentages.slice(start20, i + 1);
+          const validNumbers20 = slice20.filter(n => !isNaN(n));
+          sma13.push(validNumbers20.length > 0 ? 
+            validNumbers20.reduce((a, b) => a + b, 0) / validNumbers20.length : 
             null
           );
 
@@ -731,7 +731,7 @@
               tension: 0.1
             },
             {
-              label: '13 SMA',
+              label: '20 SMA',
               data: chartData.map(row => row.sma13 !== null ? parseFloat(row.sma13) : null),
               borderColor: 'rgb(54, 162, 235)',
               borderWidth: 2,
