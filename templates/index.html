@@ -73,6 +73,10 @@
       height: 400px;
       width: 100%;
       margin-top: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      user-select: none;
     }
   </style>
 </head>
@@ -149,10 +153,8 @@
               Экспорт в Excel
             </button>
           </div>
-          <!-- Добавляем контейнер для графика -->
-          <div class="chart-container">
-            <canvas id="marketSentimentChart"></canvas>
-          </div>
+          <!-- Добавляем контейнер для интерактивного графика -->
+          <div class="chart-container" id="marketSentimentChartContainer"></div>
           <table class="table sentiment-table">
             <thead>
               <tr>
@@ -699,115 +701,178 @@
         </tr>
       `).join('');
 
-      // Создаем график настроения рынка
-      const canvas = document.getElementById('marketSentimentChart');
-      const ctx = canvas.getContext('2d');
+      // Создаем TradingView-подобный график с LightweightCharts
+      const chartContainer = document.getElementById('marketSentimentChartContainer');
+      chartContainer.innerHTML = ''; // Очищаем контейнер перед созданием нового графика
       
-      // Уничтожаем существующий график перед созданием нового
-      const chartInstance = Chart.getChart(canvas);
-      if (chartInstance) {
-        chartInstance.destroy();
-      }
-
-      // Переворачиваем данные для правильного отображения на графике
-      const chartData = [...sentimentData].reverse();
-
-      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-      gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
-      gradient.addColorStop(1, 'rgba(75, 192, 192, 0)');
-
-      window.marketSentimentChart = new Chart(canvas, {
-        type: 'line',
-        data: {
-          labels: chartData.map(row => row.date),
-          datasets: [
-            {
-              label: 'Процент бычьих сигналов',
-              data: chartData.map(row => parseFloat(row.percentage)),
-              borderColor: 'rgb(75, 192, 192)',
-              backgroundColor: gradient,
-              fill: true,
-              tension: 0.1
-            },
-            {
-              label: '10 SMA',
-              data: chartData.map(row => row.sma10 !== null ? parseFloat(row.sma10) : null),
-              borderColor: 'rgb(255, 206, 86)',
-              borderWidth: 3,
-              fill: false,
-              tension: 0.1
-            }
-          ]
+      // Создаем инстанс графика
+      const chart = LightweightCharts.createChart(chartContainer, {
+        width: chartContainer.clientWidth,
+        height: 400,
+        layout: {
+          backgroundColor: '#ffffff',
+          textColor: '#333',
+          fontSize: 12,
+          fontFamily: 'Arial',
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: {
-            intersect: false,
-            mode: 'index'
+        crosshair: {
+          mode: LightweightCharts.CrosshairMode.Normal,
+          vertLine: {
+            color: 'rgba(100, 100, 100, 0.4)',
+            width: 1,
+            style: LightweightCharts.LineStyle.Dashed,
           },
-          plugins: {
-            zoom: {
-              pan: {
-                enabled: true,
-                mode: 'x',
-                threshold: 5,
-                modifierKey: 'shift'
-              },
-              zoom: {
-                wheel: {
-                  enabled: true,
-                },
-                pinch: {
-                  enabled: true
-                },
-                mode: 'x',
-              }
-            },
-            tooltip: {
-              position: 'nearest',
-              mode: 'index',
-              intersect: false,
-              callbacks: {
-                label: function(context) {
-                  return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
-                }
-              }
-            },
-            title: {
-              display: true,
-              text: 'Соотношение текущих бычьих сигналов и 10 SMA'
-            },
-            crosshair: {
-              line: {
-                color: 'rgba(100, 100, 100, 0.4)',
-                width: 1
-              },
-              sync: {
-                enabled: true
-              },
-              zoom: {
-                enabled: true
-              }
-            }
+          horzLine: {
+            color: 'rgba(100, 100, 100, 0.4)',
+            width: 1,
+            style: LightweightCharts.LineStyle.Dashed,
+            labelBackgroundColor: 'rgba(100, 100, 100, 0.8)',
           },
-          scales: {
-            y: {
-              beginAtZero: false,
-              title: {
-                display: true,
-                text: 'Процент'
-              }
-            },
-            x: {
-              title: {
-                display: true,
-                text: 'Дата'
-              }
-            }
-          }
+        },
+        grid: {
+          vertLines: {
+            color: 'rgba(225, 225, 225, 0.8)',
+          },
+          horzLines: {
+            color: 'rgba(225, 225, 225, 0.8)',
+          },
+        },
+        timeScale: {
+          borderColor: 'rgba(200, 200, 200, 1)',
+          timeVisible: true,
+          rightOffset: 5,
+          barSpacing: 10,
+        },
+        rightPriceScale: {
+          borderColor: 'rgba(200, 200, 200, 1)',
+        },
+        handleScroll: {
+          mouseWheel: true,
+          pressedMouseMove: true,
+          horzTouchDrag: true,
+        },
+        handleScale: {
+          axisPressedMouseMove: true,
+          mouseWheel: true,
+          pinch: true,
+        },
+      });
+      
+      // Добавляем линию для процента бычьих сигналов
+      const percentageSeries = chart.addLineSeries({
+        title: 'Процент бычьих сигналов',
+        color: 'rgb(75, 192, 192)',
+        lineWidth: 2,
+        priceFormat: {
+          type: 'percent',
+          precision: 2,
+        },
+        priceScaleId: 'right',
+      });
+      
+      // Добавляем линию для 10 SMA
+      const sma10Series = chart.addLineSeries({
+        title: '10 SMA',
+        color: 'rgb(255, 206, 86)',
+        lineWidth: 3,
+        priceFormat: {
+          type: 'percent',
+          precision: 2,
+        },
+        priceScaleId: 'right',
+      });
+      
+      // Подготовка данных для отображения
+      // Используем исходные данные (от новых к старым) для LightweightCharts
+      const chartData = [...sentimentData];
+      
+      // Подготавливаем точки данных для каждой серии
+      const percentageData = chartData.map(row => ({
+        time: new Date(row.date).getTime() / 1000, // Unix timestamp in seconds
+        value: parseFloat(row.percentage),
+      }));
+      
+      const sma10Data = chartData.map(row => ({
+        time: new Date(row.date).getTime() / 1000, // Unix timestamp in seconds
+        value: row.sma10 !== null ? parseFloat(row.sma10) : null,
+      })).filter(point => point.value !== null);
+      
+      // Устанавливаем данные для обеих серий
+      percentageSeries.setData(percentageData);
+      sma10Series.setData(sma10Data);
+      
+      // Добавляем панель легенды
+      const legendContainer = document.createElement('div');
+      legendContainer.style.position = 'absolute';
+      legendContainer.style.left = '12px';
+      legendContainer.style.top = '12px';
+      legendContainer.style.zIndex = '1';
+      legendContainer.style.fontSize = '12px';
+      legendContainer.style.fontFamily = 'Arial';
+      legendContainer.style.lineHeight = '18px';
+      legendContainer.style.fontWeight = 'bold';
+      legendContainer.style.padding = '8px';
+      legendContainer.style.background = 'rgba(255, 255, 255, 0.7)';
+      legendContainer.style.color = '#333';
+      legendContainer.style.borderRadius = '3px';
+      chartContainer.appendChild(legendContainer);
+      
+      // Функция обновления легенды
+      const updateLegend = (param) => {
+        const percentage = percentageSeries.dataByIndex(param);
+        const sma10 = sma10Series.dataByIndex(param);
+        
+        let legendText = '<div style="font-size: 14px; margin-bottom: 8px;">Соотношение текущих бычьих сигналов и 10 SMA</div>';
+        
+        // Форматируем текущую дату из таймстампа
+        let dateStr = '';
+        if (percentage && percentage.time) {
+          const date = new Date(percentage.time * 1000);
+          dateStr = date.toLocaleDateString();
+        }
+        legendText += `<div style="margin-bottom: 5px;">Дата: ${dateStr}</div>`;
+        
+        if (percentage && percentage.value !== undefined) {
+          legendText += `<div style="color: rgb(75, 192, 192); margin-bottom: 3px;">Процент бычьих сигналов: ${percentage.value.toFixed(2)}%</div>`;
+        }
+        
+        if (sma10 && sma10.value !== undefined) {
+          legendText += `<div style="color: rgb(255, 206, 86);">10 SMA: ${sma10.value.toFixed(2)}%</div>`;
+        }
+        
+        legendContainer.innerHTML = legendText;
+      };
+      
+      // Начальное обновление легенды
+      updateLegend(percentageData.length - 1);
+      
+      // Обработчик для обновления легенды при наведении курсора
+      chart.subscribeCrosshairMove((param) => {
+        if (
+          param.point === undefined ||
+          !param.time ||
+          param.point.x < 0 ||
+          param.point.x > chartContainer.clientWidth ||
+          param.point.y < 0 ||
+          param.point.y > chartContainer.clientHeight
+        ) {
+          // Если курсор за пределами графика, показываем последнее значение
+          updateLegend(percentageData.length - 1);
+        } else {
+          // Иначе показываем значение под курсором
+          updateLegend(param.time);
         }
       });
+      
+      // Адаптивность по размеру окна
+      window.addEventListener('resize', () => {
+        chart.applyOptions({
+          width: chartContainer.clientWidth,
+        });
+      });
+      
+      // Подгоняем масштаб, чтобы видеть все данные
+      chart.timeScale().fitContent();
     }
 
     function batchProcess(symbols, batchSize = 5) {
