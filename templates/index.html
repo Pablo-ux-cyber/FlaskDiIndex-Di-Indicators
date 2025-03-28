@@ -703,8 +703,9 @@
       const ctx = canvas.getContext('2d');
       
       // Уничтожаем существующий график перед созданием нового
-      if (window.marketSentimentChart) {
-        window.marketSentimentChart.destroy();
+      const chartInstance = Chart.getChart(canvas);
+      if (chartInstance) {
+        chartInstance.destroy();
       }
 
       // Переворачиваем данные для правильного отображения на графике
