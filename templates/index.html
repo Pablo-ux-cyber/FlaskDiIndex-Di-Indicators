@@ -588,112 +588,12 @@
         console.log("EMA13Data points:", ema13Data.length);
         console.log("SMA30Data points:", sma30Data.length);
         
+        // Устанавливаем только данные для линии цены, 13 EMA и 30 SMA
         closePriceSeries.setData(closePriceData);
         ema13Series.setData(ema13Data);
         sma30Series.setData(sma30Data);
         
-        // Создаем линию для отображения тренда
-        const trendLineSeries = chart.addLineSeries({
-          title: 'Trend',
-          lineWidth: 3,
-          priceFormat: {
-            type: 'price',
-            precision: 2,
-            minMove: 0.01,
-          },
-          priceScaleId: 'right',
-        });
-        
-        // Преобразуем данные о трендах в линию
-        // Для каждого тренда создаем отдельную серию точек
-        const bullTrendData = [];
-        const bearTrendData = [];
-        
-        // Начальная точка для текущего тренда
-        let currentTrend = null;
-        let currentTrendStart = null;
-        let lastBullPoint = null;
-        let lastBearPoint = null;
-        
-        // Преобразуем тренды в сегменты линий
-        trendData.forEach((point, index) => {
-          if (point.trend === 'bull') {
-            // Если точка бычьего тренда
-            bullTrendData.push({
-              time: point.time,
-              value: point.value + (point.value * 0.005) // Сдвигаем линию немного выше цены для видимости
-            });
-            lastBullPoint = point;
-          } else if (point.trend === 'bear') {
-            // Если точка медвежьего тренда
-            bearTrendData.push({
-              time: point.time,
-              value: point.value - (point.value * 0.005) // Сдвигаем линию немного ниже цены для видимости
-            });
-            lastBearPoint = point;
-          }
-        });
-        
-        // Создаем серию для отображения бычьего тренда (зеленая линия)
-        const bullTrendSeries = chart.addLineSeries({
-          title: 'Bull Trend',
-          color: 'rgba(38, 166, 154, 1)', // Зеленый
-          lineWidth: 2,
-          lastValueVisible: false,
-          priceLineVisible: false,
-          crosshairMarkerVisible: true,
-          priceFormat: {
-            type: 'price',
-            precision: 2,
-            minMove: 0.01,
-          },
-          priceScaleId: 'right',
-        });
-        
-        // Создаем серию для отображения медвежьего тренда (красная линия)
-        const bearTrendSeries = chart.addLineSeries({
-          title: 'Bear Trend',
-          color: 'rgba(239, 83, 80, 1)', // Красный
-          lineWidth: 2,
-          lastValueVisible: false,
-          priceLineVisible: false,
-          crosshairMarkerVisible: true,
-          priceFormat: {
-            type: 'price',
-            precision: 2,
-            minMove: 0.01,
-          },
-          priceScaleId: 'right',
-        });
-        
-        // Устанавливаем данные для трендовых линий
-        bullTrendSeries.setData(bullTrendData);
-        bearTrendSeries.setData(bearTrendData);
-        
-        // Добавляем отдельные маркеры для бычьих и медвежьих сигналов
-        const markers = [];
-        trendData.forEach((point, index) => {
-          if (point.trend === 'bull') {
-            markers.push({
-              time: point.time,
-              position: 'belowBar',
-              color: '#26a69a',
-              shape: 'arrowUp',
-              size: 1
-            });
-          } else if (point.trend === 'bear') {
-            markers.push({
-              time: point.time,
-              position: 'aboveBar',
-              color: '#ef5350',
-              shape: 'arrowDown',
-              size: 1
-            });
-          }
-        });
-        
-        // Добавляем маркеры на график цен
-        closePriceSeries.setMarkers(markers);
+        // Убраны все элементы, связанные с трендами
   
         // Добавляем панель легенды
         const legendContainer = document.createElement('div');
@@ -712,13 +612,11 @@
         chartContainer.appendChild(legendContainer);
         
         // Начальное содержимое легенды
-        let legendText = `<div style="font-size: 14px; margin-bottom: 8px;">${symbol} - Тренд анализ</div>`;
+        let legendText = `<div style="font-size: 14px; margin-bottom: 8px;">${symbol} - Индикаторы</div>`;
         legendText += '<div style="margin-bottom: 5px;">Наведите курсор на график для просмотра значений</div>';
         legendText += `<div style="color: #777777; margin-bottom: 3px;">Цена закрытия</div>`;
         legendText += `<div style="color: rgb(255, 20, 147); margin-bottom: 3px; font-weight: bold;">13 EMA</div>`;
         legendText += `<div style="color: rgb(54, 162, 235); margin-bottom: 3px;">30 SMA</div>`;
-        legendText += `<div style="color: rgba(38, 166, 154, 1); margin-bottom: 3px;">Bull Trend</div>`;
-        legendText += `<div style="color: rgba(239, 83, 80, 1); margin-bottom: 3px;">Bear Trend</div>`;
         legendContainer.innerHTML = legendText;
         
         // Обработчик для обновления легенды при наведении курсора
@@ -732,13 +630,11 @@
             param.point.y > chartContainer.clientHeight
           ) {
             // Если курсор за пределами графика, показываем общую информацию
-            legendText = `<div style="font-size: 14px; margin-bottom: 8px;">${symbol} - Тренд анализ</div>`;
+            legendText = `<div style="font-size: 14px; margin-bottom: 8px;">${symbol} - Индикаторы</div>`;
             legendText += '<div style="margin-bottom: 5px;">Наведите курсор на график для просмотра значений</div>';
             legendText += `<div style="color: #777777; margin-bottom: 3px;">Цена закрытия</div>`;
             legendText += `<div style="color: rgb(255, 20, 147); margin-bottom: 3px; font-weight: bold;">13 EMA</div>`;
             legendText += `<div style="color: rgb(54, 162, 235); margin-bottom: 3px;">30 SMA</div>`;
-            legendText += `<div style="color: rgba(38, 166, 154, 1); margin-bottom: 3px;">Bull Trend</div>`;
-            legendText += `<div style="color: rgba(239, 83, 80, 1); margin-bottom: 3px;">Bear Trend</div>`;
             legendContainer.innerHTML = legendText;
           } else {
             // Иначе показываем значение под курсором
@@ -759,7 +655,7 @@
               day: '2-digit'
             });
             
-            legendText = `<div style="font-size: 14px; margin-bottom: 8px;">${symbol} - Тренд анализ</div>`;
+            legendText = `<div style="font-size: 14px; margin-bottom: 8px;">${symbol} - Индикаторы</div>`;
             legendText += `<div style="margin-bottom: 5px;">Дата: ${dateStr}</div>`;
             
             if (pricePoint) {
@@ -772,11 +668,6 @@
             
             if (sma30Point) {
               legendText += `<div style="color: rgb(54, 162, 235); margin-bottom: 3px;">30 SMA: ${sma30Point.value.toFixed(2)}</div>`;
-            }
-            
-            if (trendPoint) {
-              const trendText = trendPoint.trend === 'bull' ? 'Bull' : (trendPoint.trend === 'bear' ? 'Bear' : 'Neutral');
-              legendText += `<div style="color: ${trendPoint.color};">Trend: ${trendText}</div>`;
             }
             
             legendContainer.innerHTML = legendText;
