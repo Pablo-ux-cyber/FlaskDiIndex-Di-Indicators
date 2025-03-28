@@ -527,7 +527,7 @@
         // Подготавливаем данные для 13 EMA и 30 SMA
         const ema13Data = [];
         const sma30Data = [];
-        const trendData = [];
+        const trendData = []; // Оставляем для совместимости, но не будем использовать
         
         chartData.forEach(row => {
           const dateParts = row.time.split('.');
@@ -551,13 +551,7 @@
             value: parseFloat(row.di_sma_30_new)
           });
           
-          // Данные для тренда собираем для маркеров
-          trendData.push({
-            time: timestamp,
-            value: parseFloat(row.close), // На уровне цены
-            color: row.trend_new === 'bull' ? 'green' : (row.trend_new === 'bear' ? 'red' : 'gray'),
-            trend: row.trend_new
-          });
+          // Данные для тренда удалены
         });
   
         // Устанавливаем данные для всех серий
@@ -588,10 +582,54 @@
         console.log("EMA13Data points:", ema13Data.length);
         console.log("SMA30Data points:", sma30Data.length);
         
+        // Выводим отладочную информацию для первых нескольких точек
+        console.log("First 5 price points:", closePriceData.slice(0, 5));
+        console.log("First 5 EMA points:", ema13Data.slice(0, 5));
+        console.log("First 5 SMA points:", sma30Data.slice(0, 5));
+        
         // Устанавливаем только данные для линии цены, 13 EMA и 30 SMA
+        // Настраиваем правильное представление цены
+        closePriceSeries.applyOptions({
+          priceFormat: {
+            type: 'price',
+            precision: 2,
+            minMove: 0.01,
+          }
+        });
+        
+        // Подстраиваем масштаб линии EMA и SMA по масштабу цены
+        // Это поможет убедиться, что линии видны внутри графика
+        const priceMin = Math.min(...closePriceData.map(p => p.value));
+        const priceMax = Math.max(...closePriceData.map(p => p.value));
+        const pricePadding = (priceMax - priceMin) * 0.1; // 10% отступ
+        
+        chart.applyOptions({
+          rightPriceScale: {
+            autoScale: true,
+            scaleMargins: {
+              top: 0.1,
+              bottom: 0.1,
+            },
+            entireTextOnly: false,
+          }
+        });
+        
+        // Устанавливаем данные после настройки
         closePriceSeries.setData(closePriceData);
         ema13Series.setData(ema13Data);
         sma30Series.setData(sma30Data);
+        
+        console.log("Установлены данные для графика:", {
+          closePriceRange: [priceMin, priceMax],
+          ema13Range: [
+            Math.min(...ema13Data.map(p => p.value)),
+            Math.max(...ema13Data.map(p => p.value))
+          ],
+          sma30Range: [
+            Math.min(...sma30Data.map(p => p.value)),
+            Math.max(...sma30Data.map(p => p.value))
+          ]
+        });
         
         // Убраны все элементы, связанные с трендами
   
@@ -645,7 +683,7 @@
             const pricePoint = closePriceData.find(p => p.time === timestamp);
             const ema13Point = ema13Data.find(p => p.time === timestamp);
             const sma30Point = sma30Data.find(p => p.time === timestamp);
-            const trendPoint = trendData.find(p => p.time === timestamp);
+            // Убираем использование trendPoint, так как тренды больше не отображаются
             
             // Форматирование даты из timestamp
             const date = new Date(timestamp * 1000);
