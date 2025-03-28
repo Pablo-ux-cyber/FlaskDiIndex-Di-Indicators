@@ -701,6 +701,11 @@
       // Создаем график настроения рынка
       const canvas = document.getElementById('marketSentimentChart');
       const ctx = canvas.getContext('2d');
+      
+      // Уничтожаем существующий график перед созданием нового
+      if (window.marketSentimentChart) {
+        window.marketSentimentChart.destroy();
+      }
 
       // Переворачиваем данные для правильного отображения на графике
       const chartData = [...sentimentData].reverse();
@@ -709,7 +714,7 @@
       gradient.addColorStop(0, 'rgba(75, 192, 192, 0.2)');
       gradient.addColorStop(1, 'rgba(75, 192, 192, 0)');
 
-      new Chart(canvas, {
+      window.marketSentimentChart = new Chart(canvas, {
         type: 'line',
         data: {
           labels: chartData.map(row => row.date),
