@@ -561,11 +561,32 @@
         });
   
         // Устанавливаем данные для всех серий
-        // Вместо свечей создаем простые линии цены закрытия
-        const closePriceData = chartData.map(row => ({
-          time: Math.floor(new Date(row.time.split('.').reverse().join('-')).getTime() / 1000),
-          value: parseFloat(row.close)
-        }));
+        // Вместо свечей создаем простые линии цены закрытия с тем же форматом timestamp
+        const closePriceData = [];
+        
+        // Используем тот же timestamp, что и для индикаторов
+        chartData.forEach(row => {
+          const dateParts = row.time.split('.');
+          let timestamp;
+          if (dateParts.length === 3) {
+            const day = parseInt(dateParts[0]);
+            const month = parseInt(dateParts[1]) - 1;
+            const year = parseInt(dateParts[2]);
+            timestamp = Math.floor(new Date(year, month, day).getTime() / 1000);
+          } else {
+            timestamp = Math.floor(new Date(row.time).getTime() / 1000);
+          }
+          
+          closePriceData.push({
+            time: timestamp,
+            value: parseFloat(row.close)
+          });
+        });
+        
+        // Проверяем, чтобы все данные имели корректные значения
+        console.log("ClosePriceData points:", closePriceData.length);
+        console.log("EMA13Data points:", ema13Data.length);
+        console.log("SMA30Data points:", sma30Data.length);
         
         closePriceSeries.setData(closePriceData);
         ema13Series.setData(ema13Data);
@@ -724,7 +745,8 @@
             const timestamp = param.time;
             
             // Находим соответствующую точку данных
-            const candlePoint = candleData.find(p => p.time === timestamp);
+            // Используем closePriceData вместо candleData для значения цены
+            const pricePoint = closePriceData.find(p => p.time === timestamp);
             const ema13Point = ema13Data.find(p => p.time === timestamp);
             const sma30Point = sma30Data.find(p => p.time === timestamp);
             const trendPoint = trendData.find(p => p.time === timestamp);
@@ -740,8 +762,8 @@
             legendText = `<div style="font-size: 14px; margin-bottom: 8px;">${symbol} - Тренд анализ</div>`;
             legendText += `<div style="margin-bottom: 5px;">Дата: ${dateStr}</div>`;
             
-            if (candlePoint) {
-              legendText += `<div style="color: #777777; margin-bottom: 3px;">Цена закрытия: ${candlePoint.close.toFixed(2)}</div>`;
+            if (pricePoint) {
+              legendText += `<div style="color: #777777; margin-bottom: 3px;">Цена закрытия: ${pricePoint.value.toFixed(2)}</div>`;
             }
             
             if (ema13Point) {
