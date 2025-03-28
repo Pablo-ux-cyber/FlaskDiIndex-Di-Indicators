@@ -740,11 +740,28 @@
         timeScale: {
           borderColor: 'rgba(200, 200, 200, 1)',
           timeVisible: true,
+          secondsVisible: false,
+          tickMarkFormatter: (time) => {
+            const date = new Date(time * 1000);
+            return date.toLocaleDateString('ru-RU', {
+              month: '2-digit',
+              day: '2-digit',
+            });
+          },
           rightOffset: 5,
-          barSpacing: 10,
+          barSpacing: 12,
+          fixLeftEdge: true,
+          lockVisibleTimeRangeOnResize: true,
+          rightBarStaysOnScroll: true,
+          visible: true,
+          borderVisible: true,
         },
         rightPriceScale: {
           borderColor: 'rgba(200, 200, 200, 1)',
+          scaleMargins: {
+            top: 0.1,
+            bottom: 0.1,
+          },
         },
       });
       
@@ -776,20 +793,51 @@
       
       // Подготавливаем точки данных для каждой серии
       const percentageData = chartData.map(row => {
-        const date = new Date(row.date);
-        return {
-          time: date.toISOString().split('T')[0], // Формат YYYY-MM-DD
-          value: parseFloat(row.percentage),
-        };
+        // Преобразуем дату в формат timestamp для LightweightCharts
+        const dateParts = row.date.split('.');
+        if (dateParts.length === 3) {
+          // Если формат даты dd.mm.yyyy
+          const day = parseInt(dateParts[0]);
+          const month = parseInt(dateParts[1]) - 1; // Месяцы в JS начинаются с 0
+          const year = parseInt(dateParts[2]);
+          const timestamp = Math.floor(new Date(year, month, day).getTime() / 1000);
+          return {
+            time: timestamp,
+            value: parseFloat(row.percentage),
+          };
+        } else {
+          // Если другой формат даты, пробуем стандартный парсинг
+          const date = new Date(row.date);
+          return {
+            time: Math.floor(date.getTime() / 1000),
+            value: parseFloat(row.percentage),
+          };
+        }
       });
       
       const sma10Data = chartData.map(row => {
         if (row.sma10 === null) return null;
-        const date = new Date(row.date);
-        return {
-          time: date.toISOString().split('T')[0], // Формат YYYY-MM-DD
-          value: parseFloat(row.sma10),
-        };
+        
+        // Преобразуем дату в формат timestamp для LightweightCharts
+        const dateParts = row.date.split('.');
+        if (dateParts.length === 3) {
+          // Если формат даты dd.mm.yyyy
+          const day = parseInt(dateParts[0]);
+          const month = parseInt(dateParts[1]) - 1; // Месяцы в JS начинаются с 0
+          const year = parseInt(dateParts[2]);
+          const timestamp = Math.floor(new Date(year, month, day).getTime() / 1000);
+          return {
+            time: timestamp,
+            value: parseFloat(row.sma10),
+          };
+        } else {
+          // Если другой формат даты, пробуем стандартный парсинг
+          const date = new Date(row.date);
+          return {
+            time: Math.floor(date.getTime() / 1000),
+            value: parseFloat(row.sma10),
+          };
+        }
       }).filter(point => point !== null);
       
       // Устанавливаем данные для обеих серий
@@ -837,11 +885,19 @@
           legendContainer.innerHTML = legendText;
         } else {
           // Иначе показываем значение под курсором
-          const dateStr = param.time;
+          const timestamp = param.time;
           
           // Находим соответствующую точку данных
-          const percentagePoint = percentageData.find(p => p.time === dateStr);
-          const sma10Point = sma10Data.find(p => p.time === dateStr);
+          const percentagePoint = percentageData.find(p => p.time === timestamp);
+          const sma10Point = sma10Data.find(p => p.time === timestamp);
+          
+          // Форматирование даты из timestamp
+          const date = new Date(timestamp * 1000);
+          const dateStr = date.toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          });
           
           legendText = '<div style="font-size: 14px; margin-bottom: 8px;">Соотношение текущих бычьих сигналов и 10 SMA</div>';
           legendText += `<div style="margin-bottom: 5px;">Дата: ${dateStr}</div>`;
