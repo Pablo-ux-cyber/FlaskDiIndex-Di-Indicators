@@ -419,13 +419,21 @@
           },
         });
   
-        // Создаем серию для свечей цены
-        const candleSeries = chart.addCandlestickSeries({
-          upColor: '#26a69a',
-          downColor: '#ef5350',
-          borderVisible: false,
-          wickUpColor: '#26a69a',
-          wickDownColor: '#ef5350',
+        // Создаем серию для цены закрытия (вместо свечей для большей четкости индикаторов)
+        const closePriceSeries = chart.addLineSeries({
+          title: 'Цена',
+          color: '#777777', // Серый цвет для наименьшей заметности
+          lineWidth: 1.5, // Тонкая линия
+          lineStyle: 0, // Сплошная линия
+          lastValueVisible: true,
+          priceLineVisible: false, // Не показываем линию цены
+          crosshairMarkerVisible: true,
+          crosshairMarkerRadius: 4,
+          priceFormat: {
+            type: 'price',
+            precision: 2,
+            minMove: 0.01,
+          },
           priceScaleId: 'right',
         });
   
@@ -553,7 +561,13 @@
         });
   
         // Устанавливаем данные для всех серий
-        candleSeries.setData(candleData);
+        // Вместо свечей создаем простые линии цены закрытия
+        const closePriceData = chartData.map(row => ({
+          time: Math.floor(new Date(row.time.split('.').reverse().join('-')).getTime() / 1000),
+          value: parseFloat(row.close)
+        }));
+        
+        closePriceSeries.setData(closePriceData);
         ema13Series.setData(ema13Data);
         sma30Series.setData(sma30Data);
         
@@ -657,8 +671,8 @@
           }
         });
         
-        // Добавляем маркеры на график
-        candleSeries.setMarkers(markers);
+        // Добавляем маркеры на график цен
+        closePriceSeries.setMarkers(markers);
   
         // Добавляем панель легенды
         const legendContainer = document.createElement('div');
@@ -679,7 +693,7 @@
         // Начальное содержимое легенды
         let legendText = `<div style="font-size: 14px; margin-bottom: 8px;">${symbol} - Тренд анализ</div>`;
         legendText += '<div style="margin-bottom: 5px;">Наведите курсор на график для просмотра значений</div>';
-        legendText += `<div style="color: rgb(0, 0, 0); margin-bottom: 3px;">Цена закрытия</div>`;
+        legendText += `<div style="color: #777777; margin-bottom: 3px;">Цена закрытия</div>`;
         legendText += `<div style="color: rgb(255, 20, 147); margin-bottom: 3px; font-weight: bold;">13 EMA</div>`;
         legendText += `<div style="color: rgb(54, 162, 235); margin-bottom: 3px;">30 SMA</div>`;
         legendText += `<div style="color: rgba(38, 166, 154, 1); margin-bottom: 3px;">Bull Trend</div>`;
@@ -699,8 +713,8 @@
             // Если курсор за пределами графика, показываем общую информацию
             legendText = `<div style="font-size: 14px; margin-bottom: 8px;">${symbol} - Тренд анализ</div>`;
             legendText += '<div style="margin-bottom: 5px;">Наведите курсор на график для просмотра значений</div>';
-            legendText += `<div style="color: rgb(0, 0, 0); margin-bottom: 3px;">Цена закрытия</div>`;
-            legendText += `<div style="color: rgb(255, 99, 132); margin-bottom: 3px;">13 EMA</div>`;
+            legendText += `<div style="color: #777777; margin-bottom: 3px;">Цена закрытия</div>`;
+            legendText += `<div style="color: rgb(255, 20, 147); margin-bottom: 3px; font-weight: bold;">13 EMA</div>`;
             legendText += `<div style="color: rgb(54, 162, 235); margin-bottom: 3px;">30 SMA</div>`;
             legendText += `<div style="color: rgba(38, 166, 154, 1); margin-bottom: 3px;">Bull Trend</div>`;
             legendText += `<div style="color: rgba(239, 83, 80, 1); margin-bottom: 3px;">Bear Trend</div>`;
@@ -727,7 +741,7 @@
             legendText += `<div style="margin-bottom: 5px;">Дата: ${dateStr}</div>`;
             
             if (candlePoint) {
-              legendText += `<div style="color: rgb(0, 0, 0); margin-bottom: 3px;">Цена закрытия: ${candlePoint.close.toFixed(2)}</div>`;
+              legendText += `<div style="color: #777777; margin-bottom: 3px;">Цена закрытия: ${candlePoint.close.toFixed(2)}</div>`;
             }
             
             if (ema13Point) {
