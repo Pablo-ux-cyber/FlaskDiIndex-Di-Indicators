@@ -6,7 +6,7 @@
   <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="https://unpkg.com/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
@@ -715,26 +715,26 @@
           fontSize: 12,
           fontFamily: 'Arial',
         },
-        crosshair: {
-          mode: LightweightCharts.CrosshairMode.Normal,
-          vertLine: {
-            color: 'rgba(100, 100, 100, 0.4)',
-            width: 1,
-            style: LightweightCharts.LineStyle.Dashed,
-          },
-          horzLine: {
-            color: 'rgba(100, 100, 100, 0.4)',
-            width: 1,
-            style: LightweightCharts.LineStyle.Dashed,
-            labelBackgroundColor: 'rgba(100, 100, 100, 0.8)',
-          },
-        },
         grid: {
           vertLines: {
             color: 'rgba(225, 225, 225, 0.8)',
           },
           horzLines: {
             color: 'rgba(225, 225, 225, 0.8)',
+          },
+        },
+        crosshair: {
+          mode: 1, // CrosshairMode.Normal
+          vertLine: {
+            color: 'rgba(100, 100, 100, 0.4)',
+            width: 1,
+            style: 1, // LineStyle.Dashed
+          },
+          horzLine: {
+            color: 'rgba(100, 100, 100, 0.4)',
+            width: 1,
+            style: 1, // LineStyle.Dashed
+            labelBackgroundColor: 'rgba(100, 100, 100, 0.8)',
           },
         },
         timeScale: {
@@ -745,16 +745,6 @@
         },
         rightPriceScale: {
           borderColor: 'rgba(200, 200, 200, 1)',
-        },
-        handleScroll: {
-          mouseWheel: true,
-          pressedMouseMove: true,
-          horzTouchDrag: true,
-        },
-        handleScale: {
-          axisPressedMouseMove: true,
-          mouseWheel: true,
-          pinch: true,
         },
       });
       
@@ -767,7 +757,6 @@
           type: 'percent',
           precision: 2,
         },
-        priceScaleId: 'right',
       });
       
       // Добавляем линию для 10 SMA
@@ -779,23 +768,29 @@
           type: 'percent',
           precision: 2,
         },
-        priceScaleId: 'right',
       });
       
       // Подготовка данных для отображения
-      // Используем исходные данные (от новых к старым) для LightweightCharts
-      const chartData = [...sentimentData];
+      // Используем исходные данные (от старых к новым) для LightweightCharts
+      const chartData = [...sentimentData].reverse();
       
       // Подготавливаем точки данных для каждой серии
-      const percentageData = chartData.map(row => ({
-        time: new Date(row.date).getTime() / 1000, // Unix timestamp in seconds
-        value: parseFloat(row.percentage),
-      }));
+      const percentageData = chartData.map(row => {
+        const date = new Date(row.date);
+        return {
+          time: date.toISOString().split('T')[0], // Формат YYYY-MM-DD
+          value: parseFloat(row.percentage),
+        };
+      });
       
-      const sma10Data = chartData.map(row => ({
-        time: new Date(row.date).getTime() / 1000, // Unix timestamp in seconds
-        value: row.sma10 !== null ? parseFloat(row.sma10) : null,
-      })).filter(point => point.value !== null);
+      const sma10Data = chartData.map(row => {
+        if (row.sma10 === null) return null;
+        const date = new Date(row.date);
+        return {
+          time: date.toISOString().split('T')[0], // Формат YYYY-MM-DD
+          value: parseFloat(row.sma10),
+        };
+      }).filter(point => point !== null);
       
       // Устанавливаем данные для обеих серий
       percentageSeries.setData(percentageData);
@@ -817,34 +812,12 @@
       legendContainer.style.borderRadius = '3px';
       chartContainer.appendChild(legendContainer);
       
-      // Функция обновления легенды
-      const updateLegend = (param) => {
-        const percentage = percentageSeries.dataByIndex(param);
-        const sma10 = sma10Series.dataByIndex(param);
-        
-        let legendText = '<div style="font-size: 14px; margin-bottom: 8px;">Соотношение текущих бычьих сигналов и 10 SMA</div>';
-        
-        // Форматируем текущую дату из таймстампа
-        let dateStr = '';
-        if (percentage && percentage.time) {
-          const date = new Date(percentage.time * 1000);
-          dateStr = date.toLocaleDateString();
-        }
-        legendText += `<div style="margin-bottom: 5px;">Дата: ${dateStr}</div>`;
-        
-        if (percentage && percentage.value !== undefined) {
-          legendText += `<div style="color: rgb(75, 192, 192); margin-bottom: 3px;">Процент бычьих сигналов: ${percentage.value.toFixed(2)}%</div>`;
-        }
-        
-        if (sma10 && sma10.value !== undefined) {
-          legendText += `<div style="color: rgb(255, 206, 86);">10 SMA: ${sma10.value.toFixed(2)}%</div>`;
-        }
-        
-        legendContainer.innerHTML = legendText;
-      };
-      
-      // Начальное обновление легенды
-      updateLegend(percentageData.length - 1);
+      // Начальное содержимое легенды
+      let legendText = '<div style="font-size: 14px; margin-bottom: 8px;">Соотношение текущих бычьих сигналов и 10 SMA</div>';
+      legendText += '<div style="margin-bottom: 5px;">Наведите курсор на график для просмотра значений</div>';
+      legendText += `<div style="color: rgb(75, 192, 192); margin-bottom: 3px;">Процент бычьих сигналов</div>`;
+      legendText += `<div style="color: rgb(255, 206, 86);">10 SMA</div>`;
+      legendContainer.innerHTML = legendText;
       
       // Обработчик для обновления легенды при наведении курсора
       chart.subscribeCrosshairMove((param) => {
@@ -856,11 +829,32 @@
           param.point.y < 0 ||
           param.point.y > chartContainer.clientHeight
         ) {
-          // Если курсор за пределами графика, показываем последнее значение
-          updateLegend(percentageData.length - 1);
+          // Если курсор за пределами графика, показываем общую информацию
+          legendText = '<div style="font-size: 14px; margin-bottom: 8px;">Соотношение текущих бычьих сигналов и 10 SMA</div>';
+          legendText += '<div style="margin-bottom: 5px;">Наведите курсор на график для просмотра значений</div>';
+          legendText += `<div style="color: rgb(75, 192, 192); margin-bottom: 3px;">Процент бычьих сигналов</div>`;
+          legendText += `<div style="color: rgb(255, 206, 86);">10 SMA</div>`;
+          legendContainer.innerHTML = legendText;
         } else {
           // Иначе показываем значение под курсором
-          updateLegend(param.time);
+          const dateStr = param.time;
+          
+          // Находим соответствующую точку данных
+          const percentagePoint = percentageData.find(p => p.time === dateStr);
+          const sma10Point = sma10Data.find(p => p.time === dateStr);
+          
+          legendText = '<div style="font-size: 14px; margin-bottom: 8px;">Соотношение текущих бычьих сигналов и 10 SMA</div>';
+          legendText += `<div style="margin-bottom: 5px;">Дата: ${dateStr}</div>`;
+          
+          if (percentagePoint) {
+            legendText += `<div style="color: rgb(75, 192, 192); margin-bottom: 3px;">Процент бычьих сигналов: ${percentagePoint.value.toFixed(2)}%</div>`;
+          }
+          
+          if (sma10Point) {
+            legendText += `<div style="color: rgb(255, 206, 86);">10 SMA: ${sma10Point.value.toFixed(2)}%</div>`;
+          }
+          
+          legendContainer.innerHTML = legendText;
         }
       });
       
