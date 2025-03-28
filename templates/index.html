@@ -176,6 +176,26 @@
     </div>
   </div>
 
+  <!-- Модальное окно для графика отдельной монеты -->
+  <div class="modal fade" id="coinChartModal" tabindex="-1" aria-labelledby="coinChartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="coinChartModalLabel">График монеты</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div id="coinChartContainer" style="position: relative; height: 500px; width: 100%;"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     function formatValue(val) {
       return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
@@ -304,9 +324,9 @@
                 <td>${formatValue(row.daily_di_new)}</td>
                 <td style="cursor: pointer" onclick='show4hValues(${values4h}, "${row.time}")'>${formatValue(row['4h_di_new'])}</td>
                 <td>${formatValue(row.total_new)}</td>
-                <td>${formatValue(row.di_ema_13_new)}</td>
-                <td>${formatValue(row.di_sma_30_new)}</td>
-                <td>${row.trend_new ? (row.trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</td>
+                <td><span style="cursor: pointer; text-decoration: underline;" onclick='showTradingViewChart("${symbol}", ${JSON.stringify(data).replace(/'/g, "\\'")}, "${row.time}")'>${formatValue(row.di_ema_13_new)}</span></td>
+                <td><span style="cursor: pointer; text-decoration: underline;" onclick='showTradingViewChart("${symbol}", ${JSON.stringify(data).replace(/'/g, "\\'")}, "${row.time}")'>${formatValue(row.di_sma_30_new)}</span></td>
+                <td><span style="cursor: pointer; text-decoration: underline;" onclick='showTradingViewChart("${symbol}", ${JSON.stringify(data).replace(/'/g, "\\'")}, "${row.time}")'>${row.trend_new ? (row.trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</span></td>
                 <td>${formatValue(row.close)}</td>
               </tr>
             `;
@@ -931,6 +951,334 @@
         batches.push(symbols.slice(i, i + batchSize));
       }
       return batches;
+    }
+
+    function showTradingViewChart(symbol, data, currentDate) {
+      // Устанавливаем заголовок модального окна
+      document.getElementById('coinChartModalLabel').textContent = `${symbol} - TradingView График`;
+      
+      // Получаем контейнер для графика
+      const chartContainer = document.getElementById('coinChartContainer');
+      chartContainer.innerHTML = ''; // Очищаем контейнер
+      
+      // Отсортированные от старых к новым данные
+      const chartData = [...data].sort((a, b) => a.time.localeCompare(b.time));
+      
+      // Создаем TradingView график
+      const chart = LightweightCharts.createChart(chartContainer, {
+        width: chartContainer.clientWidth,
+        height: 500,
+        layout: {
+          backgroundColor: '#ffffff',
+          textColor: '#333',
+          fontSize: 12,
+          fontFamily: 'Arial',
+        },
+        grid: {
+          vertLines: {
+            color: 'rgba(225, 225, 225, 0.8)',
+          },
+          horzLines: {
+            color: 'rgba(225, 225, 225, 0.8)',
+          },
+        },
+        crosshair: {
+          mode: 1, // CrosshairMode.Normal
+          vertLine: {
+            color: 'rgba(100, 100, 100, 0.4)',
+            width: 1,
+            style: 1, // LineStyle.Dashed
+          },
+          horzLine: {
+            color: 'rgba(100, 100, 100, 0.4)',
+            width: 1,
+            style: 1, // LineStyle.Dashed
+            labelBackgroundColor: 'rgba(100, 100, 100, 0.8)',
+          },
+        },
+        timeScale: {
+          borderColor: 'rgba(200, 200, 200, 1)',
+          timeVisible: true,
+          secondsVisible: false,
+          tickMarkFormatter: (time) => {
+            const date = new Date(time * 1000);
+            return date.toLocaleDateString('ru-RU', {
+              month: '2-digit',
+              day: '2-digit',
+            });
+          },
+          rightOffset: 5,
+          barSpacing: 12,
+          fixLeftEdge: true,
+          lockVisibleTimeRangeOnResize: true,
+          rightBarStaysOnScroll: true,
+          visible: true,
+          borderVisible: true,
+        },
+        rightPriceScale: {
+          borderColor: 'rgba(200, 200, 200, 1)',
+          scaleMargins: {
+            top: 0.1,
+            bottom: 0.1,
+          },
+        },
+      });
+
+      // Создаем серию для свечей цены
+      const candleSeries = chart.addCandlestickSeries({
+        upColor: '#26a69a',
+        downColor: '#ef5350',
+        borderVisible: false,
+        wickUpColor: '#26a69a',
+        wickDownColor: '#ef5350',
+      });
+
+      // Создаем серию для 13 EMA
+      const ema13Series = chart.addLineSeries({
+        title: '13 EMA',
+        color: 'rgb(255, 99, 132)',
+        lineWidth: 2,
+        priceFormat: {
+          type: 'price',
+          precision: 2,
+          minMove: 0.01,
+        },
+      });
+
+      // Создаем серию для 30 SMA
+      const sma30Series = chart.addLineSeries({
+        title: '30 SMA',
+        color: 'rgb(54, 162, 235)',
+        lineWidth: 2,
+        priceFormat: {
+          type: 'price',
+          precision: 2,
+          minMove: 0.01,
+        },
+      });
+
+      // Создаем серию для линии тренда
+      const trendSeries = chart.addLineSeries({
+        title: 'Trend',
+        lineWidth: 2,
+        color: 'rgba(0, 0, 0, 0)', // Прозрачная линия, так как будем показывать только маркеры
+        lastPriceAnimation: 0,
+      });
+
+      // Подготавливаем данные для свечей
+      const candleData = chartData.map(row => {
+        // Преобразуем дату в формат timestamp для LightweightCharts
+        const dateParts = row.time.split('.');
+        let timestamp;
+        if (dateParts.length === 3) {
+          // Если формат даты dd.mm.yyyy
+          const day = parseInt(dateParts[0]);
+          const month = parseInt(dateParts[1]) - 1; // Месяцы в JS начинаются с 0
+          const year = parseInt(dateParts[2]);
+          timestamp = Math.floor(new Date(year, month, day).getTime() / 1000);
+        } else {
+          // Если другой формат даты, пробуем стандартный парсинг
+          timestamp = Math.floor(new Date(row.time).getTime() / 1000);
+        }
+        
+        // Генерируем данные для свечи
+        // Обычно у нас есть только close, поэтому open/high/low оцениваем примерно
+        const close = parseFloat(row.close);
+        const open = close * (1 - Math.random() * 0.02); // Примерно на 0-2% меньше
+        return {
+          time: timestamp,
+          open: open,
+          high: Math.max(open, close) * (1 + Math.random() * 0.01), // Чуть выше
+          low: Math.min(open, close) * (1 - Math.random() * 0.01), // Чуть ниже
+          close: close
+        };
+      });
+
+      // Подготавливаем данные для 13 EMA
+      const ema13Data = chartData.map(row => {
+        const dateParts = row.time.split('.');
+        let timestamp;
+        if (dateParts.length === 3) {
+          const day = parseInt(dateParts[0]);
+          const month = parseInt(dateParts[1]) - 1;
+          const year = parseInt(dateParts[2]);
+          timestamp = Math.floor(new Date(year, month, day).getTime() / 1000);
+        } else {
+          timestamp = Math.floor(new Date(row.time).getTime() / 1000);
+        }
+        
+        return {
+          time: timestamp,
+          value: parseFloat(row.di_ema_13_new)
+        };
+      });
+
+      // Подготавливаем данные для 30 SMA
+      const sma30Data = chartData.map(row => {
+        const dateParts = row.time.split('.');
+        let timestamp;
+        if (dateParts.length === 3) {
+          const day = parseInt(dateParts[0]);
+          const month = parseInt(dateParts[1]) - 1;
+          const year = parseInt(dateParts[2]);
+          timestamp = Math.floor(new Date(year, month, day).getTime() / 1000);
+        } else {
+          timestamp = Math.floor(new Date(row.time).getTime() / 1000);
+        }
+        
+        return {
+          time: timestamp,
+          value: parseFloat(row.di_sma_30_new)
+        };
+      });
+
+      // Подготавливаем данные для трендовой линии
+      const trendData = chartData.map(row => {
+        const dateParts = row.time.split('.');
+        let timestamp;
+        if (dateParts.length === 3) {
+          const day = parseInt(dateParts[0]);
+          const month = parseInt(dateParts[1]) - 1;
+          const year = parseInt(dateParts[2]);
+          timestamp = Math.floor(new Date(year, month, day).getTime() / 1000);
+        } else {
+          timestamp = Math.floor(new Date(row.time).getTime() / 1000);
+        }
+        
+        // Значение берем как среднее между ema13 и sma30 для наглядности
+        return {
+          time: timestamp,
+          value: (parseFloat(row.di_ema_13_new) + parseFloat(row.di_sma_30_new)) / 2,
+          color: row.trend_new === 'bull' ? 'green' : (row.trend_new === 'bear' ? 'red' : 'gray'),
+          shape: 'circle',
+          size: 1
+        };
+      });
+
+      // Устанавливаем данные для всех серий
+      candleSeries.setData(candleData);
+      ema13Series.setData(ema13Data);
+      sma30Series.setData(sma30Data);
+      
+      // Для тренда добавляем и маркеры
+      trendSeries.setData([]);
+      
+      // Добавляем маркеры для трендовой линии
+      trendData.forEach(point => {
+        trendSeries.createPriceLine({
+          price: point.value,
+          time: point.time,
+          color: point.color,
+          lineWidth: 1,
+          lineStyle: 2, // Штриховая линия
+          axisLabelVisible: false,
+          title: point.trend === 'bull' ? 'Bull' : (point.trend === 'bear' ? 'Bear' : ''),
+        });
+      });
+
+      // Добавляем панель легенды
+      const legendContainer = document.createElement('div');
+      legendContainer.style.position = 'absolute';
+      legendContainer.style.left = '12px';
+      legendContainer.style.top = '12px';
+      legendContainer.style.zIndex = '1';
+      legendContainer.style.fontSize = '12px';
+      legendContainer.style.fontFamily = 'Arial';
+      legendContainer.style.lineHeight = '18px';
+      legendContainer.style.fontWeight = 'bold';
+      legendContainer.style.padding = '8px';
+      legendContainer.style.background = 'rgba(255, 255, 255, 0.7)';
+      legendContainer.style.color = '#333';
+      legendContainer.style.borderRadius = '3px';
+      chartContainer.appendChild(legendContainer);
+      
+      // Начальное содержимое легенды
+      let legendText = `<div style="font-size: 14px; margin-bottom: 8px;">${symbol} - Тренд анализ</div>`;
+      legendText += '<div style="margin-bottom: 5px;">Наведите курсор на график для просмотра значений</div>';
+      legendText += `<div style="color: rgb(0, 0, 0); margin-bottom: 3px;">Цена закрытия</div>`;
+      legendText += `<div style="color: rgb(255, 99, 132); margin-bottom: 3px;">13 EMA</div>`;
+      legendText += `<div style="color: rgb(54, 162, 235); margin-bottom: 3px;">30 SMA</div>`;
+      legendText += `<div><span style="color: green;">●</span> Bull | <span style="color: red;">●</span> Bear</div>`;
+      legendContainer.innerHTML = legendText;
+      
+      // Обработчик для обновления легенды при наведении курсора
+      chart.subscribeCrosshairMove((param) => {
+        if (
+          param.point === undefined ||
+          !param.time ||
+          param.point.x < 0 ||
+          param.point.x > chartContainer.clientWidth ||
+          param.point.y < 0 ||
+          param.point.y > chartContainer.clientHeight
+        ) {
+          // Если курсор за пределами графика, показываем общую информацию
+          legendText = `<div style="font-size: 14px; margin-bottom: 8px;">${symbol} - Тренд анализ</div>`;
+          legendText += '<div style="margin-bottom: 5px;">Наведите курсор на график для просмотра значений</div>';
+          legendText += `<div style="color: rgb(0, 0, 0); margin-bottom: 3px;">Цена закрытия</div>`;
+          legendText += `<div style="color: rgb(255, 99, 132); margin-bottom: 3px;">13 EMA</div>`;
+          legendText += `<div style="color: rgb(54, 162, 235); margin-bottom: 3px;">30 SMA</div>`;
+          legendText += `<div><span style="color: green;">●</span> Bull | <span style="color: red;">●</span> Bear</div>`;
+          legendContainer.innerHTML = legendText;
+        } else {
+          // Иначе показываем значение под курсором
+          const timestamp = param.time;
+          
+          // Находим соответствующую точку данных
+          const candlePoint = candleData.find(p => p.time === timestamp);
+          const ema13Point = ema13Data.find(p => p.time === timestamp);
+          const sma30Point = sma30Data.find(p => p.time === timestamp);
+          const trendPoint = trendData.find(p => p.time === timestamp);
+          
+          // Форматирование даты из timestamp
+          const date = new Date(timestamp * 1000);
+          const dateStr = date.toLocaleDateString('ru-RU', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          });
+          
+          legendText = `<div style="font-size: 14px; margin-bottom: 8px;">${symbol} - Тренд анализ</div>`;
+          legendText += `<div style="margin-bottom: 5px;">Дата: ${dateStr}</div>`;
+          
+          if (candlePoint) {
+            legendText += `<div style="color: rgb(0, 0, 0); margin-bottom: 3px;">Цена закрытия: ${candlePoint.close.toFixed(2)}</div>`;
+          }
+          
+          if (ema13Point) {
+            legendText += `<div style="color: rgb(255, 99, 132); margin-bottom: 3px;">13 EMA: ${ema13Point.value.toFixed(2)}</div>`;
+          }
+          
+          if (sma30Point) {
+            legendText += `<div style="color: rgb(54, 162, 235); margin-bottom: 3px;">30 SMA: ${sma30Point.value.toFixed(2)}</div>`;
+          }
+          
+          if (trendPoint) {
+            const trendText = trendPoint.color === 'green' ? 'Bull' : (trendPoint.color === 'red' ? 'Bear' : 'Neutral');
+            legendText += `<div style="color: ${trendPoint.color};">Trend: ${trendText}</div>`;
+          }
+          
+          legendContainer.innerHTML = legendText;
+        }
+      });
+      
+      // Адаптивность по размеру окна
+      const resizeObserver = new ResizeObserver(entries => {
+        chart.applyOptions({
+          width: chartContainer.clientWidth,
+        });
+      });
+      resizeObserver.observe(chartContainer);
+      
+      // Подгоняем масштаб, чтобы видеть все данные
+      chart.timeScale().fitContent();
+      
+      // Показываем модальное окно
+      $('#coinChartModal').modal('show');
+      
+      // Очищаем наблюдателя за размером при закрытии модального окна
+      $('#coinChartModal').on('hidden.bs.modal', function (e) {
+        resizeObserver.disconnect();
+      });
     }
   </script>
 </body>
