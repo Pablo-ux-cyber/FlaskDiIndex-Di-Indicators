@@ -723,26 +723,10 @@
               tension: 0.1
             },
             {
-              label: '13 EMA',
-              data: chartData.map(row => row.ma13 !== null ? parseFloat(row.ma13) : null),
-              borderColor: 'rgb(255, 99, 132)',
-              borderWidth: 2,
-              fill: false,
-              tension: 0.1
-            },
-            {
-              label: '20 SMA',
-              data: chartData.map(row => row.sma13 !== null ? parseFloat(row.sma13) : null),
-              borderColor: 'rgb(54, 162, 235)',
-              borderWidth: 2,
-              fill: false,
-              tension: 0.1
-            },
-            {
               label: '10 SMA',
               data: chartData.map(row => row.sma10 !== null ? parseFloat(row.sma10) : null),
               borderColor: 'rgb(255, 206, 86)',
-              borderWidth: 2,
+              borderWidth: 3,
               fill: false,
               tension: 0.1
             }
@@ -758,7 +742,7 @@
           plugins: {
             title: {
               display: true,
-              text: 'Анализ настроения рынка'
+              text: 'Соотношение текущих бычьих сигналов и 10 SMA'
             },
             tooltip: {
               callbacks: {
