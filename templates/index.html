@@ -7,6 +7,22 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-crosshair@1.2.0"></script>
+  <script>
+    // Регистрация плагинов для Chart.js
+    document.addEventListener('DOMContentLoaded', function() {
+      if (Chart.register) {
+        // Регистрация плагинов при использовании Chart.js v3+
+        const zoomPlugin = window.ChartZoom || Chart.getPlugin('zoom');
+        const crosshairPlugin = window.ChartCrosshair || Chart.getPlugin('crosshair');
+        
+        if (zoomPlugin) Chart.register(zoomPlugin);
+        if (crosshairPlugin) Chart.register(crosshairPlugin);
+      }
+    });
+  </script>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
     body { font-family: Arial, sans-serif; }
@@ -746,15 +762,47 @@
             mode: 'index'
           },
           plugins: {
-            title: {
-              display: true,
-              text: 'Соотношение текущих бычьих сигналов и 10 SMA'
+            zoom: {
+              pan: {
+                enabled: true,
+                mode: 'x',
+                threshold: 5,
+                modifierKey: 'shift'
+              },
+              zoom: {
+                wheel: {
+                  enabled: true,
+                },
+                pinch: {
+                  enabled: true
+                },
+                mode: 'x',
+              }
             },
             tooltip: {
+              position: 'nearest',
+              mode: 'index',
+              intersect: false,
               callbacks: {
                 label: function(context) {
                   return `${context.dataset.label}: ${context.parsed.y.toFixed(2)}%`;
                 }
+              }
+            },
+            title: {
+              display: true,
+              text: 'Соотношение текущих бычьих сигналов и 10 SMA'
+            },
+            crosshair: {
+              line: {
+                color: 'rgba(100, 100, 100, 0.4)',
+                width: 1
+              },
+              sync: {
+                enabled: true
+              },
+              zoom: {
+                enabled: true
               }
             }
           },
