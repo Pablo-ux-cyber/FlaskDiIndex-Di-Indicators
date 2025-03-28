@@ -324,9 +324,9 @@
                 <td>${formatValue(row.daily_di_new)}</td>
                 <td style="cursor: pointer" onclick='show4hValues(${values4h}, "${row.time}")'>${formatValue(row['4h_di_new'])}</td>
                 <td>${formatValue(row.total_new)}</td>
-                <td><span style="cursor: pointer; text-decoration: underline;" onclick='showTradingViewChart("${symbol}", ${JSON.stringify(data).replace(/'/g, "\\'")}, "${row.time}")'>${formatValue(row.di_ema_13_new)}</span></td>
-                <td><span style="cursor: pointer; text-decoration: underline;" onclick='showTradingViewChart("${symbol}", ${JSON.stringify(data).replace(/'/g, "\\'")}, "${row.time}")'>${formatValue(row.di_sma_30_new)}</span></td>
-                <td><span style="cursor: pointer; text-decoration: underline;" onclick='showTradingViewChart("${symbol}", ${JSON.stringify(data).replace(/'/g, "\\'")}, "${row.time}")'>${row.trend_new ? (row.trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</span></td>
+                <td><span style="cursor: pointer; text-decoration: underline;" onclick='showCoinChart("${symbol}")'>${formatValue(row.di_ema_13_new)}</span></td>
+                <td><span style="cursor: pointer; text-decoration: underline;" onclick='showCoinChart("${symbol}")'>${formatValue(row.di_sma_30_new)}</span></td>
+                <td><span style="cursor: pointer; text-decoration: underline;" onclick='showCoinChart("${symbol}")'>${row.trend_new ? (row.trend_new === 'bull' ? '<span style="color:green;">bull</span>' : '<span style="color:red;">bear</span>') : '-'}</span></td>
                 <td>${formatValue(row.close)}</td>
               </tr>
             `;
@@ -953,16 +953,37 @@
       return batches;
     }
 
-    function showTradingViewChart(symbol, data, currentDate) {
+    async function showCoinChart(symbol) {
       // Устанавливаем заголовок модального окна
-      document.getElementById('coinChartModalLabel').textContent = `${symbol} - TradingView График`;
+      document.getElementById('coinChartModalLabel').textContent = `${symbol} - Загрузка данных...`;
+      
+      // Показываем модальное окно
+      $('#coinChartModal').modal('show');
       
       // Получаем контейнер для графика
       const chartContainer = document.getElementById('coinChartContainer');
-      chartContainer.innerHTML = ''; // Очищаем контейнер
+      chartContainer.innerHTML = '<div class="text-center my-5"><div class="spinner-border" role="status"><span class="sr-only">Загрузка...</span></div><p class="mt-3">Загрузка данных...</p></div>'; 
       
-      // Отсортированные от старых к новым данные
-      const chartData = [...data].sort((a, b) => a.time.localeCompare(b.time));
+      try {
+        // Загружаем данные для конкретного символа
+        const response = await fetch(`/api/di_index?symbols=${symbol}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error: ${response.status}`);
+        }
+        
+        const json = await response.json();
+        if (!json[symbol] || !Array.isArray(json[symbol])) {
+          throw new Error(`Данные для ${symbol} не найдены или имеют неверный формат`);
+        }
+        
+        // Обновляем заголовок
+        document.getElementById('coinChartModalLabel').textContent = `${symbol} - TradingView График`;
+        
+        // Очищаем контейнер
+        chartContainer.innerHTML = '';
+        
+        // Отсортированные от старых к новым данные
+        const chartData = [...json[symbol]].sort((a, b) => a.time.localeCompare(b.time));
       
       // Создаем TradingView график
       const chart = LightweightCharts.createChart(chartContainer, {
@@ -1279,6 +1300,15 @@
       $('#coinChartModal').on('hidden.bs.modal', function (e) {
         resizeObserver.disconnect();
       });
+      } catch (error) {
+        console.error("Error creating chart:", error);
+        chartContainer.innerHTML = `<div class="alert alert-danger mt-3">
+          <h4 class="alert-heading">Ошибка загрузки данных</h4>
+          <p>${error.message}</p>
+          <hr>
+          <p class="mb-0">Пожалуйста, попробуйте еще раз или выберите другую монету.</p>
+        </div>`;
+      }
     }
   </script>
 </body>
