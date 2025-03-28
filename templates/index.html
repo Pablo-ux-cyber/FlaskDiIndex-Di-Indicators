@@ -449,15 +449,15 @@
         const ema13Series = chart.addLineSeries({
           title: '13 EMA',
           color: 'rgb(255, 20, 147)', // Более яркий и насыщенный розовый (DeepPink)
-          lineWidth: 4, // Увеличиваем толщину линии еще больше
+          lineWidth: 2, // Тонкая линия
           lineStyle: 0, // Сплошная линия
           lastValueVisible: true, // Показывать последнее значение
           priceLineVisible: true, // Показывать линию цены
-          priceLineWidth: 2, // Делаем линию цены толще
+          priceLineWidth: 1, // Делаем линию цены тоньше
           priceLineColor: 'rgba(255, 20, 147, 0.7)', // Более заметная подсветка
           priceLineStyle: 1, // Пунктирная линия для цены
           crosshairMarkerVisible: true, // Показывать маркер при наведении
-          crosshairMarkerRadius: 6, // Больший размер маркера
+          crosshairMarkerRadius: 4, // Меньший размер маркера
           priceFormat: {
             type: 'price',
             precision: 2,
@@ -471,7 +471,7 @@
         const sma30Series = chart.addLineSeries({
           title: '30 SMA',
           color: 'rgb(54, 162, 235)', // Яркий синий
-          lineWidth: 3, // Увеличиваем толщину линии
+          lineWidth: 1.5, // Тонкая линия
           lineStyle: 0, // Сплошная линия
           lastValueVisible: true, // Показывать последнее значение
           priceLineVisible: true, // Показывать линию цены
