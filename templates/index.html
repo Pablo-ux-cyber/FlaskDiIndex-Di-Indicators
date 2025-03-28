@@ -432,8 +432,13 @@
         // Создаем серию для 13 EMA
         const ema13Series = chart.addLineSeries({
           title: '13 EMA',
-          color: 'rgb(255, 99, 132)',
-          lineWidth: 2,
+          color: 'rgb(255, 99, 132)', // Яркий розовый
+          lineWidth: 3, // Увеличиваем толщину линии
+          lineStyle: 0, // Сплошная линия
+          lastValueVisible: true, // Показывать последнее значение
+          priceLineVisible: true, // Показывать линию цены
+          priceLineWidth: 1,
+          priceLineColor: 'rgba(255, 99, 132, 0.5)',
           priceFormat: {
             type: 'price',
             precision: 2,
@@ -445,8 +450,13 @@
         // Создаем серию для 30 SMA
         const sma30Series = chart.addLineSeries({
           title: '30 SMA',
-          color: 'rgb(54, 162, 235)',
-          lineWidth: 2,
+          color: 'rgb(54, 162, 235)', // Яркий синий
+          lineWidth: 3, // Увеличиваем толщину линии
+          lineStyle: 0, // Сплошная линия
+          lastValueVisible: true, // Показывать последнее значение
+          priceLineVisible: true, // Показывать линию цены
+          priceLineWidth: 1,
+          priceLineColor: 'rgba(54, 162, 235, 0.5)',
           priceFormat: {
             type: 'price',
             precision: 2,
@@ -456,7 +466,7 @@
         });
         
         // Подготавливаем данные для свечей
-        const candleData = chartData.map(row => {
+        const candleData = chartData.map((row, index, array) => {
           // Преобразуем дату в формат timestamp для LightweightCharts
           const dateParts = row.time.split('.');
           let timestamp;
@@ -471,15 +481,34 @@
             timestamp = Math.floor(new Date(row.time).getTime() / 1000);
           }
           
-          // Генерируем данные для свечи
-          // Обычно у нас есть только close, поэтому open/high/low оцениваем примерно
+          // Получаем значение close
           const close = parseFloat(row.close);
-          const open = close * (1 - Math.random() * 0.02 + 0.01); // Примерно на -1% до +1% от close
+          
+          // Для более стабильных свечей используем либо предыдущее значение, либо небольшое смещение
+          let open;
+          let high;
+          let low;
+          
+          if (index > 0) {
+            // Если есть предыдущая свеча, привязываем к ней
+            const prevClose = parseFloat(array[index - 1].close);
+            // Делаем open примерно как предыдущий close, но чуть-чуть смещаем
+            open = prevClose * (1 + (Math.random() * 0.004 - 0.002)); // Смещение ±0.2%
+          } else {
+            // Для первой свечи используем небольшое смещение от close
+            open = close * (1 - 0.003); // Открытие чуть ниже чем закрытие (на 0.3%)
+          }
+          
+          // Делаем high и low в пределах ±0.5% от диапазона open-close
+          const range = Math.abs(close - open);
+          high = Math.max(close, open) + range * 0.3;
+          low = Math.min(close, open) - range * 0.3;
+          
           return {
             time: timestamp,
             open: open,
-            high: Math.max(open, close) * (1 + Math.random() * 0.01), // Чуть выше
-            low: Math.min(open, close) * (1 - Math.random() * 0.01), // Чуть ниже
+            high: high,
+            low: low,
             close: close
           };
         });
@@ -525,19 +554,74 @@
         ema13Series.setData(ema13Data);
         sma30Series.setData(sma30Data);
         
-        // Добавляем маркеры для трендовой линии
+        // Добавляем графические маркеры для тренда на графике
+        // Используем более заметные метки вместо линий
+        const bullishMarkers = [];
+        const bearishMarkers = [];
+        
         trendData.forEach(point => {
-          if (point.trend) {
-            candleSeries.createPriceLine({
-              price: point.value,
-              color: point.color,
-              lineWidth: 1,
-              lineStyle: 2, // Штриховая линия
-              axisLabelVisible: true,
-              title: point.trend === 'bull' ? 'Bull' : 'Bear',
+          if (point.trend === 'bull') {
+            bullishMarkers.push({
+              time: point.time,
+              position: 'belowBar',
+              color: '#26a69a', // Зеленый
+              shape: 'arrowUp',
+              text: 'BULL',
+              size: 2
+            });
+          } else if (point.trend === 'bear') {
+            bearishMarkers.push({
+              time: point.time,
+              position: 'aboveBar',
+              color: '#ef5350', // Красный
+              shape: 'arrowDown',
+              text: 'BEAR',
+              size: 2
             });
           }
         });
+        
+        // Добавляем маркеры на график
+        candleSeries.setMarkers([...bullishMarkers, ...bearishMarkers]);
+        
+        // Также добавляем вспомогательные линии для трендов
+        // Находим последние бычий и медвежий тренды
+        let lastBullish = null;
+        let lastBearish = null;
+        
+        // Проходим массив в обратном порядке для поиска последних значений
+        for (let i = trendData.length - 1; i >= 0; i--) {
+          if (!lastBullish && trendData[i].trend === 'bull') {
+            lastBullish = trendData[i];
+          }
+          if (!lastBearish && trendData[i].trend === 'bear') {
+            lastBearish = trendData[i];
+          }
+          // Если найдены оба, можно выходить
+          if (lastBullish && lastBearish) break;
+        }
+        
+        if (lastBullish) {
+          candleSeries.createPriceLine({
+            price: lastBullish.value,
+            color: 'rgba(38, 166, 154, 0.6)', // Полупрозрачный зеленый
+            lineWidth: 2,
+            lineStyle: 1, // Пунктирная линия
+            axisLabelVisible: true,
+            title: 'BULL',
+          });
+        }
+        
+        if (lastBearish) {
+          candleSeries.createPriceLine({
+            price: lastBearish.value,
+            color: 'rgba(239, 83, 80, 0.6)', // Полупрозрачный красный
+            lineWidth: 2,
+            lineStyle: 1, // Пунктирная линия
+            axisLabelVisible: true,
+            title: 'BEAR',
+          });
+        }
   
         // Добавляем панель легенды
         const legendContainer = document.createElement('div');
