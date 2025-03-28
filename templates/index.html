@@ -417,6 +417,14 @@
             },
             visible: true,
           },
+          leftPriceScale: {
+            borderColor: 'rgba(200, 200, 200, 1)',
+            scaleMargins: {
+              top: 0.1,
+              bottom: 0.1,
+            },
+            visible: true,
+          },
         });
   
         // Создаем серию для цены закрытия (вместо свечей для большей четкости индикаторов)
@@ -455,7 +463,8 @@
             precision: 2,
             minMove: 0.01,
           },
-          priceScaleId: 'right',
+          // Используем отдельную шкалу для индикаторов
+          priceScaleId: 'left',
         });
   
         // Создаем серию для 30 SMA
@@ -473,7 +482,8 @@
             precision: 2,
             minMove: 0.01,
           },
-          priceScaleId: 'right',
+          // Используем ту же шкалу, что и для 13 EMA (левую)
+          priceScaleId: 'left',
         });
         
         // Подготавливаем данные для свечей
@@ -611,6 +621,15 @@
               bottom: 0.1,
             },
             entireTextOnly: false,
+          },
+          leftPriceScale: {
+            autoScale: true,
+            scaleMargins: {
+              top: 0.1,
+              bottom: 0.1,
+            },
+            entireTextOnly: false,
+            visible: true
           }
         });
         
