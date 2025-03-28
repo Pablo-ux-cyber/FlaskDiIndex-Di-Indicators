@@ -429,16 +429,19 @@
           priceScaleId: 'right',
         });
   
-        // Создаем серию для 13 EMA
+        // Создаем серию для 13 EMA - основной индикатор, делаем наиболее заметным
         const ema13Series = chart.addLineSeries({
           title: '13 EMA',
-          color: 'rgb(255, 99, 132)', // Яркий розовый
-          lineWidth: 3, // Увеличиваем толщину линии
+          color: 'rgb(255, 20, 147)', // Более яркий и насыщенный розовый (DeepPink)
+          lineWidth: 4, // Увеличиваем толщину линии еще больше
           lineStyle: 0, // Сплошная линия
           lastValueVisible: true, // Показывать последнее значение
           priceLineVisible: true, // Показывать линию цены
-          priceLineWidth: 1,
-          priceLineColor: 'rgba(255, 99, 132, 0.5)',
+          priceLineWidth: 2, // Делаем линию цены толще
+          priceLineColor: 'rgba(255, 20, 147, 0.7)', // Более заметная подсветка
+          priceLineStyle: 1, // Пунктирная линия для цены
+          crosshairMarkerVisible: true, // Показывать маркер при наведении
+          crosshairMarkerRadius: 6, // Больший размер маркера
           priceFormat: {
             type: 'price',
             precision: 2,
@@ -677,7 +680,7 @@
         let legendText = `<div style="font-size: 14px; margin-bottom: 8px;">${symbol} - Тренд анализ</div>`;
         legendText += '<div style="margin-bottom: 5px;">Наведите курсор на график для просмотра значений</div>';
         legendText += `<div style="color: rgb(0, 0, 0); margin-bottom: 3px;">Цена закрытия</div>`;
-        legendText += `<div style="color: rgb(255, 99, 132); margin-bottom: 3px;">13 EMA</div>`;
+        legendText += `<div style="color: rgb(255, 20, 147); margin-bottom: 3px; font-weight: bold;">13 EMA</div>`;
         legendText += `<div style="color: rgb(54, 162, 235); margin-bottom: 3px;">30 SMA</div>`;
         legendText += `<div style="color: rgba(38, 166, 154, 1); margin-bottom: 3px;">Bull Trend</div>`;
         legendText += `<div style="color: rgba(239, 83, 80, 1); margin-bottom: 3px;">Bear Trend</div>`;
@@ -728,7 +731,7 @@
             }
             
             if (ema13Point) {
-              legendText += `<div style="color: rgb(255, 99, 132); margin-bottom: 3px;">13 EMA: ${ema13Point.value.toFixed(2)}</div>`;
+              legendText += `<div style="color: rgb(255, 20, 147); margin-bottom: 3px; font-weight: bold;">13 EMA: ${ema13Point.value.toFixed(2)}</div>`;
             }
             
             if (sma30Point) {
