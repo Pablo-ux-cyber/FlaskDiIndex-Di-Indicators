@@ -957,7 +957,7 @@
 
           while (retryCount < maxRetries) {
             try {
-              const response = await fetch(`/api/di_index?symbols=${batch.join(',')}`);
+              const response = await fetch(`${BASE_URL}/api/di_index?symbols=${batch.join(',')}`);
               if (!response.ok) {
                 throw new Error(`HTTP error: ${response.status}`);
               }
