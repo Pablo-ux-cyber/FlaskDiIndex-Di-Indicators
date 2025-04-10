@@ -1,0 +1,31 @@
+2025-04-10 13:21:24,422 - INFO - Python: 3.10.12 (main, Feb  4 2025, 14:57:36) [GCC 11.4.0]
+2025-04-10 13:21:24,423 - INFO - Requests: 2.32.3
+2025-04-10 13:21:24,423 - INFO - Начинаем тестирование API...
+2025-04-10 13:21:24,423 - INFO - ==================================================
+2025-04-10 13:21:24,423 - INFO - Тест #1: https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=USD&limit=10&api_key=2193d3ce789e90e474570058a3a96caa0d585ca0d0d0e62687a295c8402d29e9
+2025-04-10 13:21:24,430 - DEBUG - Starting new HTTPS connection (1): min-api.cryptocompare.com:443
+2025-04-10 13:21:24,530 - DEBUG - https://min-api.cryptocompare.com:443 "GET /data/v2/histoday?fsym=BTC&tsym=USD&limit=10&api_key=2193d3ce789e90e474570058a3a96caa0d585ca0d0d0e62687a295c8402d29e9 HTTP/1.1" 200 None
+2025-04-10 13:21:24,531 - INFO -   Статус: 200
+2025-04-10 13:21:24,531 - INFO -   Успех: True
+2025-04-10 13:21:24,531 - INFO -   Количество точек данных: 11
+2025-04-10 13:21:24,531 - INFO - --------------------------------------------------
+2025-04-10 13:21:24,531 - INFO - Тест #2: https://min-api.cryptocompare.com/data/v2/histohour?fsym=BTC&tsym=USD&limit=10&aggregate=4&api_key=2193d3ce789e90e474570058a3a96caa0d585ca0d0d0e62687a295c8402d29e9
+2025-04-10 13:21:24,531 - DEBUG - Starting new HTTPS connection (1): min-api.cryptocompare.com:443
+2025-04-10 13:21:24,585 - DEBUG - https://min-api.cryptocompare.com:443 "GET /data/v2/histohour?fsym=BTC&tsym=USD&limit=10&aggregate=4&api_key=2193d3ce789e90e474570058a3a96caa0d585ca0d0d0e62687a295c8402d29e9 HTTP/1.1" 200 None
+2025-04-10 13:21:24,585 - INFO -   Статус: 200
+2025-04-10 13:21:24,586 - INFO -   Успех: True
+2025-04-10 13:21:24,586 - INFO -   Количество точек данных: 11
+2025-04-10 13:21:24,586 - INFO - --------------------------------------------------
+2025-04-10 13:21:24,586 - INFO - Тест #3: https://min-api.cryptocompare.com/data/v2/histo4h?fsym=BTC&tsym=USD&limit=10&api_key=2193d3ce789e90e474570058a3a96caa0d585ca0d0d0e62687a295c8402d29e9
+2025-04-10 13:21:24,586 - DEBUG - Starting new HTTPS connection (1): min-api.cryptocompare.com:443
+2025-04-10 13:21:24,620 - DEBUG - https://min-api.cryptocompare.com:443 "GET /data/v2/histo4h?fsym=BTC&tsym=USD&limit=10&api_key=2193d3ce789e90e474570058a3a96caa0d585ca0d0d0e62687a295c8402d29e9 HTTP/1.1" 200 None
+2025-04-10 13:21:24,620 - INFO -   Статус: 200
+2025-04-10 13:21:24,620 - INFO -   Успех: False
+2025-04-10 13:21:24,620 - INFO - --------------------------------------------------
+2025-04-10 13:21:24,620 - INFO - Тест #4: https://min-api.cryptocompare.com/data/v2/histohour?fsym=BTC&tsym=USD&limit=10&aggregate=4&e=CCCAGG&api_key=2193d3ce789e90e474570058a3a96caa0d585ca0d0d0e62687a295c8402d29e9
+2025-04-10 13:21:24,621 - DEBUG - Starting new HTTPS connection (1): min-api.cryptocompare.com:443
+2025-04-10 13:21:24,671 - DEBUG - https://min-api.cryptocompare.com:443 "GET /data/v2/histohour?fsym=BTC&tsym=USD&limit=10&aggregate=4&e=CCCAGG&api_key=2193d3ce789e90e474570058a3a96caa0d585ca0d0d0e62687a295c8402d29e9 HTTP/1.1" 200 None
+2025-04-10 13:21:24,671 - INFO -   Статус: 200
+2025-04-10 13:21:24,671 - INFO -   Успех: True
+2025-04-10 13:21:24,671 - INFO -   Количество точек данных: 11
+2025-04-10 13:21:24,671 - INFO - --------------------------------------------------
