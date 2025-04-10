@@ -302,42 +302,74 @@ def set_cached_data(symbol, data_type, data):
 
 def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     """Get 4-hour OHLCV data for given cryptocurrency"""
+    logger.debug(f"DEBUG: get_4h_data started for {symbol}")
+    
     cached_data = get_cached_data(symbol, "4h_data")
     if cached_data is not None and not cached_data.empty:
+        logger.debug(f"DEBUG: Using cached data for {symbol}")
         return cached_data
 
     all_data = []
 
     # First request - current period
     url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&api_key={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-    if data.get("Response") != "Success":
-        raise Exception(f"Error getting 4-hour data: {data}")
+    logger.debug(f"DEBUG: URL for 4h data request: {url}")
+    
+    try:
+        logger.debug(f"DEBUG: Making first request to API")
+        response = requests.get(url)
+        logger.debug(f"DEBUG: Response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            logger.error(f"DEBUG: API Error: {response.text}")
+            raise Exception(f"Error getting 4-hour data: HTTP error {response.status_code}")
+        
+        data = response.json()
+        logger.debug(f"DEBUG: API Response: {data.get('Response')}")
+        
+        if data.get("Response") != "Success":
+            logger.error(f"DEBUG: Unsuccessful API response: {data}")
+            raise Exception(f"Error getting 4-hour data: {data}")
 
-    logger.debug("\nFirst request details:")
-    logger.debug(f"TimeFrom: {datetime.fromtimestamp(data['Data']['TimeFrom'])}")
-    logger.debug(f"TimeTo: {datetime.fromtimestamp(data['Data']['TimeTo'])}")
-    logger.debug(f"Data points: {len(data['Data']['Data'])}")
-
-    all_data.extend(data['Data']['Data'])
-
-    # Second request - previous period
-    toTs = data['Data']['TimeFrom']  # Use TimeFrom from first request as end time for second request
-    url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&toTs={toTs}&api_key={API_KEY}"
-    response = requests.get(url)
-    data = response.json()
-
-    if data.get("Response") == "Success":
-        logger.debug("\nSecond request details:")
+        logger.debug("\nFirst request details:")
         logger.debug(f"TimeFrom: {datetime.fromtimestamp(data['Data']['TimeFrom'])}")
         logger.debug(f"TimeTo: {datetime.fromtimestamp(data['Data']['TimeTo'])}")
         logger.debug(f"Data points: {len(data['Data']['Data'])}")
+        logger.debug(f"DEBUG: Received {len(data['Data']['Data'])} data points")
+        
+        all_data.extend(data['Data']['Data'])
+        
+        # Second request - previous period
+        toTs = data['Data']['TimeFrom']  # Use TimeFrom from first request as end time for second request
+        second_url = f"https://min-api.cryptocompare.com/data/v2/histohour?fsym={symbol}&tsym={tsym}&limit={limit}&aggregate=4&toTs={toTs}&api_key={API_KEY}"
+        logger.debug(f"DEBUG: URL for second 4h data request: {second_url}")
+        
+        logger.debug(f"DEBUG: Making second request to API")
+        response = requests.get(second_url)
+        logger.debug(f"DEBUG: Second response status: {response.status_code}")
+        
+        if response.status_code != 200:
+            logger.error(f"DEBUG: Second API Error: {response.text}")
+            # Не прерываем выполнение, просто логируем ошибку
+        else:
+            data = response.json()
+            
+            if data.get("Response") == "Success":
+                logger.debug("\nSecond request details:")
+                logger.debug(f"TimeFrom: {datetime.fromtimestamp(data['Data']['TimeFrom'])}")
+                logger.debug(f"TimeTo: {datetime.fromtimestamp(data['Data']['TimeTo'])}")
+                logger.debug(f"Data points: {len(data['Data']['Data'])}")
 
-        # Extend only with new data points
-        new_data = [point for point in data['Data']['Data'] if point['time'] < toTs]
-        all_data.extend(new_data)
-        logger.debug(f"Added {len(new_data)} new points from second request")
+                # Extend only with new data points
+                new_data = [point for point in data['Data']['Data'] if point['time'] < toTs]
+                all_data.extend(new_data)
+                logger.debug(f"Added {len(new_data)} new points from second request")
+    
+    except Exception as e:
+        logger.error(f"DEBUG: Exception in get_4h_data: {str(e)}")
+        import traceback
+        logger.error(f"DEBUG: {traceback.format_exc()}")
+        raise
 
     # Convert to DataFrame and process
     df = pd.DataFrame(all_data)
