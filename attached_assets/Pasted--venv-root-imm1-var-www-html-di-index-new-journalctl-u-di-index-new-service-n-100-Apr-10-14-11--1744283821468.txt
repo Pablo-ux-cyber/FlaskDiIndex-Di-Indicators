@@ -1,0 +1,58 @@
+(venv) root@imm1:/var/www/html/di_index_new# journalctl -u di-index-new.service -n 100
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,000 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: Second request details:
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,000 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,000 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,000 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,000 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,002 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: Final data boundaries:
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,002 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,002 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,002 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,013 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: Final data distribution:
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,013 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 0     2024-10-25    16      1
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 1     2024-10-25    20      1
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2     2024-10-26     0      1
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 3     2024-10-26     4      1
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 4     2024-10-26     8      1
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: ...          ...   ...    ...
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 996   2025-04-09    16      1
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 997   2025-04-09    20      1
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 998   2025-04-10     0      1
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 999   2025-04-10     4      1
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 1000  2025-04-10     8      1
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: [1001 rows x 3 columns]
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,030 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,030 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 1   2019-10-28
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2   2019-11-04
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 3   2019-11-11
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 4   2019-11-18
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: Name: time, dtype: datetime64[n>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,034 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: MA Index Test case values for 2>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,034 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,034 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: /var/www/html/di_index_new/serv>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: The behavior will change in pan>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: For example, when doing 'df[col>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]:   df["range"].replace(0, 1e-10,>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,039 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: Willy Index Test case values fo>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,040 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,040 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,040 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,042 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: MACD Index Test case values for>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,043 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: 2025-04-10 14:11:38,043 - serve>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: /var/www/html/di_index_new/serv>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: The behavior will change in pan>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: For example, when doing 'df[col>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]:   df["mfi_lower_sum"].replace(0>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: /var/www/html/di_index_new/serv>
+Apr 10 14:11:38 imm1.dinet.fvds.ru gunicorn[1102157]: The behavior will change in pan>
+lines 1-56

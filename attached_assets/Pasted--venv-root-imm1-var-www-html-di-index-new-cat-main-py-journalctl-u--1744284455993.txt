@@ -1,0 +1,81 @@
+(venv) root@imm1:/var/www/html/di_index_new# cat main.py  # Проверим где пишутся логи
+journalctl -u di-index-new.service -n 50  # Посмотрим последние логи сервиса
+from flask import Flask
+import os
+import logging
+from utils.logging_config import configure_logging
+
+# Configure logging
+configure_logging()
+logger = logging.getLogger(__name__)
+
+logger.info("Starting application initialization...")
+
+# Create Flask app
+try:
+    app = Flask(__name__)
+    app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
+    logger.info("Flask app created successfully")
+
+    # Import routes and register them
+    from server import di_index_blueprint
+    app.register_blueprint(di_index_blueprint)
+    logger.info("Blueprint registered successfully")
+
+except Exception as e:
+    logger.error(f"Error during app initialization: {str(e)}", exc_info=True)
+    raise
+
+if __name__ == '__main__':
+    logger.info("Starting DI Index API server...")
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: 2025-04-10 14:24:44,338 - serve>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: /var/www/html/di_index_new/serv>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: The behavior will change in pan>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: For example, when doing 'df[col>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]:   df["range"].replace(0, 1e-10,>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: 2025-04-10 14:24:44,348 - serve>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: Willy Index Test case values fo>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: 2025-04-10 14:24:44,349 - serve>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: 2025-04-10 14:24:44,349 - serve>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: 2025-04-10 14:24:44,349 - serve>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: 2025-04-10 14:24:44,351 - serve>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: MACD Index Test case values for>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: 2025-04-10 14:24:44,352 - serve>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: 2025-04-10 14:24:44,352 - serve>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: /var/www/html/di_index_new/serv>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: The behavior will change in pan>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: For example, when doing 'df[col>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]:   df["mfi_lower_sum"].replace(0>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: /var/www/html/di_index_new/serv>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: The behavior will change in pan>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: For example, when doing 'df[col>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]:   df["range"].replace(0, 1e-10,>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: /var/www/html/di_index_new/serv>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: The behavior will change in pan>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: For example, when doing 'df[col>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]:   df["mfi_lower_sum"].replace(0>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: /var/www/html/di_index_new/serv>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: The behavior will change in pan>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: For example, when doing 'df[col>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]:   df["range"].replace(0, 1e-10,>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: /var/www/html/di_index_new/serv>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: The behavior will change in pan>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: For example, when doing 'df[col>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]:   df["mfi_lower_sum"].replace(0>
+Apr 10 14:24:44 imm1.dinet.fvds.ru gunicorn[1102751]: 2025-04-10 14:24:44,716 - serve>
+Apr 10 14:26:39 imm1.dinet.fvds.ru systemd[1]: Stopping DI Index Cryptocurrency Analy>
+Apr 10 14:26:39 imm1.dinet.fvds.ru gunicorn[1102750]: [2025-04-10 14:26:39 +0300] [11>
+Apr 10 14:26:39 imm1.dinet.fvds.ru gunicorn[1102751]: [2025-04-10 14:26:39 +0300] [11>
+Apr 10 14:26:39 imm1.dinet.fvds.ru gunicorn[1102750]: [2025-04-10 14:26:39 +0300] [11>
+Apr 10 14:26:39 imm1.dinet.fvds.ru systemd[1]: di-index-new.service: Deactivated succ>
+Apr 10 14:26:39 imm1.dinet.fvds.ru systemd[1]: Stopped DI Index Cryptocurrency Analys>
+Apr 10 14:26:39 imm1.dinet.fvds.ru systemd[1]: di-index-new.service: Consumed 1.107s >
+Apr 10 14:26:39 imm1.dinet.fvds.ru systemd[1]: Started DI Index Cryptocurrency Analys>
+Apr 10 14:26:39 imm1.dinet.fvds.ru gunicorn[1103186]: [2025-04-10 14:26:39 +0300] [11>
+Apr 10 14:26:39 imm1.dinet.fvds.ru gunicorn[1103186]: [2025-04-10 14:26:39 +0300] [11>
+Apr 10 14:26:39 imm1.dinet.fvds.ru gunicorn[1103186]: [2025-04-10 14:26:39 +0300] [11>
+Apr 10 14:26:39 imm1.dinet.fvds.ru gunicorn[1103188]: [2025-04-10 14:26:39 +0300] [11>
+Apr 10 14:26:39 imm1.dinet.fvds.ru gunicorn[1103188]: 2025-04-10 14:26:39,889 - main >
+Apr 10 14:26:39 imm1.dinet.fvds.ru gunicorn[1103188]: 2025-04-10 14:26:39,890 - main >
+Apr 10 14:26:40 imm1.dinet.fvds.ru gunicorn[1103188]: 2025-04-10 14:26:40,376 - main >
+lines 1-50/50 (END)

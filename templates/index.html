@@ -197,6 +197,11 @@
   </div>
 
   <script>
+    // Определяем базовый URL динамически, чтобы код работал и локально, и на сервере
+    const BASE_URL = window.location.pathname.includes('/di_index_new/') 
+      ? '/di_index_new' 
+      : '';
+      
     function formatValue(val) {
       return (val === null || isNaN(val)) ? '-' : Number(val).toFixed(2);
     }

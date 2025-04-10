@@ -1,0 +1,17 @@
+(venv) root@imm1:/var/www/html/di_index_new# curl -v http://localhost:5001/api/di_index?symbols=BTC
+*   Trying 127.0.0.1:5001...
+* Connected to localhost (127.0.0.1) port 5001 (#0)
+> GET /api/di_index?symbols=BTC HTTP/1.1
+> Host: localhost:5001
+> User-Agent: curl/7.81.0
+> Accept: */*
+> 
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< Server: gunicorn
+< Date: Thu, 10 Apr 2025 11:24:44 GMT
+< Connection: close
+< Content-Type: application/json
+< Content-Length: 452714
+< 
+{"BTC":[{"4h_di_new":10,"4h_values_new":[{"time":"2025-04-09 00:00:00","value_new":2},{"time":"2025-04-09 04:00:00","value_new":5},{"time":"2025-04-09 08:00:00","value_new":4},{"time":"2025-04-09 12:00:00","value_new":5},{"time":"2025-04-09 16:00:00","value_new":10},{"time":"2025-04-09 20:00:00","value_new":10}],"close":82587.03,"daily_di_new":9,"di_ema_13_new":22.01,"di_sma_30_new":26.1,"open":76255.1,"time":"2025-04-09","total_new":26,"trend_new":"bear","weekly_di_new":7},{"4h_di_new":3,"4h_values_new":[{"time":"2025-04-08 00:00:00","value_new":7},{"time":"2025-04-08 04:00:00","value_new":8},{"time":"2025-04-08 08:00:00","value_new":7},{"time":"2025-04-08 12:00:00","value_new":5},{"time":"2025-04-08 16:00:00","value_new":3},{"time":"2025-04-08 20:00:00","value_new":3}],"close":76255.1,"daily_di_new":5,"di_ema_13_new":21.34,"di_sma_30_new":25.8,"open":79143.06,"time":"2025-04-08","total_new":15,"trend_new":"bear","weekly_di_new":7},{"4h_di_new":5,"4h_values_new":[{"time":"2025-04-07 00:00:00","value_new":3},{"time":"2025-04-07 04:00:00","value_new":3},{"time":"2025-04-07 08:00:00","value_new":2},{"time":"2025-04-07 12:00:00","value_new":6},{"time":"2025-04-07 16:00:00","value_new":4},{"time":"2025-04-07 20:00:00","value_new":5}],"close":79143.06,"daily_di_new":7,"di_ema_13_new":22.4,"di_sma_30_new":26.03,"open":78365.57,"time":"2025-04-07","total_new":19,"trend_new":"bear","weekly_di_new":7},{"4h_di_new":3,"4h_values_new":[{"time":"2025-04-06 00:00:00","value_new":6},{"time":"2025-04-06 04:00:00","value_new":5},{"time":"2025-04-06 08:00:00","value_new":5},{"time":"2025-04-06 12:00:00","value_new":4},{"time":"2025-04-06 16:00:00","value_new":3},{"time":"2025-04-06 20:00
