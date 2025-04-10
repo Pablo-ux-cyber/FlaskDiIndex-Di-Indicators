@@ -15,4 +15,5 @@ dependencies = [
     "pandas-ta==0.3.14b0",
     "psycopg2-binary>=2.9.10",
     "requests>=2.25.0",
+    "trafilatura>=2.0.0",
 ]

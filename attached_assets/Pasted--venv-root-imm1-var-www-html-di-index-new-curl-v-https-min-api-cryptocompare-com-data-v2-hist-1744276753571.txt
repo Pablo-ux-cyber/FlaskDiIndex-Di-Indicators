@@ -1,0 +1,66 @@
+(venv) root@imm1:/var/www/html/di_index_new# curl -v "https://min-api.cryptocompare.com/data/v2/histohour?fsym=BTC&tsym=USD&limit=10&aggregate=4&api_key=2193d3ce789e90e474570058a3a96caa0d585ca0d0d0e62687a295c8402d29e9"
+*   Trying 20.4.130.154:443...
+* Connected to min-api.cryptocompare.com (20.4.130.154) port 443 (#0)
+* ALPN, offering h2
+* ALPN, offering http/1.1
+*  CAfile: /etc/ssl/certs/ca-certificates.crt
+*  CApath: /etc/ssl/certs
+* TLSv1.0 (OUT), TLS header, Certificate Status (22):
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* TLSv1.2 (IN), TLS header, Certificate Status (22):
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.2 (IN), TLS header, Certificate Status (22):
+* TLSv1.2 (IN), TLS handshake, Certificate (11):
+* TLSv1.2 (IN), TLS header, Certificate Status (22):
+* TLSv1.2 (IN), TLS handshake, Server key exchange (12):
+* TLSv1.2 (IN), TLS header, Certificate Status (22):
+* TLSv1.2 (IN), TLS handshake, Server finished (14):
+* TLSv1.2 (OUT), TLS header, Certificate Status (22):
+* TLSv1.2 (OUT), TLS handshake, Client key exchange (16):
+* TLSv1.2 (OUT), TLS header, Finished (20):
+* TLSv1.2 (OUT), TLS change cipher, Change cipher spec (1):
+* TLSv1.2 (OUT), TLS header, Certificate Status (22):
+* TLSv1.2 (OUT), TLS handshake, Finished (20):
+* TLSv1.2 (IN), TLS header, Finished (20):
+* TLSv1.2 (IN), TLS header, Certificate Status (22):
+* TLSv1.2 (IN), TLS handshake, Finished (20):
+* SSL connection using TLSv1.2 / ECDHE-RSA-AES256-GCM-SHA384
+* ALPN, server accepted to use http/1.1
+* Server certificate:
+*  subject: CN=*.cryptocompare.com
+*  start date: Apr 24 12:03:25 2024 GMT
+*  expire date: May 26 12:03:25 2025 GMT
+*  subjectAltName: host "min-api.cryptocompare.com" matched cert's "*.cryptocompare.com"
+*  issuer: C=US; ST=Arizona; L=Scottsdale; O=GoDaddy.com, Inc.; OU=http://certs.godaddy.com/repository/; CN=Go Daddy Secure Certificate Authority - G2
+*  SSL certificate verify ok.
+* TLSv1.2 (OUT), TLS header, Supplemental data (23):
+> GET /data/v2/histohour?fsym=BTC&tsym=USD&limit=10&aggregate=4&api_key=2193d3ce789e90e474570058a3a96caa0d585ca0d0d0e62687a295c8402d29e9 HTTP/1.1
+> Host: min-api.cryptocompare.com
+> User-Agent: curl/7.81.0
+> Accept: */*
+> 
+* TLSv1.2 (IN), TLS header, Supplemental data (23):
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< Server: nginx
+< Date: Thu, 10 Apr 2025 09:18:47 GMT
+< Content-Type: application/json; charset=UTF-8
+< Transfer-Encoding: chunked
+< Connection: keep-alive
+< Vary: Accept-Encoding
+< Content-Security-Policy: frame-ancestors 'none'
+< Access-Control-Allow-Origin: *
+< Access-Control-Allow-Methods: GET, POST, OPTIONS
+< Access-Control-Allow-Headers: Content-Type, Cookie, Set-Cookie, Authorization
+< Access-Control-Allow-Credentials: true
+< Cache-Control: public, max-age=610
+< X-CryptoCompare-Cache-HIT: true
+< X-CryptoCompare-Server-Id: cc-api-min-v2-05
+< X-RateLimit-Limit: 11000, 1;window=1;burst=20;policy="fixed window", 1;window=60;burst=300;policy="fixed window", 16;window=3600;burst=3000;policy="fixed window", 367;window=86400;burst=7500;policy="fixed window", 11000;window=2592000;policy="fixed window"
+< X-RateLimit-Remaining-All: 10341, 19;window=1, 299;window=60, 2995;window=3600, 7372;window=86400, 10341;window=2592000
+< X-RateLimit-Reset-All: 1780873, 1;window=1, 13;window=60, 2473;window=3600, 52873;window=86400, 1780873;window=2592000
+< X-RateLimit-Remaining: 10341
+< X-RateLimit-Reset: 1780873
+< 
+{"Response":"Success","Message":"","HasWarning":false,"Type":100,"RateLimit":{},"Data":{"Aggregated":true,"TimeFrom":1744128000,"TimeTo":1744275600,"Data":[{"time":1744128000,"high":78488.71,"low":76251.65,"open":78469.21,"volumefrom":14631.73,"volumeto":1129039889.43,"close":76754.35,"conversionType":"direct","conversionSymbol":""},{"time":1744142400,"high":77208.4,"low":76181.24,"open":76754.35,"volumefrom":4711.44,"volumeto":361275114.2,"close":76255.1,"conversionType":"direct","conversionSymbol":""},{"time":1744156800,"high":76791.81,"low":74569.86,"open":76255.1,"volumefrom":10052.17,"volumeto":761122023.66,"close":75010.1,"conversionType":"direct","conversionSymbol":""},{"time":1744171200,"high":77906.94,"low":74934.14,"open":75010.1,"volumefrom":5370.08,"volumeto":412228629.36,"close":77663.26,"conversionType":"direct","conversionSymbol":""},{"time":1744185600,"high":77840.39,"low":75737.14,"open":77663.26,"volumefrom":5373.55,"volumeto":412181667.48,"close":76197.51,"conversionType":"direct","conversionSymbol":""},{"time":1744200000,"high":78250.45,"low":75992.9,"open":76197.51,"volumefrom":11167.75,"volumeto":861939383.75,"close":77193.51,"conversionType":"direct","conversionSymbol":""},{"time":1744214400,"high":82977.63,"low":77070.85,"open":77193.51,"volumefrom":24029.63,"volumeto":1946959968.68,"close":82297.85,"conversionType":"direct","conversionSymbol":""},{"time":1744228800,"high":83574.06,"low":81993.13,"open":82297.85,"volumefrom":6859.99,"volumeto":568701185.43,"close":82587.03,"conversionType":"direct","conversionSymbol":""},{"time":1744243200,"high":82710.13,"low":81449.58,"open":82587.03,"volumefrom":4012,"volumeto":329669391.73,"close":81739.3,"conversionType":"direct","conversionSymbol":""},{"time":1744257600,"high":82313.33,"low":81285.59,"open":81739.3,"volumefrom":1723.49,"volumeto":141099864.53,"close":81576.06,"conversionType":"direct","conversionSymbol":""},{"time":1744272000,"high":81705.4,"low":81326.52,"open":81576.06,"volumefrom":161.86,"volumeto":13186414.81,"close":81667.74,"co* Connection #0 to host min-api.cryptocompare.com left intact
+nversionType":"direct","conversionSymbol":""}]}}(venv) root@imm1:/var/www/html/di_index_new# 
