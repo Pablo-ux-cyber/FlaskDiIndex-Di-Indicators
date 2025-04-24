@@ -289,28 +289,38 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
         # Log sample of weekly data for verification
         logger.debug(f"Sample of weekly data timestamps for {symbol}:")
         if not df_weekly.empty:
-            # Timeindex не содержит колонку 'time', это индекс
-            logger.debug(str(df_weekly.index[:5]))
-            # Логируем колонки для диагностики
+            logger.debug(str(df_weekly.head(5)))
             logger.debug(f"Available columns: {df_weekly.columns.tolist()}")
             
         # Convert to list for storage
         weekly_list = []
-        df_weekly_reset = df_weekly.reset_index()  # Получаем time как колонку
-        for _, row in df_weekly_reset.iterrows():
-            # Конвертируем datetime в timestamp
-            dt = pd.Timestamp(row['time'])
-            time_val = int(dt.timestamp())
-            data_point = {
-                'time': time_val,
-                'open': float(row['open']),
-                'high': float(row['high']),
-                'low': float(row['low']),
-                'close': float(row['close']),
-                'volumefrom': float(row['volumefrom']),
-                'volumeto': float(row['volumeto'])
-            }
-            weekly_list.append(data_point)
+        # Преобразуем индекс в строку, если это DatetimeIndex
+        if isinstance(df_weekly.index, pd.DatetimeIndex):
+            df_weekly = df_weekly.reset_index()
+            
+        # Простая версия без изменения структуры
+        for _, row in df_weekly.iterrows():
+            try:
+                # Берем дату из индекса или колонки time
+                if 'time' in row:
+                    dt = pd.Timestamp(row['time'])
+                else:
+                    dt = pd.Timestamp(row.name) if isinstance(row.name, pd.Timestamp) else pd.Timestamp.now()
+                
+                time_val = int(dt.timestamp())
+                data_point = {
+                    'time': time_val,
+                    'open': float(row['open']),
+                    'high': float(row['high']),
+                    'low': float(row['low']),
+                    'close': float(row['close']),
+                    'volumefrom': float(row['volumefrom']),
+                    'volumeto': float(row['volumeto'])
+                }
+                weekly_list.append(data_point)
+            except Exception as e:
+                logger.error(f"Error processing weekly data row: {e}")
+                logger.debug(f"Row data: {row}")
         
         # Сохраняем данные в JSON файл
         save_historical_data(symbol, "weekly", weekly_list)
