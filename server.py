@@ -6,7 +6,6 @@ import time
 from functools import lru_cache
 import logging
 import concurrent.futures
-import os
 
 # Настройка логирования
 logging.basicConfig(level=logging.DEBUG)
@@ -16,15 +15,10 @@ logger = logging.getLogger(__name__)
 if not hasattr(np, "NaN"):
     np.NaN = np.nan
 
-# Создаем директорию для сохранения данных, если она не существует
-DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
-if not os.path.exists(DATA_DIR):
-    os.makedirs(DATA_DIR, exist_ok=True)
-    logger.info(f"Created data directory at {DATA_DIR}")
-
 import pandas as pd
 import pandas_ta as ta
 from flask import Blueprint, jsonify, request, render_template
+import os
 
 # Create blueprint for DI index routes
 di_index_blueprint = Blueprint('di_index', __name__)
@@ -245,103 +239,42 @@ def calculate_di_index(df):
 
 def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
     """Get weekly OHLCV data for given cryptocurrency"""
-    from utils.historical_data import load_historical_data, save_historical_data, convert_to_dataframe
-    
-    cached_data = get_cached_data(symbol, "weekly_data")
-    if cached_data is not None and not cached_data.empty:
-        return cached_data
+    df_daily = get_daily_data(symbol, tsym, limit)
 
-    # Загружаем исторические данные из JSON файла
-    historical_data = load_historical_data(symbol, "weekly")
-    logger.debug(f"DEBUG: Loaded {len(historical_data)} historical weekly data points for {symbol}")
-    
-    try:
-        df_daily = get_daily_data(symbol, tsym, limit)
+    # Convert index to datetime if it's not already
+    if not isinstance(df_daily.index, pd.DatetimeIndex):
+        df_daily.set_index('time', inplace=True)
 
-        # Convert index to datetime if it's not already
-        if not isinstance(df_daily.index, pd.DatetimeIndex):
-            df_daily.set_index('time', inplace=True)
+    # Get the current date and find the last completed Sunday
+    current_date = pd.Timestamp.now().normalize()
+    days_since_sunday = current_date.dayofweek + 1
+    last_completed_sunday = current_date - pd.Timedelta(days=days_since_sunday)
 
-        # Get the current date and find the last completed Sunday
-        current_date = pd.Timestamp.now().normalize()
-        days_since_sunday = current_date.dayofweek + 1
-        last_completed_sunday = current_date - pd.Timedelta(days=days_since_sunday)
+    # Filter data to include only completed weeks
+    df_daily = df_daily[df_daily.index <= last_completed_sunday]
 
-        # Filter data to include only completed weeks
-        df_daily = df_daily[df_daily.index <= last_completed_sunday]
+    # Use W-MON for Monday-based weekly grouping
+    df_weekly = df_daily.resample('W-MON').agg({
+        'open': 'first',
+        'high': 'max',
+        'low': 'min',
+        'close': 'last',
+        'volumefrom': 'sum',
+        'volumeto': 'sum'
+    })
 
-        # Use W-MON for Monday-based weekly grouping
-        df_weekly = df_daily.resample('W-MON').agg({
-            'open': 'first',
-            'high': 'max',
-            'low': 'min',
-            'close': 'last',
-            'volumefrom': 'sum',
-            'volumeto': 'sum'
-        })
+    # Reset index to get time as a column
+    df_weekly.reset_index(inplace=True)
 
-        # Reset index to get time as a column
-        df_weekly.reset_index(inplace=True)
+    # Set timeframe attribute
+    df_weekly.attrs['timeframe'] = 'weekly'
 
-        # Set timeframe attribute
-        df_weekly.attrs['timeframe'] = 'weekly'
+    # Log sample of weekly data for verification
+    logger.debug(f"Sample of weekly data timestamps for {symbol}:")
+    if not df_weekly.empty:
+        logger.debug(df_weekly['time'].head())
 
-        # Log sample of weekly data for verification
-        logger.debug(f"Sample of weekly data timestamps for {symbol}:")
-        if not df_weekly.empty:
-            logger.debug(str(df_weekly.head(5)))
-            logger.debug(f"Available columns: {df_weekly.columns.tolist()}")
-            
-        # Convert to list for storage
-        weekly_list = []
-        # Преобразуем индекс в строку, если это DatetimeIndex
-        if isinstance(df_weekly.index, pd.DatetimeIndex):
-            df_weekly = df_weekly.reset_index()
-            
-        # Простая версия без изменения структуры
-        for _, row in df_weekly.iterrows():
-            try:
-                # Берем дату из индекса или колонки time
-                if 'time' in row:
-                    dt = pd.Timestamp(row['time'])
-                else:
-                    dt = pd.Timestamp(row.name) if isinstance(row.name, pd.Timestamp) else pd.Timestamp.now()
-                
-                time_val = int(dt.timestamp())
-                data_point = {
-                    'time': time_val,
-                    'open': float(row['open']),
-                    'high': float(row['high']),
-                    'low': float(row['low']),
-                    'close': float(row['close']),
-                    'volumefrom': float(row['volumefrom']),
-                    'volumeto': float(row['volumeto'])
-                }
-                weekly_list.append(data_point)
-            except Exception as e:
-                logger.error(f"Error processing weekly data row: {e}")
-                logger.debug(f"Row data: {row}")
-        
-        # Сохраняем данные в JSON файл
-        save_historical_data(symbol, "weekly", weekly_list)
-        logger.debug(f"DEBUG: Saved {len(weekly_list)} weekly data points for {symbol}")
-        
-        # Кэшируем данные
-        set_cached_data(symbol, "weekly_data", df_weekly)
-        
-        return df_weekly
-    
-    except Exception as e:
-        logger.error(f"Error creating weekly data for {symbol}: {str(e)}", exc_info=True)
-        
-        # Если произошла ошибка, но есть исторические данные, используем их
-        if historical_data:
-            logger.warning(f"DEBUG: Exception in weekly data. Using historical data for {symbol}")
-            df = convert_to_dataframe(historical_data)
-            df.attrs['timeframe'] = 'weekly'
-            set_cached_data(symbol, "weekly_data", df)
-            return df
-        raise
+    return df_weekly
 
 def get_cache_key(symbol, data_type):
     """Generate cache key for given symbol and data type"""
@@ -369,21 +302,13 @@ def set_cached_data(symbol, data_type, data):
 
 def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     """Get 4-hour OHLCV data for given cryptocurrency"""
-    from utils.historical_data import load_historical_data, merge_historical_and_api_data, save_historical_data, convert_to_dataframe
-    
     logger.debug(f"DEBUG: get_4h_data started for {symbol}")
     
-    # Проверяем кэш в памяти
     cached_data = get_cached_data(symbol, "4h_data")
     if cached_data is not None and not cached_data.empty:
         logger.debug(f"DEBUG: Using cached data for {symbol}")
         return cached_data
 
-    # Загружаем исторические данные из JSON файла
-    historical_data = load_historical_data(symbol, "4h")
-    logger.debug(f"DEBUG: Loaded {len(historical_data)} historical 4h data points for {symbol}")
-    
-    # Получаем новые данные из API
     all_data = []
 
     # First request - current period
@@ -397,13 +322,6 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
         
         if response.status_code != 200:
             logger.error(f"DEBUG: API Error: {response.text}")
-            # Если API недоступен, но у нас есть исторические данные, используем их
-            if historical_data:
-                logger.warning(f"DEBUG: API unavailable. Using historical data only for {symbol}")
-                df = convert_to_dataframe(historical_data)
-                df.attrs['timeframe'] = '4h'
-                set_cached_data(symbol, "4h_data", df)
-                return df
             raise Exception(f"Error getting 4-hour data: HTTP error {response.status_code}")
         
         data = response.json()
@@ -411,13 +329,6 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
         
         if data.get("Response") != "Success":
             logger.error(f"DEBUG: Unsuccessful API response: {data}")
-            # Если API вернул ошибку, но у нас есть исторические данные, используем их
-            if historical_data:
-                logger.warning(f"DEBUG: API error. Using historical data only for {symbol}")
-                df = convert_to_dataframe(historical_data)
-                df.attrs['timeframe'] = '4h'
-                set_cached_data(symbol, "4h_data", df)
-                return df
             raise Exception(f"Error getting 4-hour data: {data}")
 
         logger.debug("\nFirst request details:")
@@ -453,40 +364,30 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
                 new_data = [point for point in data['Data']['Data'] if point['time'] < toTs]
                 all_data.extend(new_data)
                 logger.debug(f"Added {len(new_data)} new points from second request")
-        
-        # Объединяем исторические данные с данными из API
-        all_data = merge_historical_and_api_data(historical_data, all_data)
-        
-        # Сохраняем обновленные данные в JSON файл
-        save_historical_data(symbol, "4h", all_data)
-        logger.debug(f"DEBUG: Saved {len(all_data)} combined data points for {symbol}")
     
     except Exception as e:
         logger.error(f"DEBUG: Exception in get_4h_data: {str(e)}")
         import traceback
         logger.error(f"DEBUG: {traceback.format_exc()}")
-        
-        # Если произошла ошибка, но есть исторические данные, используем их
-        if historical_data:
-            logger.warning(f"DEBUG: Exception occurred. Using historical data only for {symbol}")
-            df = convert_to_dataframe(historical_data)
-            df.attrs['timeframe'] = '4h'
-            set_cached_data(symbol, "4h_data", df)
-            return df
         raise
 
     # Convert to DataFrame and process
-    df = convert_to_dataframe(all_data)
+    df = pd.DataFrame(all_data)
+    df['time'] = pd.to_datetime(df['time'], unit='s')
 
     # Log data boundaries
     logger.debug("\nFinal data boundaries:")
-    logger.debug(f"Earliest data: {df.index.min()}")
-    logger.debug(f"Latest data: {df.index.max()}")
+    logger.debug(f"Earliest data: {df['time'].min()}")
+    logger.debug(f"Latest data: {df['time'].max()}")
     logger.debug(f"Total points: {len(df)}")
 
+    # Sort and remove duplicates
+    df = df.sort_values('time', ascending=True)
+    df = df.drop_duplicates(subset=['time'], keep='last')
+
     # Group by date and hour
-    df['date'] = df.index.date
-    df['hour'] = df.index.hour
+    df['date'] = df['time'].dt.date
+    df['hour'] = df['time'].dt.hour
 
     # Log final distribution
     distribution = df.groupby(['date', 'hour']).size().reset_index(name='count')
@@ -639,78 +540,32 @@ def validate_symbol(symbol):
 
 def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     """Get daily OHLCV data for given cryptocurrency"""
-    from utils.historical_data import load_historical_data, merge_historical_and_api_data, save_historical_data, convert_to_dataframe
-    
     cached_data = get_cached_data(symbol, "daily_data")
     if cached_data is not None and not cached_data.empty:
         return cached_data
 
-    # Загружаем исторические данные из JSON файла
-    historical_data = load_historical_data(symbol, "daily")
-    logger.debug(f"DEBUG: Loaded {len(historical_data)} historical daily data points for {symbol}")
-    
-    # Получаем новые данные из API
-    try:
-        url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={symbol}&tsym={tsym}&limit={limit}&api_key={API_KEY}"
-        response = requests.get(url)
-        
-        if response.status_code != 200:
-            logger.error(f"DEBUG: API Error: {response.text}")
-            # Если API недоступен, но у нас есть исторические данные, используем их
-            if historical_data:
-                logger.warning(f"DEBUG: API unavailable. Using historical data only for {symbol} (daily)")
-                df = convert_to_dataframe(historical_data)
-                df.attrs['timeframe'] = 'daily'
-                set_cached_data(symbol, "daily_data", df)
-                return df
-            raise Exception(f"Error getting daily data: HTTP error {response.status_code}")
-        
-        data = response.json()
-        if data.get("Response") != "Success":
-            logger.error(f"DEBUG: Unsuccessful API response: {data}")
-            # Если API вернул ошибку, но у нас есть исторические данные, используем их
-            if historical_data:
-                logger.warning(f"DEBUG: API error. Using historical data only for {symbol} (daily)")
-                df = convert_to_dataframe(historical_data)
-                df.attrs['timeframe'] = 'daily'
-                set_cached_data(symbol, "daily_data", df)
-                return df
-            raise Exception(f"Error getting daily data: {data}")
-        
-        # Объединяем исторические данные с данными из API
-        api_data = data['Data']['Data']
-        all_data = merge_historical_and_api_data(historical_data, api_data)
-        
-        # Сохраняем обновленные данные в JSON файл
-        save_historical_data(symbol, "daily", all_data)
-        logger.debug(f"DEBUG: Saved {len(all_data)} combined daily data points for {symbol}")
-        
-        # Convert to DataFrame
-        df = convert_to_dataframe(all_data)
-        
-    except Exception as e:
-        logger.error(f"DEBUG: Exception in get_daily_data: {str(e)}")
-        # Если произошла ошибка, но есть исторические данные, используем их
-        if historical_data:
-            logger.warning(f"DEBUG: Exception occurred. Using historical data only for {symbol} (daily)")
-            df = convert_to_dataframe(historical_data)
-            df.attrs['timeframe'] = 'daily'
-            set_cached_data(symbol, "daily_data", df)
-            return df
-        raise
+    url = f"https://min-api.cryptocompare.com/data/v2/histoday?fsym={symbol}&tsym={tsym}&limit={limit}&api_key={API_KEY}"
+    response = requests.get(url)
+    data = response.json()
+    if data.get("Response") != "Success":
+        raise Exception(f"Error getting daily data: {data}")
+
+    # Convert timestamp to datetime
+    df = pd.DataFrame(data['Data']['Data'])
+    df['time'] = pd.to_datetime(df['time'], unit='s')
 
     # Логируем исходное время для проверки
     if len(df) > 0:
         logger.debug(f"Original timestamps for {symbol} daily data:")
-        logger.debug(str(df.index[:5]))
+        logger.debug(df['time'].head())
 
     # Отфильтровываем текущий день и будущие даты
     today = pd.Timestamp.now().normalize()  # Получаем начало текущего дня в UTC
-    df = df[df.index < today]  # Оставляем только завершённые дни
+    df = df[df['time'] < today]  # Оставляем только завершённые дни
 
     # Логируем время свечей для проверки
     logger.debug(f"Sample of daily candle times for {symbol}:")
-    logger.debug(str(df.index[:5]))
+    logger.debug(df['time'].head())
 
     # Устанавливаем атрибут timeframe
     df.attrs['timeframe'] = 'daily'
