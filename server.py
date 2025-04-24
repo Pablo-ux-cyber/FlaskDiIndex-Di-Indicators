@@ -289,12 +289,18 @@ def get_weekly_data(symbol="BTC", tsym="USD", limit=2000):
         # Log sample of weekly data for verification
         logger.debug(f"Sample of weekly data timestamps for {symbol}:")
         if not df_weekly.empty:
-            logger.debug(df_weekly['time'].head())
+            # Timeindex не содержит колонку 'time', это индекс
+            logger.debug(str(df_weekly.index[:5]))
+            # Логируем колонки для диагностики
+            logger.debug(f"Available columns: {df_weekly.columns.tolist()}")
             
         # Convert to list for storage
         weekly_list = []
-        for _, row in df_weekly.iterrows():
-            time_val = int(pd.Timestamp(row['time']).timestamp())
+        df_weekly_reset = df_weekly.reset_index()  # Получаем time как колонку
+        for _, row in df_weekly_reset.iterrows():
+            # Конвертируем datetime в timestamp
+            dt = pd.Timestamp(row['time'])
+            time_val = int(dt.timestamp())
             data_point = {
                 'time': time_val,
                 'open': float(row['open']),
@@ -686,7 +692,7 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
     # Логируем исходное время для проверки
     if len(df) > 0:
         logger.debug(f"Original timestamps for {symbol} daily data:")
-        logger.debug(df.index.head())
+        logger.debug(str(df.index[:5]))
 
     # Отфильтровываем текущий день и будущие даты
     today = pd.Timestamp.now().normalize()  # Получаем начало текущего дня в UTC
@@ -694,7 +700,7 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
 
     # Логируем время свечей для проверки
     logger.debug(f"Sample of daily candle times for {symbol}:")
-    logger.debug(df.index.head())
+    logger.debug(str(df.index[:5]))
 
     # Устанавливаем атрибут timeframe
     df.attrs['timeframe'] = 'daily'
