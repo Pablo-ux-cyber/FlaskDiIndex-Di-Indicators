@@ -2,6 +2,8 @@ from flask import Flask
 import os
 import logging
 from utils.logging_config import configure_logging
+from models import db
+from db_init import init_db
 
 # Configure logging
 configure_logging()
@@ -13,6 +15,18 @@ logger.info("Starting application initialization...")
 try:
     app = Flask(__name__)
     app.secret_key = os.environ.get("SESSION_SECRET", "dev_secret_key")
+    
+    # Configure database
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    
+    # Initialize database
+    db.init_app(app)
+    
+    with app.app_context():
+        db.create_all()
+        logger.info("Database tables created")
+    
     logger.info("Flask app created successfully")
 
     # Import routes and register them
