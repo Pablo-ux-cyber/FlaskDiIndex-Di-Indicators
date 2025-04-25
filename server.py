@@ -27,6 +27,12 @@ from utils.history_manager import (
     merge_with_historical_data
 )
 
+# Импортируем модуль для работы с историей DI индекса
+from utils.di_history_manager import (
+    save_di_history,
+    load_di_history
+)
+
 # Create blueprint for DI index routes
 di_index_blueprint = Blueprint('di_index', __name__)
 
@@ -635,6 +641,13 @@ def process_symbol_batch(symbols, debug=False):
                     # Сортируем результаты по дате перед отправкой
                     if isinstance(result, list):
                         result.sort(key=lambda x: x["time"], reverse=True)
+                        
+                        # Сохраняем историю DI индекса
+                        try:
+                            save_di_history(symbol, result)
+                        except Exception as e:
+                            logger.error(f"Error saving DI history for {symbol}: {str(e)}")
+                            
                     results[symbol] = result
                 except Exception as e:
                     logger.error(f"Error processing {symbol}: {str(e)}", exc_info=True)
