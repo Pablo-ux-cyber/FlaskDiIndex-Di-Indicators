@@ -20,6 +20,13 @@ import pandas_ta as ta
 from flask import Blueprint, jsonify, request, render_template
 import os
 
+# Импортируем модуль для работы с историческими данными
+from utils.history_manager import (
+    load_historical_data, 
+    save_historical_data, 
+    merge_with_historical_data
+)
+
 # Create blueprint for DI index routes
 di_index_blueprint = Blueprint('di_index', __name__)
 
@@ -304,11 +311,15 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
     """Get 4-hour OHLCV data for given cryptocurrency"""
     logger.debug(f"DEBUG: get_4h_data started for {symbol}")
     
+    # Сначала проверяем кеш
     cached_data = get_cached_data(symbol, "4h_data")
     if cached_data is not None and not cached_data.empty:
         logger.debug(f"DEBUG: Using cached data for {symbol}")
         return cached_data
-
+    
+    # Затем проверяем, есть ли сохраненные исторические данные
+    historical_data = load_historical_data(symbol, "4h_data")
+    
     all_data = []
 
     # First request - current period
@@ -369,6 +380,11 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
         logger.error(f"DEBUG: Exception in get_4h_data: {str(e)}")
         import traceback
         logger.error(f"DEBUG: {traceback.format_exc()}")
+        
+        # Если API запрос не удался, но у нас есть исторические данные - используем их
+        if historical_data is not None and not historical_data.empty:
+            logger.info(f"Using historical data as fallback for {symbol}")
+            return historical_data
         raise
 
     # Convert to DataFrame and process
@@ -396,8 +412,22 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
 
     # Set timeframe attribute
     df.attrs['timeframe'] = '4h'
-
+    
+    # Сохраняем в кеш
     set_cached_data(symbol, "4h_data", df)
+    
+    # Объединяем новые данные с историческими и сохраняем
+    try:
+        # Если у нас есть исторические данные, объединяем с новыми
+        if historical_data is not None and not historical_data.empty:
+            merge_with_historical_data(df, symbol, "4h_data")
+        else:
+            # Иначе просто сохраняем текущие данные как исторические
+            save_historical_data(df, symbol, "4h_data")
+    except Exception as e:
+        logger.error(f"Error saving historical data: {str(e)}")
+        # Ошибка сохранения исторических данных не должна прерывать выполнение
+    
     return df
 
 def process_symbol(symbol, debug=False):
