@@ -2,6 +2,7 @@
   "2025-04-10": {
     "time": "2025-04-10",
     "value": "OLD_VALUE",
-    "number": 1
+    "number": 1,
+    "4h_values_new": []
   }
 }

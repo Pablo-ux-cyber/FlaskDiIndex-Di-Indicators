@@ -739,33 +739,8 @@ def di_index():
                         if historical_entries:
                             results[symbol].extend(historical_entries)
                         
-                        # Проверяем все записи на наличие 4h_values_new и добавляем их при необходимости
-                        for entry in results[symbol]:
-                            if isinstance(entry, dict) and "daily_di_new" in entry:
-                                daily_value = entry.get("daily_di_new")
-                                
-                                # Если 4h_di_new отсутствует или null, заполняем его значением из daily
-                                if "4h_di_new" not in entry or entry["4h_di_new"] is None:
-                                    entry["4h_di_new"] = daily_value
-                                
-                                # Если 4h_values_new отсутствует или пустой список, создаем его
-                                if "4h_values_new" not in entry or not entry["4h_values_new"]:
-                                    # Создаем записи для всех 6 4-часовых интервалов
-                                    entry["4h_values_new"] = []
-                                    date_str = entry.get("time")
-                                    if date_str:
-                                        for hour in [0, 4, 8, 12, 16, 20]:
-                                            # Немного вариаций для реалистичности
-                                            value = daily_value
-                                            if hour == 0:
-                                                value = max(0, daily_value - 2) if daily_value is not None else None
-                                            elif hour == 4:
-                                                value = max(0, daily_value - 1) if daily_value is not None else None
-                                            
-                                            entry["4h_values_new"].append({
-                                                "time": f"{date_str} {hour:02d}:00:00",
-                                                "value_new": value
-                                            })
+                        # Мы не генерируем синтетические данные для 4h_values_new,
+                        # а только используем реальные исторические данные
                         
                         # Сортируем результаты по дате в обратном порядке (сначала новые)
                         results[symbol] = sorted(results[symbol], key=lambda x: x.get("time", ""), reverse=True)

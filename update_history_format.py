@@ -65,59 +65,22 @@ def update_history_file(file_path, generate_missing=True):
             if isinstance(record, dict):
                 updated = False
                 
-                # Проверяем нужно ли генерировать 4h данные
-                need_generation = generate_missing and "daily_di_new" in record and (
-                    # Нет 4h_di_new или оно null
-                    "4h_di_new" not in record or record["4h_di_new"] is None or
-                    # Есть 4h_values_new, но это пустой массив
-                    ("4h_values_new" in record and isinstance(record["4h_values_new"], list) and len(record["4h_values_new"]) == 0)
-                )
-                
-                if need_generation:
-                    daily_value = record.get("daily_di_new")
-                    
-                    # Используем daily значение как 4h (так как настоящих данных у нас нет)
-                    record["4h_di_new"] = daily_value
-                    
-                    # Создаем записи для всех 6 4-часовых интервалов
-                    record["4h_values_new"] = []
-                    for hour in [0, 4, 8, 12, 16, 20]:
-                        time_part = f"{hour:02d}:00:00"
-                        full_time = f"{date} {time_part}"
-                        
-                        # Добавляем немного вариации для более реалистичных данных
-                        # Значения растут в течение дня и заканчиваются на daily_value
-                        if hour == 0:
-                            value = max(0, daily_value - 2) if daily_value is not None else None
-                        elif hour == 4:
-                            value = max(0, daily_value - 1) if daily_value is not None else None
-                        elif hour == 8:
-                            value = daily_value
-                        elif hour == 12:
-                            value = daily_value
-                        elif hour == 16:
-                            value = daily_value
-                        else:  # hour == 20
-                            value = daily_value
-                            
-                        record["4h_values_new"].append({
+                # Мы не генерируем синтетические 4h данные,
+                # а только используем реальные исторические данные
+                if "4h_values_new" not in record:
+                    # Если есть 4h_di_new, создаем запись последней свечи
+                    if "4h_di_new" in record:
+                        # Создаем запись с 20:00:00 (последняя 4h свеча дня)
+                        time_part = "20:00:00"
+                        full_time = f"{date}T{time_part}"
+                        record["4h_values_new"] = [{
                             "time": full_time,
-                            "value_new": value
-                        })
+                            "value_new": record["4h_di_new"]
+                        }]
+                    else:
+                        # Иначе просто создаем пустой массив
+                        record["4h_values_new"] = []
                     
-                    generated_records += 1
-                    updated = True
-                
-                # Если поля 4h_values_new нет, но есть 4h_di_new, создаем его
-                elif "4h_di_new" in record and "4h_values_new" not in record:
-                    # Создаем запись с 20:00:00 (последняя 4h свеча дня)
-                    time_part = "20:00:00"
-                    full_time = f"{date}T{time_part}"
-                    record["4h_values_new"] = [{
-                        "time": full_time,
-                        "value_new": record["4h_di_new"]
-                    }]
-                    updated_records += 1
                     updated = True
                 
                 # Проверяем, что у всех записей в 4h_values_new есть значения
