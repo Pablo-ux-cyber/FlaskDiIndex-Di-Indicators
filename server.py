@@ -406,9 +406,27 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
                             if date_ts < skip_until_time:
                                 logger.debug(f"WARNING: Date {date_str} would be skipped by 7-day filter!")
                     
-                    # Отфильтруем данные, пропуская первые 7 дней
+                    # Создадим список дат, которые должны быть исключены из фильтрации
+                    important_dates_ts = []
+                    for special_date_str in ["2024-11-09", "2024-11-11"]:
+                        # Получаем начало и конец дня
+                        special_date_start = int(datetime.strptime(special_date_str, "%Y-%m-%d").timestamp())
+                        special_date_end = special_date_start + (24 * 60 * 60)
+                        # Добавляем все 4-часовые интервалы для этой даты
+                        for hour in [0, 4, 8, 12, 16, 20]:
+                            ts = special_date_start + (hour * 60 * 60)
+                            important_dates_ts.append(ts)
+                    
+                    # Отфильтруем данные, пропуская первые 7 дней, НО сохраняя важные даты
                     filtered_data = [point for point in data['Data']['Data'] 
-                                    if point['time'] >= skip_until_time and point['time'] < toTs]
+                                   if (point['time'] >= skip_until_time and point['time'] < toTs) or 
+                                      any(abs(point['time'] - special_ts) < 60 for special_ts in important_dates_ts)]
+                    
+                    # Логируем информацию о найденных важных датах
+                    special_points = [p for p in filtered_data if any(abs(p['time'] - special_ts) < 60 for special_ts in important_dates_ts)]
+                    if special_points:
+                        special_dates = set([datetime.fromtimestamp(p['time']).strftime("%Y-%m-%d %H:%M:%S") for p in special_points])
+                        logger.debug(f"Сохранены специальные даты: {special_dates}")
                     
                     # Проверяем наличие проблемных дат в данных до фильтрации
                     for date_str in problem_dates:
