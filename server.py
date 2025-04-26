@@ -595,9 +595,10 @@ def get_daily_data(symbol="BTC", tsym="USD", limit=2000):
         logger.debug(f"Original timestamps for {symbol} daily data:")
         logger.debug(df['time'].head())
 
-    # Отфильтровываем текущий день и будущие даты
+    # Отфильтровываем текущий день и будущие даты, но включаем вчерашний день
     today = pd.Timestamp.now().normalize()  # Получаем начало текущего дня в UTC
-    df = df[df['time'] < today]  # Оставляем только завершённые дни
+    yesterday = today - pd.Timedelta(days=1)  # Вчерашний день уже завершён
+    df = df[df['time'] <= yesterday]  # Оставляем завершённые дни, включая вчерашний
 
     # Логируем время свечей для проверки
     logger.debug(f"Sample of daily candle times for {symbol}:")
