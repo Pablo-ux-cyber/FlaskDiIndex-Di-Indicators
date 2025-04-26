@@ -22,10 +22,10 @@ HISTORY_DIR = "historical_data"
 
 class DateTimeEncoder(json.JSONEncoder):
     """Кастомный энкодер для сериализации объектов datetime"""
-    def default(self, obj):
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        return super().default(obj)
+    def default(self, o):
+        if isinstance(o, datetime):
+            return o.isoformat()
+        return super().default(o)
 
 
 def get_history_files():

@@ -11,10 +11,10 @@ HISTORY_DIR = "historical_data"
 
 # Кастомный JSON энкодер для обработки типов данных datetime
 class DateTimeEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, (datetime, date)):
-            return obj.isoformat()
-        return super(DateTimeEncoder, self).default(obj)
+    def default(self, o):
+        if isinstance(o, (datetime, date)):
+            return o.isoformat()
+        return super(DateTimeEncoder, self).default(o)
 
 def ensure_history_dir():
     """Убедиться, что каталог для хранения истории существует"""
