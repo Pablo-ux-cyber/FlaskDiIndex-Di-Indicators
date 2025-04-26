@@ -42,7 +42,7 @@ def check_period(data, start_date, end_date, period_name):
         
         if entry:
             # Проверяем наличие 4h данных
-            if entry.get("4h_di_new") is not None:
+            if "4h_values_new" in entry and isinstance(entry["4h_values_new"], list) and len(entry["4h_values_new"]) > 0:
                 days_with_4h += 1
             else:
                 days_without_4h += 1
@@ -104,12 +104,12 @@ def main():
             
             # Проверка наличия 4h данных в первой и последней записи
             print("\nПроверка крайних точек:")
-            if "4h_di_new" in first_entry:
+            if "4h_values_new" in first_entry and isinstance(first_entry["4h_values_new"], list) and len(first_entry["4h_values_new"]) > 0:
                 print(f"Самая старая запись ({format_date(first_entry.get('time'))}): \033[32mЕсть 4h данные\033[0m")
             else:
                 print(f"Самая старая запись ({format_date(first_entry.get('time'))}): \033[31mНет 4h данных\033[0m")
                 
-            if "4h_di_new" in last_entry:
+            if "4h_values_new" in last_entry and isinstance(last_entry["4h_values_new"], list) and len(last_entry["4h_values_new"]) > 0:
                 print(f"Самая новая запись ({format_date(last_entry.get('time'))}): \033[32mЕсть 4h данные\033[0m")
             else:
                 print(f"Самая новая запись ({format_date(last_entry.get('time'))}): \033[31mНет 4h данных\033[0m")
