@@ -694,38 +694,47 @@ def di_index():
                 history = load_di_history(symbol)
                 
                 if history and symbol in results:
-                    # Создаем множество текущих дат для быстрой проверки
-                    current_dates = set()
-                    for entry in results[symbol]:
+                    # Словарь текущих записей для быстрого доступа и обновления
+                    current_entries = {}
+                    for i, entry in enumerate(results[symbol]):
                         if isinstance(entry, dict) and "time" in entry and "error" not in entry:
-                            current_dates.add(entry["time"])
+                            current_entries[entry["time"]] = (i, entry)
                     
-                    # Добавляем данные из истории для дат, которых нет в текущих результатах
+                    # Добавляем данные из истории
                     historical_entries = []
+                    
                     for date, hist_data in history.items():
-                        if date not in current_dates:
-                            # Убеждаемся, что запись - словарь
-                            if isinstance(hist_data, dict):
-                                # Для всех записей, если daily_di_new есть, но 4h_di_new нет или пустой, используем daily
-                                if "daily_di_new" in hist_data:
-                                    daily_value = hist_data.get("daily_di_new")
-                                    
-                                    # Если 4h_di_new отсутствует или null, заполняем его значением из daily
-                                    if "4h_di_new" not in hist_data or hist_data["4h_di_new"] is None:
-                                        hist_data["4h_di_new"] = daily_value
-                                    
-                                    # Мы больше не генерируем синтетические 4-часовые данные
-                                    # Если 4h_values_new отсутствует, создаем пустой массив
-                                    if "4h_values_new" not in hist_data:
-                                        hist_data["4h_values_new"] = []
-                                
-                                historical_entries.append(hist_data)
+                        # Убеждаемся, что запись - словарь
+                        if isinstance(hist_data, dict) and "daily_di_new" in hist_data:
+                            daily_value = hist_data.get("daily_di_new")
                             
+                            # Если 4h_di_new отсутствует или null, заполняем его значением из daily
+                            if "4h_di_new" not in hist_data or hist_data["4h_di_new"] is None:
+                                hist_data["4h_di_new"] = daily_value
+                            
+                            # Мы больше не генерируем синтетические 4-часовые данные
+                            # Если 4h_values_new отсутствует, создаем пустой массив
+                            if "4h_values_new" not in hist_data:
+                                hist_data["4h_values_new"] = []
+                            
+                            # Проверяем, есть ли эта дата в текущих результатах
+                            if date in current_entries:
+                                # Если дата уже есть, обновляем только 4h данные из истории
+                                idx, current_data = current_entries[date]
+                                # Если в истории есть 4h_values_new, используем их
+                                if hist_data.get("4h_values_new"):
+                                    current_data["4h_values_new"] = hist_data["4h_values_new"]
+                                    current_data["4h_di_new"] = hist_data["4h_di_new"]
+                                    # Обновляем запись в результатах
+                                    results[symbol][idx] = current_data
+                            else:
+                                # Если даты нет, добавляем всю запись из истории
+                                historical_entries.append(hist_data)
+                    
                     # Добавляем исторические данные
-                    if isinstance(results[symbol], list):
+                    if isinstance(results[symbol], list) and historical_entries:
                         # Добавляем исторические записи, которых нет в текущих результатах
-                        if historical_entries:
-                            results[symbol].extend(historical_entries)
+                        results[symbol].extend(historical_entries)
                         
                         # Мы не генерируем синтетические данные для 4h_values_new,
                         # а только используем реальные исторические данные
