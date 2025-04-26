@@ -2,9 +2,16 @@ import os
 import json
 import pandas as pd
 import logging
-from datetime import datetime
+from datetime import datetime, date
 
 logger = logging.getLogger('server')
+
+# Кастомный JSON энкодер для обработки типов данных datetime и date
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, (datetime, date)):
+            return o.isoformat()
+        return super(DateTimeEncoder, self).default(o)
 
 # Каталог для хранения исторических данных
 HISTORY_DIR = "historical_data"
@@ -34,7 +41,7 @@ def save_historical_data(df, symbol, data_type):
     
     try:
         with open(file_path, 'w') as f:
-            json.dump(data_to_save, f)
+            json.dump(data_to_save, f, cls=DateTimeEncoder)
         logger.info(f"Исторические данные сохранены: {file_path}, записей: {len(data_to_save)}")
         return True
     except Exception as e:
