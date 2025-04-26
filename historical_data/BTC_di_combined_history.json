@@ -120,15 +120,15 @@
     "4h_values_new": [
       {
         "time": "2025-04-22 00:00:00",
-        "value_new": 14
+        "value_new": 13
       },
       {
         "time": "2025-04-22 04:00:00",
-        "value_new": 15
+        "value_new": 14
       },
       {
         "time": "2025-04-22 08:00:00",
-        "value_new": 15
+        "value_new": 14
       },
       {
         "time": "2025-04-22 12:00:00",
@@ -158,30 +158,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-21 00:00:00",
-        "value_new": 16
-      },
-      {
-        "time": "2025-04-21 04:00:00",
-        "value_new": 16
-      },
-      {
-        "time": "2025-04-21 08:00:00",
         "value_new": 15
       },
       {
+        "time": "2025-04-21 04:00:00",
+        "value_new": 15
+      },
+      {
+        "time": "2025-04-21 08:00:00",
+        "value_new": 14
+      },
+      {
         "time": "2025-04-21 12:00:00",
-        "value_new": 16
+        "value_new": 15
       },
       {
         "time": "2025-04-21 16:00:00",
-        "value_new": 14
+        "value_new": 13
       },
       {
         "time": "2025-04-21 20:00:00",
-        "value_new": 14
+        "value_new": 13
       }
     ],
-    "4h_di_new": 14,
+    "4h_di_new": 13,
     "total_new": 34,
     "di_ema_13_new": 27.35,
     "di_sma_30_new": 25.13,
@@ -196,30 +196,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-20 00:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-20 04:00:00",
-        "value_new": 9
-      },
-      {
-        "time": "2025-04-20 08:00:00",
-        "value_new": 7
-      },
-      {
-        "time": "2025-04-20 12:00:00",
-        "value_new": 9
-      },
-      {
-        "time": "2025-04-20 16:00:00",
         "value_new": 8
       },
       {
+        "time": "2025-04-20 08:00:00",
+        "value_new": 6
+      },
+      {
+        "time": "2025-04-20 12:00:00",
+        "value_new": 8
+      },
+      {
+        "time": "2025-04-20 16:00:00",
+        "value_new": 7
+      },
+      {
         "time": "2025-04-20 20:00:00",
-        "value_new": 14
+        "value_new": 13
       }
     ],
-    "4h_di_new": 14,
+    "4h_di_new": 13,
     "total_new": 33,
     "di_ema_13_new": 26.24,
     "di_sma_30_new": 24.8,
@@ -234,30 +234,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-19 00:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-04-19 04:00:00",
-        "value_new": 13
+        "value_new": 12
       },
       {
         "time": "2025-04-19 08:00:00",
-        "value_new": 14
+        "value_new": 13
       },
       {
         "time": "2025-04-19 12:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-19 16:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-19 20:00:00",
-        "value_new": 12
+        "value_new": 11
       }
     ],
-    "4h_di_new": 12,
+    "4h_di_new": 11,
     "total_new": 30,
     "di_ema_13_new": 25.12,
     "di_sma_30_new": 24.57,
@@ -272,30 +272,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-18 00:00:00",
-        "value_new": 11
-      },
-      {
-        "time": "2025-04-18 04:00:00",
-        "value_new": 9
-      },
-      {
-        "time": "2025-04-18 08:00:00",
         "value_new": 10
       },
       {
-        "time": "2025-04-18 12:00:00",
+        "time": "2025-04-18 04:00:00",
         "value_new": 8
+      },
+      {
+        "time": "2025-04-18 08:00:00",
+        "value_new": 9
+      },
+      {
+        "time": "2025-04-18 12:00:00",
+        "value_new": 7
       },
       {
         "time": "2025-04-18 16:00:00",
-        "value_new": 8
+        "value_new": 7
       },
       {
         "time": "2025-04-18 20:00:00",
-        "value_new": 6
+        "value_new": 5
       }
     ],
-    "4h_di_new": 6,
+    "4h_di_new": 5,
     "total_new": 22,
     "di_ema_13_new": 24.3,
     "di_sma_30_new": 24.47,
@@ -310,30 +310,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-17 00:00:00",
-        "value_new": 5
+        "value_new": 4
       },
       {
         "time": "2025-04-17 04:00:00",
-        "value_new": 6
+        "value_new": 5
       },
       {
         "time": "2025-04-17 08:00:00",
-        "value_new": 7
+        "value_new": 6
       },
       {
         "time": "2025-04-17 12:00:00",
-        "value_new": 7
+        "value_new": 6
       },
       {
         "time": "2025-04-17 16:00:00",
-        "value_new": 9
+        "value_new": 8
       },
       {
         "time": "2025-04-17 20:00:00",
-        "value_new": 12
+        "value_new": 11
       }
     ],
-    "4h_di_new": 12,
+    "4h_di_new": 11,
     "total_new": 28,
     "di_ema_13_new": 24.69,
     "di_sma_30_new": 24.9,
@@ -348,30 +348,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-16 00:00:00",
-        "value_new": 6
+        "value_new": 5
       },
       {
         "time": "2025-04-16 04:00:00",
-        "value_new": 6
+        "value_new": 5
       },
       {
         "time": "2025-04-16 08:00:00",
-        "value_new": 5
+        "value_new": 4
       },
       {
         "time": "2025-04-16 12:00:00",
-        "value_new": 9
+        "value_new": 8
       },
       {
         "time": "2025-04-16 16:00:00",
-        "value_new": 6
+        "value_new": 5
       },
       {
         "time": "2025-04-16 20:00:00",
-        "value_new": 5
+        "value_new": 4
       }
     ],
-    "4h_di_new": 5,
+    "4h_di_new": 4,
     "total_new": 20,
     "di_ema_13_new": 24.13,
     "di_sma_30_new": 24.77,
@@ -386,30 +386,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-15 00:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-15 04:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-15 08:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-15 12:00:00",
-        "value_new": 9
+        "value_new": 8
       },
       {
         "time": "2025-04-15 16:00:00",
-        "value_new": 7
+        "value_new": 6
       },
       {
         "time": "2025-04-15 20:00:00",
-        "value_new": 6
+        "value_new": 5
       }
     ],
-    "4h_di_new": 6,
+    "4h_di_new": 5,
     "total_new": 22,
     "di_ema_13_new": 24.82,
     "di_sma_30_new": 25.13,
@@ -424,30 +424,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-14 00:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-04-14 04:00:00",
-        "value_new": 10
+        "value_new": 9
       },
       {
         "time": "2025-04-14 08:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-04-14 12:00:00",
-        "value_new": 8
+        "value_new": 7
       },
       {
         "time": "2025-04-14 16:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-04-14 20:00:00",
-        "value_new": 10
+        "value_new": 9
       }
     ],
-    "4h_di_new": 10,
+    "4h_di_new": 9,
     "total_new": 29,
     "di_ema_13_new": 25.29,
     "di_sma_30_new": 25.2,
@@ -462,30 +462,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-13 00:00:00",
-        "value_new": 13
+        "value_new": 12
       },
       {
         "time": "2025-04-13 04:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-13 08:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-13 12:00:00",
-        "value_new": 11
-      },
-      {
-        "time": "2025-04-13 16:00:00",
         "value_new": 10
       },
       {
+        "time": "2025-04-13 16:00:00",
+        "value_new": 9
+      },
+      {
         "time": "2025-04-13 20:00:00",
-        "value_new": 11
+        "value_new": 10
       }
     ],
-    "4h_di_new": 11,
+    "4h_di_new": 10,
     "total_new": 30,
     "di_ema_13_new": 24.67,
     "di_sma_30_new": 25.33,
@@ -500,30 +500,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-12 00:00:00",
-        "value_new": 13
+        "value_new": 12
       },
       {
         "time": "2025-04-12 04:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-12 08:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-12 12:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-12 16:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-12 20:00:00",
-        "value_new": 13
+        "value_new": 12
       }
     ],
-    "4h_di_new": 13,
+    "4h_di_new": 12,
     "total_new": 32,
     "di_ema_13_new": 23.79,
     "di_sma_30_new": 25.37,
@@ -538,30 +538,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-11 00:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-11 04:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-11 08:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-11 12:00:00",
-        "value_new": 13
+        "value_new": 12
       },
       {
         "time": "2025-04-11 16:00:00",
-        "value_new": 13
+        "value_new": 12
       },
       {
         "time": "2025-04-11 20:00:00",
-        "value_new": 14
+        "value_new": 13
       }
     ],
-    "4h_di_new": 14,
+    "4h_di_new": 13,
     "total_new": 30,
     "di_ema_13_new": 22.42,
     "di_sma_30_new": 25.07,
@@ -576,30 +576,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-10 00:00:00",
-        "value_new": 10
+        "value_new": 9
       },
       {
         "time": "2025-04-10 04:00:00",
-        "value_new": 10
+        "value_new": 9
       },
       {
         "time": "2025-04-10 08:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-04-10 12:00:00",
-        "value_new": 6
+        "value_new": 5
       },
       {
         "time": "2025-04-10 16:00:00",
-        "value_new": 7
+        "value_new": 6
       },
       {
         "time": "2025-04-10 20:00:00",
-        "value_new": 9
+        "value_new": 8
       }
     ],
-    "4h_di_new": 9,
+    "4h_di_new": 8,
     "total_new": 22,
     "di_ema_13_new": 21.15,
     "di_sma_30_new": 25.0,
@@ -626,18 +626,18 @@
       },
       {
         "time": "2025-04-09 12:00:00",
-        "value_new": 5
+        "value_new": 4
       },
       {
         "time": "2025-04-09 16:00:00",
-        "value_new": 10
+        "value_new": 9
       },
       {
         "time": "2025-04-09 20:00:00",
-        "value_new": 10
+        "value_new": 9
       }
     ],
-    "4h_di_new": 10,
+    "4h_di_new": 9,
     "total_new": 25,
     "di_ema_13_new": 21.01,
     "di_sma_30_new": 25.1,
@@ -652,23 +652,23 @@
     "4h_values_new": [
       {
         "time": "2025-04-08 00:00:00",
-        "value_new": 7
+        "value_new": 6
       },
       {
         "time": "2025-04-08 04:00:00",
-        "value_new": 8
-      },
-      {
-        "time": "2025-04-08 08:00:00",
         "value_new": 7
       },
       {
+        "time": "2025-04-08 08:00:00",
+        "value_new": 6
+      },
+      {
         "time": "2025-04-08 12:00:00",
-        "value_new": 5
+        "value_new": 4
       },
       {
         "time": "2025-04-08 16:00:00",
-        "value_new": 3
+        "value_new": 2
       },
       {
         "time": "2025-04-08 20:00:00",
@@ -690,7 +690,7 @@
     "4h_values_new": [
       {
         "time": "2025-04-07 00:00:00",
-        "value_new": 3
+        "value_new": 2
       },
       {
         "time": "2025-04-07 04:00:00",
@@ -698,22 +698,22 @@
       },
       {
         "time": "2025-04-07 08:00:00",
-        "value_new": 2
+        "value_new": 1
       },
       {
         "time": "2025-04-07 12:00:00",
-        "value_new": 6
+        "value_new": 5
       },
       {
         "time": "2025-04-07 16:00:00",
-        "value_new": 4
+        "value_new": 3
       },
       {
         "time": "2025-04-07 20:00:00",
-        "value_new": 5
+        "value_new": 4
       }
     ],
-    "4h_di_new": 5,
+    "4h_di_new": 4,
     "total_new": 18,
     "di_ema_13_new": 21.41,
     "di_sma_30_new": 25.03,
@@ -728,30 +728,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-06 00:00:00",
-        "value_new": 6
+        "value_new": 5
       },
       {
         "time": "2025-04-06 04:00:00",
-        "value_new": 5
-      },
-      {
-        "time": "2025-04-06 08:00:00",
-        "value_new": 5
-      },
-      {
-        "time": "2025-04-06 12:00:00",
         "value_new": 4
       },
       {
-        "time": "2025-04-06 16:00:00",
+        "time": "2025-04-06 08:00:00",
+        "value_new": 4
+      },
+      {
+        "time": "2025-04-06 12:00:00",
         "value_new": 3
       },
       {
+        "time": "2025-04-06 16:00:00",
+        "value_new": 2
+      },
+      {
         "time": "2025-04-06 20:00:00",
-        "value_new": 3
+        "value_new": 2
       }
     ],
-    "4h_di_new": 3,
+    "4h_di_new": 2,
     "total_new": 14,
     "di_ema_13_new": 21.97,
     "di_sma_30_new": 25.2,
@@ -766,30 +766,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-05 00:00:00",
-        "value_new": 7
-      },
-      {
-        "time": "2025-04-05 04:00:00",
-        "value_new": 7
-      },
-      {
-        "time": "2025-04-05 08:00:00",
         "value_new": 6
       },
       {
-        "time": "2025-04-05 12:00:00",
+        "time": "2025-04-05 04:00:00",
+        "value_new": 6
+      },
+      {
+        "time": "2025-04-05 08:00:00",
         "value_new": 5
       },
       {
-        "time": "2025-04-05 16:00:00",
+        "time": "2025-04-05 12:00:00",
         "value_new": 4
       },
       {
+        "time": "2025-04-05 16:00:00",
+        "value_new": 3
+      },
+      {
         "time": "2025-04-05 20:00:00",
-        "value_new": 7
+        "value_new": 6
       }
     ],
-    "4h_di_new": 7,
+    "4h_di_new": 6,
     "total_new": 22,
     "di_ema_13_new": 23.3,
     "di_sma_30_new": 25.57,
@@ -804,30 +804,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-04 00:00:00",
-        "value_new": 3
+        "value_new": 2
       },
       {
         "time": "2025-04-04 04:00:00",
-        "value_new": 4
-      },
-      {
-        "time": "2025-04-04 08:00:00",
         "value_new": 3
       },
       {
+        "time": "2025-04-04 08:00:00",
+        "value_new": 2
+      },
+      {
         "time": "2025-04-04 12:00:00",
-        "value_new": 4
+        "value_new": 3
       },
       {
         "time": "2025-04-04 16:00:00",
-        "value_new": 7
+        "value_new": 6
       },
       {
         "time": "2025-04-04 20:00:00",
-        "value_new": 8
+        "value_new": 7
       }
     ],
-    "4h_di_new": 8,
+    "4h_di_new": 7,
     "total_new": 23,
     "di_ema_13_new": 23.52,
     "di_sma_30_new": 25.97,
@@ -842,30 +842,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-03 00:00:00",
-        "value_new": 9
+        "value_new": 8
       },
       {
         "time": "2025-04-03 04:00:00",
-        "value_new": 7
+        "value_new": 6
       },
       {
         "time": "2025-04-03 08:00:00",
-        "value_new": 5
+        "value_new": 4
       },
       {
         "time": "2025-04-03 12:00:00",
-        "value_new": 4
+        "value_new": 3
       },
       {
         "time": "2025-04-03 16:00:00",
-        "value_new": 4
+        "value_new": 3
       },
       {
         "time": "2025-04-03 20:00:00",
-        "value_new": 3
+        "value_new": 2
       }
     ],
-    "4h_di_new": 3,
+    "4h_di_new": 2,
     "total_new": 16,
     "di_ema_13_new": 23.61,
     "di_sma_30_new": 26.27,
@@ -880,30 +880,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-02 00:00:00",
-        "value_new": 15
+        "value_new": 14
       },
       {
         "time": "2025-04-02 04:00:00",
-        "value_new": 15
+        "value_new": 14
       },
       {
         "time": "2025-04-02 08:00:00",
-        "value_new": 15
+        "value_new": 14
       },
       {
         "time": "2025-04-02 12:00:00",
-        "value_new": 14
+        "value_new": 13
       },
       {
         "time": "2025-04-02 16:00:00",
-        "value_new": 14
+        "value_new": 13
       },
       {
         "time": "2025-04-02 20:00:00",
-        "value_new": 8
+        "value_new": 7
       }
     ],
-    "4h_di_new": 8,
+    "4h_di_new": 7,
     "total_new": 20,
     "di_ema_13_new": 24.88,
     "di_sma_30_new": 26.53,
@@ -918,30 +918,30 @@
     "4h_values_new": [
       {
         "time": "2025-04-01 00:00:00",
-        "value_new": 9
+        "value_new": 8
       },
       {
         "time": "2025-04-01 04:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-04-01 08:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-04-01 12:00:00",
-        "value_new": 13
+        "value_new": 12
       },
       {
         "time": "2025-04-01 16:00:00",
-        "value_new": 14
+        "value_new": 13
       },
       {
         "time": "2025-04-01 20:00:00",
-        "value_new": 15
+        "value_new": 14
       }
     ],
-    "4h_di_new": 15,
+    "4h_di_new": 14,
     "total_new": 31,
     "di_ema_13_new": 25.69,
     "di_sma_30_new": 26.7,
@@ -956,30 +956,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-31 00:00:00",
-        "value_new": 5
+        "value_new": 4
       },
       {
         "time": "2025-03-31 04:00:00",
-        "value_new": 5
+        "value_new": 4
       },
       {
         "time": "2025-03-31 08:00:00",
-        "value_new": 6
+        "value_new": 5
       },
       {
         "time": "2025-03-31 12:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-03-31 16:00:00",
-        "value_new": 8
+        "value_new": 7
       },
       {
         "time": "2025-03-31 20:00:00",
-        "value_new": 7
+        "value_new": 6
       }
     ],
-    "4h_di_new": 7,
+    "4h_di_new": 6,
     "total_new": 18,
     "di_ema_13_new": 24.8,
     "di_sma_30_new": 26.8,
@@ -994,30 +994,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-30 00:00:00",
-        "value_new": 6
-      },
-      {
-        "time": "2025-03-30 04:00:00",
-        "value_new": 6
-      },
-      {
-        "time": "2025-03-30 08:00:00",
-        "value_new": 6
-      },
-      {
-        "time": "2025-03-30 12:00:00",
         "value_new": 5
       },
       {
+        "time": "2025-03-30 04:00:00",
+        "value_new": 5
+      },
+      {
+        "time": "2025-03-30 08:00:00",
+        "value_new": 5
+      },
+      {
+        "time": "2025-03-30 12:00:00",
+        "value_new": 4
+      },
+      {
         "time": "2025-03-30 16:00:00",
-        "value_new": 6
+        "value_new": 5
       },
       {
         "time": "2025-03-30 20:00:00",
-        "value_new": 6
+        "value_new": 5
       }
     ],
-    "4h_di_new": 6,
+    "4h_di_new": 5,
     "total_new": 19,
     "di_ema_13_new": 25.94,
     "di_sma_30_new": 27.23,
@@ -1032,30 +1032,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-29 00:00:00",
-        "value_new": 4
+        "value_new": 3
       },
       {
         "time": "2025-03-29 04:00:00",
-        "value_new": 4
+        "value_new": 3
       },
       {
         "time": "2025-03-29 08:00:00",
-        "value_new": 4
+        "value_new": 3
       },
       {
         "time": "2025-03-29 12:00:00",
-        "value_new": 5
+        "value_new": 4
       },
       {
         "time": "2025-03-29 16:00:00",
-        "value_new": 5
+        "value_new": 4
       },
       {
         "time": "2025-03-29 20:00:00",
-        "value_new": 5
+        "value_new": 4
       }
     ],
-    "4h_di_new": 5,
+    "4h_di_new": 4,
     "total_new": 18,
     "di_ema_13_new": 27.09,
     "di_sma_30_new": 27.57,
@@ -1070,30 +1070,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-28 00:00:00",
-        "value_new": 9
+        "value_new": 8
       },
       {
         "time": "2025-03-28 04:00:00",
-        "value_new": 7
-      },
-      {
-        "time": "2025-03-28 08:00:00",
         "value_new": 6
       },
       {
-        "time": "2025-03-28 12:00:00",
+        "time": "2025-03-28 08:00:00",
         "value_new": 5
+      },
+      {
+        "time": "2025-03-28 12:00:00",
+        "value_new": 4
       },
       {
         "time": "2025-03-28 16:00:00",
-        "value_new": 5
+        "value_new": 4
       },
       {
         "time": "2025-03-28 20:00:00",
-        "value_new": 4
+        "value_new": 3
       }
     ],
-    "4h_di_new": 4,
+    "4h_di_new": 3,
     "total_new": 22,
     "di_ema_13_new": 28.61,
     "di_sma_30_new": 27.73,
@@ -1108,30 +1108,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-27 00:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-03-27 04:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-03-27 08:00:00",
-        "value_new": 10
+        "value_new": 9
       },
       {
         "time": "2025-03-27 12:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-03-27 16:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-03-27 20:00:00",
-        "value_new": 10
+        "value_new": 9
       }
     ],
-    "4h_di_new": 10,
+    "4h_di_new": 9,
     "total_new": 30,
     "di_ema_13_new": 29.71,
     "di_sma_30_new": 27.63,
@@ -1146,30 +1146,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-26 00:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-03-26 04:00:00",
-        "value_new": 13
+        "value_new": 12
       },
       {
         "time": "2025-03-26 08:00:00",
-        "value_new": 13
+        "value_new": 12
       },
       {
         "time": "2025-03-26 12:00:00",
-        "value_new": 10
+        "value_new": 9
       },
       {
         "time": "2025-03-26 16:00:00",
-        "value_new": 10
+        "value_new": 9
       },
       {
         "time": "2025-03-26 20:00:00",
-        "value_new": 10
+        "value_new": 9
       }
     ],
-    "4h_di_new": 10,
+    "4h_di_new": 9,
     "total_new": 30,
     "di_ema_13_new": 29.66,
     "di_sma_30_new": 27.4,
@@ -1184,30 +1184,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-25 00:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-03-25 04:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-03-25 08:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-03-25 12:00:00",
-        "value_new": 14
+        "value_new": 13
       },
       {
         "time": "2025-03-25 16:00:00",
-        "value_new": 15
+        "value_new": 14
       },
       {
         "time": "2025-03-25 20:00:00",
-        "value_new": 13
+        "value_new": 12
       }
     ],
-    "4h_di_new": 13,
+    "4h_di_new": 12,
     "total_new": 34,
     "di_ema_13_new": 29.61,
     "di_sma_30_new": 27.07,
@@ -1222,30 +1222,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-24 00:00:00",
-        "value_new": 13
+        "value_new": 12
       },
       {
         "time": "2025-03-24 04:00:00",
-        "value_new": 14
-      },
-      {
-        "time": "2025-03-24 08:00:00",
         "value_new": 13
       },
       {
+        "time": "2025-03-24 08:00:00",
+        "value_new": 12
+      },
+      {
         "time": "2025-03-24 12:00:00",
-        "value_new": 14
+        "value_new": 13
       },
       {
         "time": "2025-03-24 16:00:00",
-        "value_new": 14
+        "value_new": 13
       },
       {
         "time": "2025-03-24 20:00:00",
-        "value_new": 14
+        "value_new": 13
       }
     ],
-    "4h_di_new": 14,
+    "4h_di_new": 13,
     "total_new": 35,
     "di_ema_13_new": 28.87,
     "di_sma_30_new": 26.83,
@@ -1260,30 +1260,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-23 00:00:00",
-        "value_new": 8
+        "value_new": 7
       },
       {
         "time": "2025-03-23 04:00:00",
-        "value_new": 8
+        "value_new": 7
       },
       {
         "time": "2025-03-23 08:00:00",
-        "value_new": 10
+        "value_new": 9
       },
       {
         "time": "2025-03-23 12:00:00",
-        "value_new": 13
+        "value_new": 12
       },
       {
         "time": "2025-03-23 16:00:00",
-        "value_new": 13
+        "value_new": 12
       },
       {
         "time": "2025-03-23 20:00:00",
-        "value_new": 13
+        "value_new": 12
       }
     ],
-    "4h_di_new": 13,
+    "4h_di_new": 12,
     "total_new": 33,
     "di_ema_13_new": 27.85,
     "di_sma_30_new": 26.57,
@@ -1298,30 +1298,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-22 00:00:00",
-        "value_new": 8
+        "value_new": 7
       },
       {
         "time": "2025-03-22 04:00:00",
-        "value_new": 8
+        "value_new": 7
       },
       {
         "time": "2025-03-22 08:00:00",
-        "value_new": 7
+        "value_new": 6
       },
       {
         "time": "2025-03-22 12:00:00",
-        "value_new": 6
+        "value_new": 5
       },
       {
         "time": "2025-03-22 16:00:00",
-        "value_new": 7
+        "value_new": 6
       },
       {
         "time": "2025-03-22 20:00:00",
-        "value_new": 6
+        "value_new": 5
       }
     ],
-    "4h_di_new": 6,
+    "4h_di_new": 5,
     "total_new": 24,
     "di_ema_13_new": 27.0,
     "di_sma_30_new": 26.4,
@@ -1336,30 +1336,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-21 00:00:00",
-        "value_new": 9
+        "value_new": 8
       },
       {
         "time": "2025-03-21 04:00:00",
-        "value_new": 7
+        "value_new": 6
       },
       {
         "time": "2025-03-21 08:00:00",
-        "value_new": 7
+        "value_new": 6
       },
       {
         "time": "2025-03-21 12:00:00",
-        "value_new": 7
+        "value_new": 6
       },
       {
         "time": "2025-03-21 16:00:00",
-        "value_new": 7
+        "value_new": 6
       },
       {
         "time": "2025-03-21 20:00:00",
-        "value_new": 8
+        "value_new": 7
       }
     ],
-    "4h_di_new": 8,
+    "4h_di_new": 7,
     "total_new": 26,
     "di_ema_13_new": 27.49,
     "di_sma_30_new": 26.87,
@@ -1374,30 +1374,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-20 00:00:00",
-        "value_new": 14
+        "value_new": 13
       },
       {
         "time": "2025-03-20 04:00:00",
-        "value_new": 14
+        "value_new": 13
       },
       {
         "time": "2025-03-20 08:00:00",
-        "value_new": 14
+        "value_new": 13
       },
       {
         "time": "2025-03-20 12:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-03-20 16:00:00",
-        "value_new": 8
+        "value_new": 7
       },
       {
         "time": "2025-03-20 20:00:00",
-        "value_new": 10
+        "value_new": 9
       }
     ],
-    "4h_di_new": 10,
+    "4h_di_new": 9,
     "total_new": 27,
     "di_ema_13_new": 27.74,
     "di_sma_30_new": 27.07,
@@ -1412,30 +1412,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-19 00:00:00",
-        "value_new": 7
+        "value_new": 6
       },
       {
         "time": "2025-03-19 04:00:00",
-        "value_new": 8
+        "value_new": 7
       },
       {
         "time": "2025-03-19 08:00:00",
-        "value_new": 10
+        "value_new": 9
       },
       {
         "time": "2025-03-19 12:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-03-19 16:00:00",
-        "value_new": 14
+        "value_new": 13
       },
       {
         "time": "2025-03-19 20:00:00",
-        "value_new": 14
+        "value_new": 13
       }
     ],
-    "4h_di_new": 14,
+    "4h_di_new": 13,
     "total_new": 35,
     "di_ema_13_new": 27.87,
     "di_sma_30_new": 26.97,
@@ -1450,30 +1450,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-18 00:00:00",
-        "value_new": 10
+        "value_new": 9
       },
       {
         "time": "2025-03-18 04:00:00",
-        "value_new": 8
-      },
-      {
-        "time": "2025-03-18 08:00:00",
         "value_new": 7
       },
       {
+        "time": "2025-03-18 08:00:00",
+        "value_new": 6
+      },
+      {
         "time": "2025-03-18 12:00:00",
-        "value_new": 4
+        "value_new": 3
       },
       {
         "time": "2025-03-18 16:00:00",
-        "value_new": 6
+        "value_new": 5
       },
       {
         "time": "2025-03-18 20:00:00",
-        "value_new": 6
+        "value_new": 5
       }
     ],
-    "4h_di_new": 6,
+    "4h_di_new": 5,
     "total_new": 24,
     "di_ema_13_new": 26.68,
     "di_sma_30_new": 26.47,
@@ -1488,30 +1488,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-17 00:00:00",
-        "value_new": 9
-      },
-      {
-        "time": "2025-03-17 04:00:00",
-        "value_new": 9
-      },
-      {
-        "time": "2025-03-17 08:00:00",
-        "value_new": 9
-      },
-      {
-        "time": "2025-03-17 12:00:00",
         "value_new": 8
       },
       {
+        "time": "2025-03-17 04:00:00",
+        "value_new": 8
+      },
+      {
+        "time": "2025-03-17 08:00:00",
+        "value_new": 8
+      },
+      {
+        "time": "2025-03-17 12:00:00",
+        "value_new": 7
+      },
+      {
         "time": "2025-03-17 16:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-03-17 20:00:00",
-        "value_new": 11
+        "value_new": 10
       }
     ],
-    "4h_di_new": 11,
+    "4h_di_new": 10,
     "total_new": 31,
     "di_ema_13_new": 27.13,
     "di_sma_30_new": 26.53,
@@ -1526,30 +1526,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-16 00:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-03-16 04:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-03-16 08:00:00",
-        "value_new": 9
+        "value_new": 8
       },
       {
         "time": "2025-03-16 12:00:00",
-        "value_new": 10
-      },
-      {
-        "time": "2025-03-16 16:00:00",
         "value_new": 9
       },
       {
+        "time": "2025-03-16 16:00:00",
+        "value_new": 8
+      },
+      {
         "time": "2025-03-16 20:00:00",
-        "value_new": 6
+        "value_new": 5
       }
     ],
-    "4h_di_new": 6,
+    "4h_di_new": 5,
     "total_new": 24,
     "di_ema_13_new": 26.48,
     "di_sma_30_new": 26.7,
@@ -1564,30 +1564,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-15 00:00:00",
-        "value_new": 13
+        "value_new": 12
       },
       {
         "time": "2025-03-15 04:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-03-15 08:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2025-03-15 12:00:00",
-        "value_new": 14
-      },
-      {
-        "time": "2025-03-15 16:00:00",
         "value_new": 13
       },
       {
+        "time": "2025-03-15 16:00:00",
+        "value_new": 12
+      },
+      {
         "time": "2025-03-15 20:00:00",
-        "value_new": 14
+        "value_new": 13
       }
     ],
-    "4h_di_new": 14,
+    "4h_di_new": 13,
     "total_new": 33,
     "di_ema_13_new": 26.89,
     "di_sma_30_new": 27.03,
@@ -1602,30 +1602,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-14 00:00:00",
-        "value_new": 5
+        "value_new": 4
       },
       {
         "time": "2025-03-14 04:00:00",
-        "value_new": 6
+        "value_new": 5
       },
       {
         "time": "2025-03-14 08:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-03-14 12:00:00",
-        "value_new": 13
+        "value_new": 12
       },
       {
         "time": "2025-03-14 16:00:00",
-        "value_new": 13
+        "value_new": 12
       },
       {
         "time": "2025-03-14 20:00:00",
-        "value_new": 13
+        "value_new": 12
       }
     ],
-    "4h_di_new": 13,
+    "4h_di_new": 12,
     "total_new": 31,
     "di_ema_13_new": 25.88,
     "di_sma_30_new": 26.87,
@@ -1640,30 +1640,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-13 00:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-03-13 04:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-03-13 08:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2025-03-13 12:00:00",
-        "value_new": 8
+        "value_new": 7
       },
       {
         "time": "2025-03-13 16:00:00",
-        "value_new": 3
+        "value_new": 2
       },
       {
         "time": "2025-03-13 20:00:00",
-        "value_new": 6
+        "value_new": 5
       }
     ],
-    "4h_di_new": 6,
+    "4h_di_new": 5,
     "total_new": 23,
     "di_ema_13_new": 25.02,
     "di_sma_30_new": 26.9,
@@ -1678,30 +1678,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-12 00:00:00",
-        "value_new": 10
+        "value_new": 9
       },
       {
         "time": "2025-03-12 04:00:00",
-        "value_new": 11
-      },
-      {
-        "time": "2025-03-12 08:00:00",
         "value_new": 10
       },
       {
-        "time": "2025-03-12 12:00:00",
+        "time": "2025-03-12 08:00:00",
         "value_new": 9
+      },
+      {
+        "time": "2025-03-12 12:00:00",
+        "value_new": 8
       },
       {
         "time": "2025-03-12 16:00:00",
-        "value_new": 9
+        "value_new": 8
       },
       {
         "time": "2025-03-12 20:00:00",
-        "value_new": 11
+        "value_new": 10
       }
     ],
-    "4h_di_new": 11,
+    "4h_di_new": 10,
     "total_new": 28,
     "di_ema_13_new": 25.36,
     "di_sma_30_new": 26.8,
@@ -1716,30 +1716,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-11 00:00:00",
-        "value_new": 4
+        "value_new": 3
       },
       {
         "time": "2025-03-11 04:00:00",
-        "value_new": 5
+        "value_new": 4
       },
       {
         "time": "2025-03-11 08:00:00",
-        "value_new": 5
+        "value_new": 4
       },
       {
         "time": "2025-03-11 12:00:00",
-        "value_new": 6
+        "value_new": 5
       },
       {
         "time": "2025-03-11 16:00:00",
-        "value_new": 8
+        "value_new": 7
       },
       {
         "time": "2025-03-11 20:00:00",
-        "value_new": 9
+        "value_new": 8
       }
     ],
-    "4h_di_new": 9,
+    "4h_di_new": 8,
     "total_new": 25,
     "di_ema_13_new": 24.92,
     "di_sma_30_new": 26.87,
@@ -1754,30 +1754,30 @@
     "4h_values_new": [
       {
         "time": "2025-03-10 00:00:00",
-        "value_new": 3
+        "value_new": 2
       },
       {
         "time": "2025-03-10 04:00:00",
-        "value_new": 5
-      },
-      {
-        "time": "2025-03-10 08:00:00",
-        "value_new": 5
-      },
-      {
-        "time": "2025-03-10 12:00:00",
         "value_new": 4
       },
       {
-        "time": "2025-03-10 16:00:00",
+        "time": "2025-03-10 08:00:00",
+        "value_new": 4
+      },
+      {
+        "time": "2025-03-10 12:00:00",
         "value_new": 3
       },
       {
+        "time": "2025-03-10 16:00:00",
+        "value_new": 2
+      },
+      {
         "time": "2025-03-10 20:00:00",
-        "value_new": 3
+        "value_new": 2
       }
     ],
-    "4h_di_new": 3,
+    "4h_di_new": 2,
     "total_new": 16,
     "di_ema_13_new": 24.91,
     "di_sma_30_new": 26.9,
@@ -1804,18 +1804,18 @@
       },
       {
         "time": "2025-03-09 12:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2025-03-09 16:00:00",
         "value_new": 2
       },
       {
+        "time": "2025-03-09 16:00:00",
+        "value_new": 1
+      },
+      {
         "time": "2025-03-09 20:00:00",
-        "value_new": 3
+        "value_new": 2
       }
     ],
-    "4h_di_new": 3,
+    "4h_di_new": 2,
     "total_new": 21,
     "di_ema_13_new": 26.39,
     "di_sma_30_new": 27.17,
@@ -4794,23 +4794,23 @@
     "4h_values_new": [
       {
         "time": "2024-12-20 00:00:00",
-        "value_new": 5
+        "value_new": 2
       },
       {
         "time": "2024-12-20 04:00:00",
-        "value_new": 5
+        "value_new": 2
       },
       {
         "time": "2024-12-20 08:00:00",
-        "value_new": 5
+        "value_new": 2
       },
       {
         "time": "2024-12-20 12:00:00",
-        "value_new": 8
+        "value_new": 5
       },
       {
         "time": "2024-12-20 16:00:00",
-        "value_new": 9
+        "value_new": 6
       },
       {
         "time": "2024-12-20 20:00:00",
@@ -4832,30 +4832,30 @@
     "4h_values_new": [
       {
         "time": "2024-12-19 00:00:00",
-        "value_new": 5
+        "value_new": 2
       },
       {
         "time": "2024-12-19 04:00:00",
-        "value_new": 5
+        "value_new": 2
       },
       {
         "time": "2024-12-19 08:00:00",
-        "value_new": 5
+        "value_new": 2
       },
       {
         "time": "2024-12-19 12:00:00",
-        "value_new": 5
+        "value_new": 2
       },
       {
         "time": "2024-12-19 16:00:00",
-        "value_new": 5
+        "value_new": 2
       },
       {
         "time": "2024-12-19 20:00:00",
-        "value_new": 5
+        "value_new": 2
       }
     ],
-    "4h_di_new": 5,
+    "4h_di_new": 2,
     "total_new": 26,
     "di_ema_13_new": 37.35,
     "di_sma_30_new": 38.77,
@@ -4870,30 +4870,30 @@
     "4h_values_new": [
       {
         "time": "2024-12-18 00:00:00",
-        "value_new": 9
+        "value_new": 6
       },
       {
         "time": "2024-12-18 04:00:00",
-        "value_new": 8
+        "value_new": 5
       },
       {
         "time": "2024-12-18 08:00:00",
-        "value_new": 9
+        "value_new": 6
       },
       {
         "time": "2024-12-18 12:00:00",
-        "value_new": 7
+        "value_new": 4
       },
       {
         "time": "2024-12-18 16:00:00",
-        "value_new": 7
+        "value_new": 4
       },
       {
         "time": "2024-12-18 20:00:00",
-        "value_new": 7
+        "value_new": 4
       }
     ],
-    "4h_di_new": 7,
+    "4h_di_new": 4,
     "total_new": 33,
     "di_ema_13_new": 39.24,
     "di_sma_30_new": 39.23,
@@ -4908,30 +4908,30 @@
     "4h_values_new": [
       {
         "time": "2024-12-17 00:00:00",
-        "value_new": 16
+        "value_new": 13
       },
       {
         "time": "2024-12-17 04:00:00",
-        "value_new": 16
+        "value_new": 13
       },
       {
         "time": "2024-12-17 08:00:00",
-        "value_new": 16
+        "value_new": 13
       },
       {
         "time": "2024-12-17 12:00:00",
-        "value_new": 12
+        "value_new": 9
       },
       {
         "time": "2024-12-17 16:00:00",
-        "value_new": 10
+        "value_new": 7
       },
       {
         "time": "2024-12-17 20:00:00",
-        "value_new": 10
+        "value_new": 7
       }
     ],
-    "4h_di_new": 10,
+    "4h_di_new": 7,
     "total_new": 38,
     "di_ema_13_new": 40.28,
     "di_sma_30_new": 39.3,
@@ -4946,30 +4946,30 @@
     "4h_values_new": [
       {
         "time": "2024-12-16 00:00:00",
-        "value_new": 14
+        "value_new": 11
       },
       {
         "time": "2024-12-16 04:00:00",
-        "value_new": 13
+        "value_new": 10
       },
       {
         "time": "2024-12-16 08:00:00",
-        "value_new": 13
+        "value_new": 10
       },
       {
         "time": "2024-12-16 12:00:00",
-        "value_new": 16
+        "value_new": 13
       },
       {
         "time": "2024-12-16 16:00:00",
-        "value_new": 16
+        "value_new": 13
       },
       {
         "time": "2024-12-16 20:00:00",
-        "value_new": 14
+        "value_new": 11
       }
     ],
-    "4h_di_new": 14,
+    "4h_di_new": 11,
     "total_new": 43,
     "di_ema_13_new": 40.66,
     "di_sma_30_new": 39.2,
@@ -4984,30 +4984,30 @@
     "4h_values_new": [
       {
         "time": "2024-12-15 00:00:00",
-        "value_new": 13
+        "value_new": 10
       },
       {
         "time": "2024-12-15 04:00:00",
-        "value_new": 15
+        "value_new": 12
       },
       {
         "time": "2024-12-15 08:00:00",
-        "value_new": 17
+        "value_new": 14
       },
       {
         "time": "2024-12-15 12:00:00",
-        "value_new": 17
+        "value_new": 14
       },
       {
         "time": "2024-12-15 16:00:00",
-        "value_new": 16
+        "value_new": 13
       },
       {
         "time": "2024-12-15 20:00:00",
-        "value_new": 16
+        "value_new": 13
       }
     ],
-    "4h_di_new": 16,
+    "4h_di_new": 13,
     "total_new": 43,
     "di_ema_13_new": 40.27,
     "di_sma_30_new": 38.87,
@@ -5022,30 +5022,30 @@
     "4h_values_new": [
       {
         "time": "2024-12-14 00:00:00",
-        "value_new": 15
+        "value_new": 12
       },
       {
         "time": "2024-12-14 04:00:00",
-        "value_new": 15
+        "value_new": 12
       },
       {
         "time": "2024-12-14 08:00:00",
-        "value_new": 15
+        "value_new": 12
       },
       {
         "time": "2024-12-14 12:00:00",
-        "value_new": 15
+        "value_new": 12
       },
       {
         "time": "2024-12-14 16:00:00",
-        "value_new": 14
+        "value_new": 11
       },
       {
         "time": "2024-12-14 20:00:00",
-        "value_new": 14
+        "value_new": 11
       }
     ],
-    "4h_di_new": 14,
+    "4h_di_new": 11,
     "total_new": 41,
     "di_ema_13_new": 39.82,
     "di_sma_30_new": 38.53,
@@ -5080,10 +5080,10 @@
       },
       {
         "time": "2024-12-13 20:00:00",
-        "value_new": 16
+        "value_new": 13
       }
     ],
-    "4h_di_new": 16,
+    "4h_di_new": 13,
     "total_new": 43,
     "di_ema_13_new": 39.62,
     "di_sma_30_new": 38.2,
@@ -5858,30 +5858,30 @@
     "4h_values_new": [
       {
         "time": "2024-11-22 00:00:00",
-        "value_new": 11
+        "value_new": 8
       },
       {
         "time": "2024-11-22 04:00:00",
-        "value_new": 13
+        "value_new": 9
       },
       {
         "time": "2024-11-22 08:00:00",
-        "value_new": 13
+        "value_new": 9
       },
       {
         "time": "2024-11-22 12:00:00",
-        "value_new": 11
+        "value_new": 10
       },
       {
         "time": "2024-11-22 16:00:00",
-        "value_new": 12
+        "value_new": 11
       },
       {
         "time": "2024-11-22 20:00:00",
-        "value_new": 10
+        "value_new": 9
       }
     ],
-    "4h_di_new": 10,
+    "4h_di_new": 9,
     "total_new": 42,
     "di_ema_13_new": 36.58,
     "di_sma_30_new": 32.57,
@@ -5896,30 +5896,30 @@
     "4h_values_new": [
       {
         "time": "2024-11-21 00:00:00",
-        "value_new": 11
+        "value_new": 7
       },
       {
         "time": "2024-11-21 04:00:00",
-        "value_new": 13
+        "value_new": 8
       },
       {
         "time": "2024-11-21 08:00:00",
-        "value_new": 13
+        "value_new": 8
       },
       {
         "time": "2024-11-21 12:00:00",
-        "value_new": 10
+        "value_new": 5
       },
       {
         "time": "2024-11-21 16:00:00",
-        "value_new": 12
+        "value_new": 7
       },
       {
         "time": "2024-11-21 20:00:00",
-        "value_new": 12
+        "value_new": 8
       }
     ],
-    "4h_di_new": 12,
+    "4h_di_new": 8,
     "total_new": 41,
     "di_ema_13_new": 35.68,
     "di_sma_30_new": 32.17,
@@ -5934,30 +5934,30 @@
     "4h_values_new": [
       {
         "time": "2024-11-20 00:00:00",
-        "value_new": 13
+        "value_new": 6
       },
       {
         "time": "2024-11-20 04:00:00",
-        "value_new": 14
+        "value_new": 8
       },
       {
         "time": "2024-11-20 08:00:00",
-        "value_new": 14
+        "value_new": 8
       },
       {
         "time": "2024-11-20 12:00:00",
-        "value_new": 13
+        "value_new": 8
       },
       {
         "time": "2024-11-20 16:00:00",
-        "value_new": 12
+        "value_new": 7
       },
       {
         "time": "2024-11-20 20:00:00",
-        "value_new": 11
+        "value_new": 7
       }
     ],
-    "4h_di_new": 11,
+    "4h_di_new": 7,
     "total_new": 40,
     "di_ema_13_new": 34.79,
     "di_sma_30_new": 31.83,
@@ -5972,30 +5972,30 @@
     "4h_values_new": [
       {
         "time": "2024-11-19 00:00:00",
-        "value_new": 11
+        "value_new": 2
       },
       {
         "time": "2024-11-19 04:00:00",
-        "value_new": 11
+        "value_new": 2
       },
       {
         "time": "2024-11-19 08:00:00",
-        "value_new": 12
+        "value_new": 2
       },
       {
         "time": "2024-11-19 12:00:00",
-        "value_new": 14
+        "value_new": 3
       },
       {
         "time": "2024-11-19 16:00:00",
-        "value_new": 14
+        "value_new": 7
       },
       {
         "time": "2024-11-19 20:00:00",
-        "value_new": 13
+        "value_new": 7
       }
     ],
-    "4h_di_new": 13,
+    "4h_di_new": 7,
     "total_new": 40,
     "di_ema_13_new": 33.93,
     "di_sma_30_new": 31.53,
@@ -6010,30 +6010,30 @@
     "4h_values_new": [
       {
         "time": "2024-11-18 00:00:00",
-        "value_new": 10
+        "value_new": 2
       },
       {
         "time": "2024-11-18 04:00:00",
-        "value_new": 9
+        "value_new": 3
       },
       {
         "time": "2024-11-18 08:00:00",
-        "value_new": 7
+        "value_new": 1
       },
       {
         "time": "2024-11-18 12:00:00",
-        "value_new": 12
+        "value_new": 3
       },
       {
         "time": "2024-11-18 16:00:00",
-        "value_new": 10
+        "value_new": 3
       },
       {
         "time": "2024-11-18 20:00:00",
-        "value_new": 9
+        "value_new": 2
       }
     ],
-    "4h_di_new": 9,
+    "4h_di_new": 2,
     "total_new": 35,
     "di_ema_13_new": 32.92,
     "di_sma_30_new": 31.3,
@@ -6047,31 +6047,15 @@
     "weekly_di_new": 17,
     "4h_values_new": [
       {
-        "time": "2024-11-17 00:00:00",
-        "value_new": 8
-      },
-      {
-        "time": "2024-11-17 04:00:00",
-        "value_new": 9
-      },
-      {
-        "time": "2024-11-17 08:00:00",
-        "value_new": 9
-      },
-      {
-        "time": "2024-11-17 12:00:00",
-        "value_new": 8
-      },
-      {
         "time": "2024-11-17 16:00:00",
-        "value_new": 7
+        "value_new": 0
       },
       {
         "time": "2024-11-17 20:00:00",
-        "value_new": 7
+        "value_new": 2
       }
     ],
-    "4h_di_new": 7,
+    "4h_di_new": 2,
     "total_new": 35,
     "di_ema_13_new": 32.57,
     "di_sma_30_new": 31.2,
@@ -6083,33 +6067,8 @@
     "time": "2024-11-16",
     "daily_di_new": 16,
     "weekly_di_new": 17,
-    "4h_values_new": [
-      {
-        "time": "2024-11-16 00:00:00",
-        "value_new": 11
-      },
-      {
-        "time": "2024-11-16 04:00:00",
-        "value_new": 12
-      },
-      {
-        "time": "2024-11-16 08:00:00",
-        "value_new": 11
-      },
-      {
-        "time": "2024-11-16 12:00:00",
-        "value_new": 8
-      },
-      {
-        "time": "2024-11-16 16:00:00",
-        "value_new": 9
-      },
-      {
-        "time": "2024-11-16 20:00:00",
-        "value_new": 8
-      }
-    ],
-    "4h_di_new": 8,
+    "4h_values_new": [],
+    "4h_di_new": null,
     "total_new": 33,
     "di_ema_13_new": 32.16,
     "di_sma_30_new": 31.1,
@@ -6121,33 +6080,8 @@
     "time": "2024-11-15",
     "daily_di_new": 16,
     "weekly_di_new": 17,
-    "4h_values_new": [
-      {
-        "time": "2024-11-15 00:00:00",
-        "value_new": 5
-      },
-      {
-        "time": "2024-11-15 04:00:00",
-        "value_new": 4
-      },
-      {
-        "time": "2024-11-15 08:00:00",
-        "value_new": 7
-      },
-      {
-        "time": "2024-11-15 12:00:00",
-        "value_new": 7
-      },
-      {
-        "time": "2024-11-15 16:00:00",
-        "value_new": 10
-      },
-      {
-        "time": "2024-11-15 20:00:00",
-        "value_new": 11
-      }
-    ],
-    "4h_di_new": 11,
+    "4h_values_new": [],
+    "4h_di_new": null,
     "total_new": 33,
     "di_ema_13_new": 32.02,
     "di_sma_30_new": 31.07,
@@ -6159,33 +6093,8 @@
     "time": "2024-11-14",
     "daily_di_new": 14,
     "weekly_di_new": 17,
-    "4h_values_new": [
-      {
-        "time": "2024-11-14 00:00:00",
-        "value_new": 5
-      },
-      {
-        "time": "2024-11-14 04:00:00",
-        "value_new": 6
-      },
-      {
-        "time": "2024-11-14 08:00:00",
-        "value_new": 7
-      },
-      {
-        "time": "2024-11-14 12:00:00",
-        "value_new": 4
-      },
-      {
-        "time": "2024-11-14 16:00:00",
-        "value_new": 6
-      },
-      {
-        "time": "2024-11-14 20:00:00",
-        "value_new": 4
-      }
-    ],
-    "4h_di_new": 4,
+    "4h_values_new": [],
+    "4h_di_new": null,
     "total_new": 31,
     "di_ema_13_new": 31.86,
     "di_sma_30_new": 31.0,
@@ -6197,33 +6106,8 @@
     "time": "2024-11-13",
     "daily_di_new": 16,
     "weekly_di_new": 17,
-    "4h_values_new": [
-      {
-        "time": "2024-11-13 00:00:00",
-        "value_new": 4
-      },
-      {
-        "time": "2024-11-13 04:00:00",
-        "value_new": 5
-      },
-      {
-        "time": "2024-11-13 08:00:00",
-        "value_new": 6
-      },
-      {
-        "time": "2024-11-13 12:00:00",
-        "value_new": 6
-      },
-      {
-        "time": "2024-11-13 16:00:00",
-        "value_new": 6
-      },
-      {
-        "time": "2024-11-13 20:00:00",
-        "value_new": 5
-      }
-    ],
-    "4h_di_new": 5,
+    "4h_values_new": [],
+    "4h_di_new": null,
     "total_new": 33,
     "di_ema_13_new": 32.0,
     "di_sma_30_new": 30.97,
@@ -6235,33 +6119,8 @@
     "time": "2024-11-12",
     "daily_di_new": 16,
     "weekly_di_new": 17,
-    "4h_values_new": [
-      {
-        "time": "2024-11-12 00:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2024-11-12 04:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2024-11-12 08:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2024-11-12 12:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2024-11-12 16:00:00",
-        "value_new": 6
-      },
-      {
-        "time": "2024-11-12 20:00:00",
-        "value_new": 6
-      }
-    ],
-    "4h_di_new": 6,
+    "4h_values_new": [],
+    "4h_di_new": null,
     "total_new": 33,
     "di_ema_13_new": 31.84,
     "di_sma_30_new": 30.77,
@@ -6273,33 +6132,8 @@
     "time": "2024-11-11",
     "daily_di_new": 16,
     "weekly_di_new": 17,
-    "4h_values_new": [
-      {
-        "time": "2024-11-11 00:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2024-11-11 04:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2024-11-11 08:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2024-11-11 12:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2024-11-11 16:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2024-11-11 20:00:00",
-        "value_new": 3
-      }
-    ],
-    "4h_di_new": 3,
+    "4h_values_new": [],
+    "4h_di_new": null,
     "total_new": 33,
     "di_ema_13_new": 31.64,
     "di_sma_30_new": 30.33,
@@ -6311,17 +6145,8 @@
     "time": "2024-11-10",
     "daily_di_new": 16,
     "weekly_di_new": 17,
-    "4h_values_new": [
-      {
-        "time": "2024-11-10 16:00:00",
-        "value_new": 0
-      },
-      {
-        "time": "2024-11-10 20:00:00",
-        "value_new": 2
-      }
-    ],
-    "4h_di_new": 2,
+    "4h_values_new": [],
+    "4h_di_new": null,
     "total_new": 33,
     "di_ema_13_new": 31.42,
     "di_sma_30_new": 29.87,
@@ -6333,33 +6158,8 @@
     "time": "2024-11-09",
     "daily_di_new": 17,
     "weekly_di_new": 17,
-    "4h_values_new": [
-      {
-        "time": "2024-11-11 00:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2024-11-11 04:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2024-11-11 08:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2024-11-11 12:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2024-11-11 16:00:00",
-        "value_new": 3
-      },
-      {
-        "time": "2024-11-11 20:00:00",
-        "value_new": 3
-      }
-    ],
-    "4h_di_new": 3,
+    "4h_values_new": [],
+    "4h_di_new": null,
     "total_new": 34,
     "di_ema_13_new": 31.15,
     "di_sma_30_new": 29.37,

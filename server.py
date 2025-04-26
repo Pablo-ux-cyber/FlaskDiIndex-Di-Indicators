@@ -386,11 +386,41 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
                     start_time = data['Data']['TimeFrom']
                     # Вычисляем время, после которого будем использовать данные (7 дней = 7 * 24 * 60 * 60 секунд)
                     skip_until_time = start_time + (7 * 24 * 60 * 60)
-                    logger.debug(f"Skipping data until: {datetime.fromtimestamp(skip_until_time)}")
+                    
+                    # Преобразуем в даты для вывода в лог
+                    start_date = datetime.fromtimestamp(start_time)
+                    skip_until_date = datetime.fromtimestamp(skip_until_time)
+                    end_date = datetime.fromtimestamp(toTs)
+                    
+                    logger.debug(f"Second request range: {start_date} to {end_date}")
+                    logger.debug(f"Skipping data until: {skip_until_date}")
+                    
+                    # Проверим, есть ли проблемные даты в запросе 
+                    problem_dates = ["2024-11-09", "2024-11-11"]
+                    for date_str in problem_dates:
+                        # Конвертируем дату в timestamp начала дня
+                        date_ts = int(datetime.strptime(date_str, "%Y-%m-%d").timestamp())
+                        # Проверяем, попадает ли в диапазон текущего запроса
+                        if date_ts >= start_time and date_ts < toTs:
+                            logger.debug(f"Problem date {date_str} is in current request range")
+                            if date_ts < skip_until_time:
+                                logger.debug(f"WARNING: Date {date_str} would be skipped by 7-day filter!")
                     
                     # Отфильтруем данные, пропуская первые 7 дней
                     filtered_data = [point for point in data['Data']['Data'] 
                                     if point['time'] >= skip_until_time and point['time'] < toTs]
+                    
+                    # Проверяем наличие проблемных дат в данных до фильтрации
+                    for date_str in problem_dates:
+                        date_ts = int(datetime.strptime(date_str, "%Y-%m-%d").timestamp())
+                        # Находим точки данных для этой даты (начало дня до начало следующего дня)
+                        next_day_ts = date_ts + (24 * 60 * 60)
+                        points_for_date = [p for p in data['Data']['Data'] 
+                                        if p['time'] >= date_ts and p['time'] < next_day_ts]
+                        if points_for_date:
+                            logger.debug(f"Found {len(points_for_date)} 4h points for {date_str} before filtering")
+                        else:
+                            logger.debug(f"No 4h points found for {date_str} in second request")
                     
                     all_data.extend(filtered_data)
                     logger.debug(f"Added {len(filtered_data)} filtered points from second request (skipped first 7 days)")
