@@ -666,8 +666,10 @@ def di_index():
     try:
         symbols = request.args.get("symbols", "BTC")
         debug_mode = request.args.get("debug", "false").lower() == "true"
+        # Добавляем параметр использования исторических данных
+        use_history = request.args.get("use_history", "true").lower() == "true"
 
-        logger.debug(f"Received request for symbols: {symbols}")
+        logger.debug(f"Received request for symbols: {symbols}, use_history: {use_history}")
         symbol_list = [s.strip().upper() for s in symbols.split(',') if s.strip()]
         logger.debug(f"Parsed symbol list: {symbol_list}")
 
@@ -680,9 +682,42 @@ def di_index():
                 logger.error(f"Invalid cryptocurrency symbol: {symbol}")
                 return jsonify({"error": f"Invalid cryptocurrency symbol: {symbol}"}), 400
 
+        # Получаем данные от API CryptoCompare
         results = process_symbol_batch(symbol_list, debug_mode)
+        
+        # Если нужно, дополняем результаты историческими данными из файлов
+        if use_history:
+            from utils.di_history_manager import load_di_history
+            
+            for symbol in symbol_list:
+                # Загружаем историю DI индекса
+                history = load_di_history(symbol)
+                
+                if history and symbol in results:
+                    # Создаем множество текущих дат для быстрой проверки
+                    current_dates = set()
+                    for entry in results[symbol]:
+                        if isinstance(entry, dict) and "time" in entry and "error" not in entry:
+                            current_dates.add(entry["time"])
+                    
+                    # Добавляем данные из истории для дат, которых нет в текущих результатах
+                    historical_entries = []
+                    for date, hist_data in history.items():
+                        if date not in current_dates:
+                            # Убеждаемся, что данные в том же формате
+                            historical_entries.append(hist_data)
+                    
+                    # Добавляем исторические данные
+                    if historical_entries and isinstance(results[symbol], list):
+                        results[symbol].extend(historical_entries)
+                        
+                        # Сортируем результаты по дате в обратном порядке (сначала новые)
+                        results[symbol] = sorted(results[symbol], key=lambda x: x.get("time", ""), reverse=True)
+                        
+                        logger.debug(f"Добавлены исторические данные для {symbol}, всего записей: {len(results[symbol])}")
+        
         logger.debug(f"Calculation completed, results keys: {list(results.keys())}")
-
+        
         return jsonify(results)
 
     except Exception as e:
