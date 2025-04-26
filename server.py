@@ -1,12 +1,11 @@
 import math
 import requests
 import numpy as np
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta
 import time
 from functools import lru_cache
 import logging
 import concurrent.futures
-import json
 
 # Настройка логирования
 logging.basicConfig(level=logging.DEBUG)
