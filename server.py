@@ -704,9 +704,20 @@ def di_index():
                     historical_entries = []
                     for date, hist_data in history.items():
                         if date not in current_dates:
-                            # Убеждаемся, что данные в том же формате
-                            historical_entries.append(hist_data)
-                    
+                            # Проверяем, есть ли 4h_di_new (необходимое поле)
+                            if isinstance(hist_data, dict) and "4h_di_new" in hist_data:
+                                # Для старых записей без 4h_values_new создаем это поле
+                                if "4h_values_new" not in hist_data and "4h_di_new" in hist_data:
+                                    # Создаем запись с 20:00:00, предполагая что это последняя 4h свеча дня
+                                    time_part = "20:00:00"
+                                    full_time = f"{date}T{time_part}"
+                                    hist_data["4h_values_new"] = [{
+                                        "time": full_time,
+                                        "value_new": hist_data["4h_di_new"]
+                                    }]
+                                    
+                                historical_entries.append(hist_data)
+                            
                     # Добавляем исторические данные
                     if historical_entries and isinstance(results[symbol], list):
                         results[symbol].extend(historical_entries)

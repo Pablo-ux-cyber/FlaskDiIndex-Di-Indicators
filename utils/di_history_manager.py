@@ -46,9 +46,8 @@ def save_di_history(symbol, results_list):
         # Извлекаем дату из результата
         date = data_to_save.get('time')
         if date:
-            # Удаляем поле '4h_values_new', так как оно может содержать сложные структуры
-            if '4h_values_new' in data_to_save:
-                del data_to_save['4h_values_new']
+            # Сохраняем поле '4h_values_new' для отображения 4-часовых данных в истории
+            # Раньше мы его удаляли, но теперь оно нужно для отображения истории
             
             # Сохраняем запись
             current_data[date] = data_to_save
