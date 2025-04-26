@@ -205,16 +205,7 @@ def calculate_ad_index(df):
 
 def calculate_di_index(df):
     """Calculate DI index components and final value"""
-    # Проверяем наличие флага для игнорирования точек в 4h расчетах
-    is_4h_data = df.attrs.get("timeframe") == "4h"
-    has_ignore_flag = "_ignore_for_4h_index" in df.columns
-    
-    # Если есть точки, которые нужно игнорировать в 4h расчетах, создаем маску
-    ignore_mask = pd.Series(False, index=df.index)
-    if is_4h_data and has_ignore_flag:
-        ignore_mask = df["_ignore_for_4h_index"] == True
-        logger.debug(f"Найдено {ignore_mask.sum()} точек, которые будут проигнорированы при расчете 4h индекса")
-    
+    # Вычисляем все компоненты DI индекса для всех данных без исключений
     # Calculate all components
     df = calculate_ma_index(df)
     df = calculate_willy_index(df)
@@ -242,18 +233,23 @@ def calculate_di_index(df):
     elif timeframe == "daily":
         df["daily_di_new"] = df["di_value"]
     else:  # 4h
-        # Для 4h данных проверяем флаг игнорирования
-        if has_ignore_flag:
-            # Устанавливаем None для точек, которые нужно игнорировать
-            df.loc[ignore_mask, "4h_di_new"] = None
-            # Устанавливаем значения только для других точек
-            df.loc[~ignore_mask, "4h_di_new"] = df.loc[~ignore_mask, "di_value"]
-        else:
-            # Обычный случай - все точки используются
-            df["4h_di_new"] = df["di_value"]
+        # Для 4h данных просто устанавливаем значения для всех точек
+        # Фильтрация точек из первых 7 дней будет произведена позже
+        df["4h_di_new"] = df["di_value"]
+        
+        # Проверим, есть ли помеченные для скрытия точки
+        if "_hide_in_frontend" in df.columns:
+            hide_mask = df["_hide_in_frontend"] == True
+            if hide_mask.any():
+                logger.debug(f"Найдено {hide_mask.sum()} точек, которые будут скрыты при передаче на фронтенд")
 
     result = []
     for _, row in df.iterrows():
+        # Проверяем, нужно ли скрыть эту точку на фронтенде
+        if "_hide_in_frontend" in row and row["_hide_in_frontend"] == True:
+            # Пропускаем эту точку - она не попадет в результат
+            continue
+            
         time_val = row["time"] if "time" in row.index else row.name
         time_str = time_val.strftime("%Y-%m-%d %H:%M:%S") if isinstance(time_val, pd.Timestamp) else str(time_val)
 
@@ -424,18 +420,19 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
                             if date_ts < skip_until_time:
                                 logger.debug(f"WARNING: Date {date_str} would be skipped by 7-day filter!")
                     
-                    # Преобразуем все точки из второго запроса, но для первых 7 дней
-                    # установим null для значений 4h индекса - чтобы они не влияли на расчеты
+                    # Используем все точки для расчетов, но помечаем первые 7 дней
+                    # специальным флагом, чтобы не показывать их на фронтенде
                     filtered_data = []
                     
                     for point in data['Data']['Data']:
                         if point['time'] < toTs:  # Убедимся, что точка в нужном временном интервале
-                            # Если точка в первые 7 дней, отмечаем ее специальным ключом для последующей обработки
+                            # Если точка в первые 7 дней, отмечаем ее специальным ключом
+                            # Этот флаг будет использоваться только при формировании ответа для фронтенда
                             if point['time'] < skip_until_time:
-                                point['_ignore_for_4h_index'] = True
+                                point['_hide_in_frontend'] = True
                             filtered_data.append(point)
                     
-                    logger.debug(f"Всего точек из второго запроса: {len(filtered_data)}, из них отмечено для игнорирования в 4h расчетах: {sum(1 for p in filtered_data if p.get('_ignore_for_4h_index', False))}")
+                    logger.debug(f"Всего точек из второго запроса: {len(filtered_data)}, из них будет скрыто на фронтенде: {sum(1 for p in filtered_data if p.get('_hide_in_frontend', False))}")
                     
                     # Проверяем наличие проблемных дат в данных до фильтрации
                     for date_str in problem_dates:
