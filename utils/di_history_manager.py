@@ -2,12 +2,19 @@ import os
 import json
 import pandas as pd
 import logging
-from datetime import datetime
+from datetime import datetime, date
 
 logger = logging.getLogger('server')
 
 # Каталог для хранения исторических данных
 HISTORY_DIR = "historical_data"
+
+# Кастомный JSON энкодер для обработки типов данных datetime
+class DateTimeEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        return super(DateTimeEncoder, self).default(obj)
 
 def ensure_history_dir():
     """Убедиться, что каталог для хранения истории существует"""
@@ -60,9 +67,9 @@ def save_di_history(symbol, results_list):
         # Текущие данные имеют приоритет
         existing_data.update(current_data)
         
-        # Сохраняем объединенные данные
+        # Сохраняем объединенные данные с использованием кастомного энкодера
         with open(file_path, 'w') as f:
-            json.dump(existing_data, f, indent=2)
+            json.dump(existing_data, f, indent=2, cls=DateTimeEncoder)
             
         logger.info(f"История DI индекса сохранена: {file_path}, записей: {len(existing_data)}")
         return True
