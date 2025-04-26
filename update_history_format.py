@@ -65,8 +65,15 @@ def update_history_file(file_path, generate_missing=True):
             if isinstance(record, dict):
                 updated = False
                 
-                # Если у записи нет 4h_di_new или оно null, но есть daily_di_new, генерируем 4h данные
-                if generate_missing and "daily_di_new" in record and ("4h_di_new" not in record or record["4h_di_new"] is None):
+                # Проверяем нужно ли генерировать 4h данные
+                need_generation = generate_missing and "daily_di_new" in record and (
+                    # Нет 4h_di_new или оно null
+                    "4h_di_new" not in record or record["4h_di_new"] is None or
+                    # Есть 4h_values_new, но это пустой массив
+                    ("4h_values_new" in record and isinstance(record["4h_values_new"], list) and len(record["4h_values_new"]) == 0)
+                )
+                
+                if need_generation:
                     daily_value = record.get("daily_di_new")
                     
                     # Используем daily значение как 4h (так как настоящих данных у нас нет)
