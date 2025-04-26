@@ -1,0 +1,704 @@
+(venv) root@imm1:/var/www/html/di_index_new# cd /var/www/html/di_index_new && /var/www/html/di_index_new/venv/bin/python3 daily_update.py
+2025-04-26 12:36:36,035 - daily_update - INFO - Запуск ежедневного обновления данных DI индекса
+2025-04-26 12:36:36,036 - daily_update - INFO - Загружены 15 монет из конфигурационного файла
+2025-04-26 12:36:36,036 - daily_update - INFO - Загружен список из 15 монет для отслеживания
+2025-04-26 12:36:36,036 - daily_update - INFO - Запуск обновления данных для 15 монет
+2025-04-26 12:36:43,049 - daily_update - INFO - Обработка пакета 1/3: BTC, ETH, XRP, LTC, ADA
+2025-04-26 12:36:43,706 - server - ERROR - Ошибка при загрузке исторических данных: Expecting value: line 1 column 213 (char 212)
+2025-04-26 12:36:43,899 - server - ERROR - Ошибка при загрузке исторических данных: Expecting value: line 1 column 202 (char 201)
+2025-04-26 12:36:43,907 - server - ERROR - Ошибка при загрузке исторических данных: Expecting value: line 1 column 209 (char 208)
+2025-04-26 12:36:43,947 - server - INFO - Загружены исторические данные: historical_data/BTC_4h_data_history.json, записей: 1001
+2025-04-26 12:36:43,954 - server - ERROR - Ошибка при загрузке исторических данных: Expecting value: line 1 column 210 (char 209)
+2025-04-26 12:36:44,501 - server - INFO - Исторические данные сохранены: historical_data/ADA_4h_data_history.json, записей: 1001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:36:44,846 - server - INFO - Исторические данные сохранены: historical_data/LTC_4h_data_history.json, записей: 1001
+2025-04-26 12:36:44,874 - server - INFO - Исторические данные сохранены: historical_data/ETH_4h_data_history.json, записей: 1001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+2025-04-26 12:36:44,911 - server - INFO - История DI индекса сохранена: historical_data/ADA_di_combined_history.json, записей: 2001
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:36:44,945 - server - INFO - Исторические данные сохранены: historical_data/XRP_4h_data_history.json, записей: 1001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:36:45,682 - server - INFO - Объединение новых данных с историческими для BTC_4h_data
+2025-04-26 12:36:45,686 - server - INFO - Загружены исторические данные: historical_data/BTC_4h_data_history.json, записей: 1001
+2025-04-26 12:36:45,686 - server - INFO - Исторических записей: 1001, новых записей: 1001
+2025-04-26 12:36:45,688 - server - INFO - После объединения и удаления дубликатов: 1001 записей
+2025-04-26 12:36:45,808 - server - INFO - История DI индекса сохранена: historical_data/ETH_di_combined_history.json, записей: 2001
+2025-04-26 12:36:45,808 - server - INFO - Исторические данные сохранены: historical_data/BTC_4h_data_history.json, записей: 1001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:36:45,901 - server - INFO - История DI индекса сохранена: historical_data/LTC_di_combined_history.json, записей: 2001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:36:46,063 - server - INFO - История DI индекса сохранена: historical_data/XRP_di_combined_history.json, записей: 2001
+2025-04-26 12:36:46,215 - server - INFO - История DI индекса сохранена: historical_data/BTC_di_combined_history.json, записей: 2001
+2025-04-26 12:36:46,216 - daily_update - INFO - Успешно обновлены данные для ADA
+2025-04-26 12:36:46,216 - daily_update - INFO - Успешно обновлены данные для ETH
+2025-04-26 12:36:46,216 - daily_update - INFO - Успешно обновлены данные для LTC
+2025-04-26 12:36:46,216 - daily_update - INFO - Успешно обновлены данные для XRP
+2025-04-26 12:36:46,216 - daily_update - INFO - Успешно обновлены данные для BTC
+2025-04-26 12:36:48,218 - daily_update - INFO - Обработка пакета 2/3: DOT, SOL, DOGE, LINK, AVAX
+2025-04-26 12:36:48,772 - server - ERROR - Ошибка при загрузке исторических данных: Expecting value: line 1 column 209 (char 208)
+2025-04-26 12:36:48,795 - server - ERROR - Ошибка при загрузке исторических данных: Expecting value: line 1 column 213 (char 212)
+2025-04-26 12:36:48,814 - server - ERROR - Ошибка при загрузке исторических данных: Expecting value: line 1 column 203 (char 202)
+2025-04-26 12:36:49,459 - server - INFO - Исторические данные сохранены: historical_data/DOGE_4h_data_history.json, записей: 1001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:36:49,735 - server - INFO - История DI индекса сохранена: historical_data/DOGE_di_combined_history.json, записей: 2001
+2025-04-26 12:36:49,917 - server - ERROR - Ошибка при загрузке исторических данных: Expecting value: line 1 column 203 (char 202)
+2025-04-26 12:36:49,995 - server - INFO - Исторические данные сохранены: historical_data/SOL_4h_data_history.json, записей: 1001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:36:50,274 - server - INFO - История DI индекса сохранена: historical_data/SOL_di_combined_history.json, записей: 2001
+2025-04-26 12:36:51,047 - server - INFO - Исторические данные сохранены: historical_data/LINK_4h_data_history.json, записей: 1001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:36:51,340 - server - INFO - История DI индекса сохранена: historical_data/LINK_di_combined_history.json, записей: 2001
+2025-04-26 12:36:51,366 - server - ERROR - Ошибка при загрузке исторических данных: Expecting value: line 1 column 204 (char 203)
+2025-04-26 12:36:52,105 - server - INFO - Исторические данные сохранены: historical_data/AVAX_4h_data_history.json, записей: 1001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:36:52,383 - server - INFO - История DI индекса сохранена: historical_data/AVAX_di_combined_history.json, записей: 2001
+2025-04-26 12:36:53,020 - server - INFO - Исторические данные сохранены: historical_data/DOT_4h_data_history.json, записей: 1001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:36:53,296 - server - INFO - История DI индекса сохранена: historical_data/DOT_di_combined_history.json, записей: 2001
+2025-04-26 12:36:53,300 - daily_update - INFO - Успешно обновлены данные для DOGE
+2025-04-26 12:36:53,300 - daily_update - INFO - Успешно обновлены данные для SOL
+2025-04-26 12:36:53,300 - daily_update - INFO - Успешно обновлены данные для LINK
+2025-04-26 12:36:53,300 - daily_update - INFO - Успешно обновлены данные для AVAX
+2025-04-26 12:36:53,300 - daily_update - INFO - Успешно обновлены данные для DOT
+2025-04-26 12:36:55,303 - daily_update - INFO - Обработка пакета 3/3: BNB, MATIC, UNI, SHIB, ATOM
+2025-04-26 12:36:56,172 - server - ERROR - Ошибка при загрузке исторических данных: Expecting value: line 1 column 202 (char 201)
+2025-04-26 12:36:56,718 - server - ERROR - Ошибка при загрузке исторических данных: Expecting value: line 1 column 210 (char 209)
+2025-04-26 12:36:56,962 - server - ERROR - Ошибка при загрузке исторических данных: Expecting value: line 1 column 207 (char 206)
+2025-04-26 12:36:57,599 - server - ERROR - Ошибка при загрузке исторических данных: Expecting value: line 1 column 226 (char 225)
+2025-04-26 12:36:58,298 - server - ERROR - Ошибка при загрузке исторических данных: Expecting value: line 1 column 201 (char 200)
+2025-04-26 12:36:58,727 - server - INFO - Исторические данные сохранены: historical_data/SHIB_4h_data_history.json, записей: 1001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:36:59,016 - server - INFO - История DI индекса сохранена: historical_data/SHIB_di_combined_history.json, записей: 2001
+2025-04-26 12:36:59,445 - server - INFO - Исторические данные сохранены: historical_data/BNB_4h_data_history.json, записей: 1001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:36:59,520 - server - INFO - Исторические данные сохранены: historical_data/MATIC_4h_data_history.json, записей: 1001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:36:59,817 - server - INFO - Исторические данные сохранены: historical_data/ATOM_4h_data_history.json, записей: 1001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:37:00,371 - server - INFO - История DI индекса сохранена: historical_data/BNB_di_combined_history.json, записей: 2001
+2025-04-26 12:37:00,504 - server - INFO - Исторические данные сохранены: historical_data/UNI_4h_data_history.json, записей: 1001
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:37:00,550 - server - INFO - История DI индекса сохранена: historical_data/MATIC_di_combined_history.json, записей: 2000
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:37:00,678 - server - INFO - История DI индекса сохранена: historical_data/ATOM_di_combined_history.json, записей: 2000
+/var/www/html/di_index_new/server.py:84: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["range"].replace(0, 1e-10, inplace=True)  # Avoid division by zero
+/var/www/html/di_index_new/server.py:173: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df["mfi_lower_sum"].replace(0, np.nan, inplace=True)
+2025-04-26 12:37:00,874 - server - INFO - История DI индекса сохранена: historical_data/UNI_di_combined_history.json, записей: 2001
+2025-04-26 12:37:00,878 - daily_update - INFO - Успешно обновлены данные для SHIB
+2025-04-26 12:37:00,879 - daily_update - INFO - Успешно обновлены данные для BNB
+2025-04-26 12:37:00,879 - daily_update - INFO - Успешно обновлены данные для MATIC
+2025-04-26 12:37:00,879 - daily_update - INFO - Успешно обновлены данные для ATOM
+2025-04-26 12:37:00,879 - daily_update - INFO - Успешно обновлены данные для UNI
+2025-04-26 12:37:02,886 - daily_update - INFO - Обновление данных завершено за 26.85 секунд
+(venv) root@imm1:/var/www/html/di_index_new# 
