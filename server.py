@@ -354,6 +354,7 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
         logger.debug(f"Data points: {len(data['Data']['Data'])}")
         logger.debug(f"DEBUG: Received {len(data['Data']['Data'])} data points")
         
+        # Добавляем все данные из первого запроса (это более новые данные)
         all_data.extend(data['Data']['Data'])
         
         # Second request - previous period
@@ -376,11 +377,23 @@ def get_4h_data(symbol="BTC", tsym="USD", limit=2000):
                 logger.debug(f"TimeFrom: {datetime.fromtimestamp(data['Data']['TimeFrom'])}")
                 logger.debug(f"TimeTo: {datetime.fromtimestamp(data['Data']['TimeTo'])}")
                 logger.debug(f"Data points: {len(data['Data']['Data'])}")
-
-                # Extend only with new data points
-                new_data = [point for point in data['Data']['Data'] if point['time'] < toTs]
-                all_data.extend(new_data)
-                logger.debug(f"Added {len(new_data)} new points from second request")
+                
+                # Вычисляем время, которое соответствует 7 дням от начала второго блока данных
+                # Это нужно для пропуска первых 7 дней из второго запроса (более старые данные)
+                # так как они могут быть менее стабильны
+                if len(data['Data']['Data']) > 0:
+                    # Получаем начальное время из данных
+                    start_time = data['Data']['TimeFrom']
+                    # Вычисляем время, после которого будем использовать данные (7 дней = 7 * 24 * 60 * 60 секунд)
+                    skip_until_time = start_time + (7 * 24 * 60 * 60)
+                    logger.debug(f"Skipping data until: {datetime.fromtimestamp(skip_until_time)}")
+                    
+                    # Отфильтруем данные, пропуская первые 7 дней
+                    filtered_data = [point for point in data['Data']['Data'] 
+                                    if point['time'] >= skip_until_time and point['time'] < toTs]
+                    
+                    all_data.extend(filtered_data)
+                    logger.debug(f"Added {len(filtered_data)} filtered points from second request (skipped first 7 days)")
     
     except Exception as e:
         logger.error(f"DEBUG: Exception in get_4h_data: {str(e)}")
