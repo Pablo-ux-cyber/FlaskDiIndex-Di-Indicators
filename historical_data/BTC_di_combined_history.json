@@ -6333,10 +6333,8 @@
     "time": "2024-11-09",
     "daily_di_new": 17,
     "weekly_di_new": 17,
-    "4h_values_new": [
-      {"time": "2024-11-09T20:00:00", "value_new": 17}
-    ],
-    "4h_di_new": 17,
+    "4h_values_new": [],
+    "4h_di_new": null,
     "total_new": 34,
     "di_ema_13_new": 31.15,
     "di_sma_30_new": 29.37,

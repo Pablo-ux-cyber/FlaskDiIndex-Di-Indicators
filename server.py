@@ -714,22 +714,10 @@ def di_index():
                                     if "4h_di_new" not in hist_data or hist_data["4h_di_new"] is None:
                                         hist_data["4h_di_new"] = daily_value
                                     
-                                    # Если 4h_values_new отсутствует или пустой список, создаем его
-                                    if "4h_values_new" not in hist_data or not hist_data["4h_values_new"]:
-                                        # Создаем записи для всех 6 4-часовых интервалов
+                                    # Мы больше не генерируем синтетические 4-часовые данные
+                                    # Если 4h_values_new отсутствует, создаем пустой массив
+                                    if "4h_values_new" not in hist_data:
                                         hist_data["4h_values_new"] = []
-                                        for hour in [0, 4, 8, 12, 16, 20]:
-                                            # Немного вариаций для реалистичности
-                                            value = daily_value
-                                            if hour == 0:
-                                                value = max(0, daily_value - 2) if daily_value is not None else None
-                                            elif hour == 4:
-                                                value = max(0, daily_value - 1) if daily_value is not None else None
-                                            
-                                            hist_data["4h_values_new"].append({
-                                                "time": f"{date} {hour:02d}:00:00",
-                                                "value_new": value
-                                            })
                                 
                                 historical_entries.append(hist_data)
                             
