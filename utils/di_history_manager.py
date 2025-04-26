@@ -62,9 +62,14 @@ def save_di_history(symbol, results_list):
                 except json.JSONDecodeError:
                     logger.error(f"Ошибка чтения существующего файла истории: {file_path}")
         
-        # Объединяем текущие и существующие данные
-        # Текущие данные имеют приоритет
-        existing_data.update(current_data)
+        # Объединяем текущие и существующие данные с сохранением 4h значений
+        for date, new_data in current_data.items():
+            if date in existing_data:
+                # Если для этой даты уже существуют данные с 4h значениями, сохраняем их
+                if "4h_values_new" in existing_data[date] and existing_data[date]["4h_values_new"]:
+                    new_data["4h_values_new"] = existing_data[date]["4h_values_new"]
+                    new_data["4h_di_new"] = existing_data[date]["4h_di_new"]
+            existing_data[date] = new_data
         
         # Сохраняем объединенные данные с использованием кастомного энкодера
         with open(file_path, 'w') as f:
