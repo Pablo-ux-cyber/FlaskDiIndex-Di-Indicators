@@ -28,6 +28,7 @@ logger = logging.getLogger("test_update")
 
 # Импорт функции для обработки символа
 from server import process_symbol
+from utils.di_history_manager import save_di_history
 
 def load_tracked_symbols():
     """Загружает список монет для отслеживания из конфигурационного файла"""
@@ -54,7 +55,16 @@ def update_symbols_data(symbols):
             symbol = futures[future]
             try:
                 # Получаем результат выполнения
-                result = future.result()
+                symbol, result_list = future.result()
+                
+                # Сохраняем историю DI индекса, если результат в виде списка
+                if isinstance(result_list, list):
+                    try:
+                        save_di_history(symbol, result_list)
+                        logger.info(f"История DI индекса для {symbol} сохранена, записей: {len(result_list)}")
+                    except Exception as e:
+                        logger.error(f"Ошибка при сохранении истории DI индекса для {symbol}: {str(e)}")
+                
                 logger.info(f"Обработка {symbol} завершена")
             except Exception as e:
                 logger.error(f"Ошибка при обработке {symbol}: {str(e)}")
