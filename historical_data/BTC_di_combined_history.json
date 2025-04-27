@@ -31,8 +31,8 @@
     ],
     "4h_di_new": 14,
     "total_new": 35,
-    "di_ema_13_new": 31.23,
-    "di_sma_30_new": 26.1,
+    "di_ema_13_new": 30.91,
+    "di_sma_30_new": 25.67,
     "trend_new": "bull",
     "open": 94022.48,
     "close": 94711.24
@@ -69,8 +69,8 @@
     ],
     "4h_di_new": 13,
     "total_new": 34,
-    "di_ema_13_new": 30.6,
-    "di_sma_30_new": 25.97,
+    "di_ema_13_new": 30.23,
+    "di_sma_30_new": 25.5,
     "trend_new": "bull",
     "open": 93729.23,
     "close": 94022.48
@@ -107,8 +107,8 @@
     ],
     "4h_di_new": 13,
     "total_new": 34,
-    "di_ema_13_new": 30.04,
-    "di_sma_30_new": 26.0,
+    "di_ema_13_new": 29.6,
+    "di_sma_30_new": 25.53,
     "trend_new": "bull",
     "open": 93483.3,
     "close": 93729.23
@@ -145,8 +145,8 @@
     ],
     "4h_di_new": 15,
     "total_new": 36,
-    "di_ema_13_new": 29.38,
-    "di_sma_30_new": 26.07,
+    "di_ema_13_new": 28.87,
+    "di_sma_30_new": 25.57,
     "trend_new": "bull",
     "open": 87515.57,
     "close": 93483.3
@@ -183,8 +183,8 @@
     ],
     "4h_di_new": 14,
     "total_new": 35,
-    "di_ema_13_new": 28.27,
-    "di_sma_30_new": 26.0,
+    "di_ema_13_new": 27.68,
+    "di_sma_30_new": 25.47,
     "trend_new": "bull",
     "open": 85167.14,
     "close": 87515.57
@@ -220,9 +220,9 @@
       }
     ],
     "4h_di_new": 14,
-    "total_new": 34,
-    "di_ema_13_new": 27.15,
-    "di_sma_30_new": 25.67,
+    "total_new": 33,
+    "di_ema_13_new": 26.46,
+    "di_sma_30_new": 25.1,
     "trend_new": "bull",
     "open": 85061.54,
     "close": 85167.14
@@ -258,9 +258,9 @@
       }
     ],
     "4h_di_new": 12,
-    "total_new": 31,
-    "di_ema_13_new": 26.01,
-    "di_sma_30_new": 25.43,
+    "total_new": 30,
+    "di_ema_13_new": 25.37,
+    "di_sma_30_new": 24.87,
     "trend_new": "bull",
     "open": 84459.96,
     "close": 85061.54
@@ -296,9 +296,9 @@
       }
     ],
     "4h_di_new": 6,
-    "total_new": 23,
-    "di_ema_13_new": 25.18,
-    "di_sma_30_new": 25.33,
+    "total_new": 22,
+    "di_ema_13_new": 24.6,
+    "di_sma_30_new": 24.77,
     "trend_new": "bear",
     "open": 84943.42,
     "close": 84459.96
@@ -334,9 +334,9 @@
       }
     ],
     "4h_di_new": 12,
-    "total_new": 29,
-    "di_ema_13_new": 25.54,
-    "di_sma_30_new": 25.77,
+    "total_new": 28,
+    "di_ema_13_new": 25.03,
+    "di_sma_30_new": 25.23,
     "trend_new": "bear",
     "open": 84029.4,
     "close": 84943.42
@@ -372,9 +372,9 @@
       }
     ],
     "4h_di_new": 5,
-    "total_new": 21,
-    "di_ema_13_new": 24.96,
-    "di_sma_30_new": 25.63,
+    "total_new": 20,
+    "di_ema_13_new": 24.54,
+    "di_sma_30_new": 25.1,
     "trend_new": "bear",
     "open": 83638.17,
     "close": 84029.4
@@ -410,9 +410,9 @@
       }
     ],
     "4h_di_new": 6,
-    "total_new": 23,
-    "di_ema_13_new": 25.62,
-    "di_sma_30_new": 26.0,
+    "total_new": 22,
+    "di_ema_13_new": 25.29,
+    "di_sma_30_new": 25.47,
     "trend_new": "bear",
     "open": 84575.75,
     "close": 83638.17
@@ -449,8 +449,8 @@
     ],
     "4h_di_new": 10,
     "total_new": 30,
-    "di_ema_13_new": 26.06,
-    "di_sma_30_new": 26.03,
+    "di_ema_13_new": 25.84,
+    "di_sma_30_new": 25.53,
     "trend_new": "bull",
     "open": 83730.92,
     "close": 84575.75
@@ -487,8 +487,8 @@
     ],
     "4h_di_new": 11,
     "total_new": 31,
-    "di_ema_13_new": 25.4,
-    "di_sma_30_new": 26.13,
+    "di_ema_13_new": 25.15,
+    "di_sma_30_new": 25.63,
     "trend_new": "bear",
     "open": 85272.12,
     "close": 83730.92
@@ -525,8 +525,8 @@
     ],
     "4h_di_new": 13,
     "total_new": 33,
-    "di_ema_13_new": 24.47,
-    "di_sma_30_new": 26.13,
+    "di_ema_13_new": 24.18,
+    "di_sma_30_new": 25.63,
     "trend_new": "bear",
     "open": 83386.0,
     "close": 85272.12
@@ -563,8 +563,8 @@
     ],
     "4h_di_new": 14,
     "total_new": 31,
-    "di_ema_13_new": 23.05,
-    "di_sma_30_new": 25.8,
+    "di_ema_13_new": 22.71,
+    "di_sma_30_new": 25.3,
     "trend_new": "bear",
     "open": 79554.96,
     "close": 83386.0
@@ -601,8 +601,8 @@
     ],
     "4h_di_new": 9,
     "total_new": 22,
-    "di_ema_13_new": 21.72,
-    "di_sma_30_new": 25.73,
+    "di_ema_13_new": 21.32,
+    "di_sma_30_new": 25.2,
     "trend_new": "bear",
     "open": 82587.03,
     "close": 79554.96
@@ -638,9 +638,9 @@
       }
     ],
     "4h_di_new": 10,
-    "total_new": 26,
-    "di_ema_13_new": 21.68,
-    "di_sma_30_new": 25.87,
+    "total_new": 25,
+    "di_ema_13_new": 21.21,
+    "di_sma_30_new": 25.3,
     "trend_new": "bear",
     "open": 76255.1,
     "close": 82587.03
@@ -677,8 +677,8 @@
     ],
     "4h_di_new": 2,
     "total_new": 14,
-    "di_ema_13_new": 20.96,
-    "di_sma_30_new": 25.57,
+    "di_ema_13_new": 20.58,
+    "di_sma_30_new": 25.0,
     "trend_new": "bear",
     "open": 79143.06,
     "close": 76255.1
@@ -715,8 +715,8 @@
     ],
     "4h_di_new": 5,
     "total_new": 18,
-    "di_ema_13_new": 22.12,
-    "di_sma_30_new": 25.83,
+    "di_ema_13_new": 21.67,
+    "di_sma_30_new": 25.27,
     "trend_new": "bear",
     "open": 78365.57,
     "close": 79143.06
@@ -753,8 +753,8 @@
     ],
     "4h_di_new": 3,
     "total_new": 14,
-    "di_ema_13_new": 22.8,
-    "di_sma_30_new": 26.0,
+    "di_ema_13_new": 22.29,
+    "di_sma_30_new": 25.43,
     "trend_new": "bear",
     "open": 83503.37,
     "close": 78365.57
@@ -790,9 +790,9 @@
       }
     ],
     "4h_di_new": 7,
-    "total_new": 23,
-    "di_ema_13_new": 24.27,
-    "di_sma_30_new": 26.37,
+    "total_new": 22,
+    "di_ema_13_new": 23.67,
+    "di_sma_30_new": 25.8,
     "trend_new": "bear",
     "open": 83860.21,
     "close": 83503.37
@@ -829,8 +829,8 @@
     ],
     "4h_di_new": 8,
     "total_new": 24,
-    "di_ema_13_new": 24.48,
-    "di_sma_30_new": 26.73,
+    "di_ema_13_new": 23.95,
+    "di_sma_30_new": 26.2,
     "trend_new": "bear",
     "open": 83158.8,
     "close": 83860.21
@@ -866,9 +866,9 @@
       }
     ],
     "4h_di_new": 3,
-    "total_new": 17,
-    "di_ema_13_new": 24.56,
-    "di_sma_30_new": 27.0,
+    "total_new": 16,
+    "di_ema_13_new": 23.94,
+    "di_sma_30_new": 26.47,
     "trend_new": "bear",
     "open": 82490.58,
     "close": 83158.8
@@ -905,8 +905,8 @@
     ],
     "4h_di_new": 8,
     "total_new": 21,
-    "di_ema_13_new": 25.82,
-    "di_sma_30_new": 27.23,
+    "di_ema_13_new": 25.26,
+    "di_sma_30_new": 26.73,
     "trend_new": "bear",
     "open": 85174.96,
     "close": 82490.58
@@ -943,8 +943,8 @@
     ],
     "4h_di_new": 15,
     "total_new": 32,
-    "di_ema_13_new": 26.62,
-    "di_sma_30_new": 27.37,
+    "di_ema_13_new": 25.97,
+    "di_sma_30_new": 26.87,
     "trend_new": "bear",
     "open": 82539.52,
     "close": 85174.96
@@ -980,9 +980,9 @@
       }
     ],
     "4h_di_new": 7,
-    "total_new": 19,
-    "di_ema_13_new": 25.73,
-    "di_sma_30_new": 27.43,
+    "total_new": 18,
+    "di_ema_13_new": 24.96,
+    "di_sma_30_new": 26.93,
     "trend_new": "bear",
     "open": 82379.51,
     "close": 82539.52
@@ -1018,9 +1018,9 @@
       }
     ],
     "4h_di_new": 6,
-    "total_new": 20,
-    "di_ema_13_new": 26.85,
-    "di_sma_30_new": 27.83,
+    "total_new": 19,
+    "di_ema_13_new": 26.13,
+    "di_sma_30_new": 27.37,
     "trend_new": "bear",
     "open": 82625.65,
     "close": 82379.51
@@ -1056,9 +1056,9 @@
       }
     ],
     "4h_di_new": 5,
-    "total_new": 19,
-    "di_ema_13_new": 27.99,
-    "di_sma_30_new": 28.13,
+    "total_new": 18,
+    "di_ema_13_new": 27.31,
+    "di_sma_30_new": 27.7,
     "trend_new": "bear",
     "open": 84387.01,
     "close": 82625.65
@@ -1094,9 +1094,9 @@
       }
     ],
     "4h_di_new": 4,
-    "total_new": 23,
-    "di_ema_13_new": 29.49,
-    "di_sma_30_new": 28.27,
+    "total_new": 22,
+    "di_ema_13_new": 28.87,
+    "di_sma_30_new": 27.87,
     "trend_new": "bull",
     "open": 87218.89,
     "close": 84387.01
@@ -1133,8 +1133,8 @@
     ],
     "4h_di_new": 10,
     "total_new": 31,
-    "di_ema_13_new": 30.57,
-    "di_sma_30_new": 28.13,
+    "di_ema_13_new": 30.01,
+    "di_sma_30_new": 27.77,
     "trend_new": "bull",
     "open": 86923.95,
     "close": 87218.89
@@ -1170,9 +1170,9 @@
       }
     ],
     "4h_di_new": 10,
-    "total_new": 31,
-    "di_ema_13_new": 30.5,
-    "di_sma_30_new": 27.87,
+    "total_new": 30,
+    "di_ema_13_new": 29.84,
+    "di_sma_30_new": 27.5,
     "trend_new": "bull",
     "open": 87439.7,
     "close": 86923.95
@@ -1209,8 +1209,8 @@
     ],
     "4h_di_new": 13,
     "total_new": 35,
-    "di_ema_13_new": 30.42,
-    "di_sma_30_new": 27.5,
+    "di_ema_13_new": 29.82,
+    "di_sma_30_new": 27.17,
     "trend_new": "bull",
     "open": 87520.48,
     "close": 87439.7
@@ -1246,9 +1246,9 @@
       }
     ],
     "4h_di_new": 14,
-    "total_new": 36,
-    "di_ema_13_new": 29.66,
-    "di_sma_30_new": 27.23,
+    "total_new": 35,
+    "di_ema_13_new": 28.95,
+    "di_sma_30_new": 26.9,
     "trend_new": "bull",
     "open": 86091.67,
     "close": 87520.48
@@ -1284,9 +1284,9 @@
       }
     ],
     "4h_di_new": 13,
-    "total_new": 34,
-    "di_ema_13_new": 28.6,
-    "di_sma_30_new": 26.93,
+    "total_new": 33,
+    "di_ema_13_new": 27.95,
+    "di_sma_30_new": 26.63,
     "trend_new": "bull",
     "open": 83837.39,
     "close": 86091.67
@@ -1322,9 +1322,9 @@
       }
     ],
     "4h_di_new": 6,
-    "total_new": 25,
-    "di_ema_13_new": 27.7,
-    "di_sma_30_new": 26.73,
+    "total_new": 24,
+    "di_ema_13_new": 27.1,
+    "di_sma_30_new": 26.47,
     "trend_new": "bull",
     "open": 84060.48,
     "close": 83837.39
@@ -1360,9 +1360,9 @@
       }
     ],
     "4h_di_new": 8,
-    "total_new": 27,
-    "di_ema_13_new": 28.15,
-    "di_sma_30_new": 27.17,
+    "total_new": 26,
+    "di_ema_13_new": 27.62,
+    "di_sma_30_new": 26.93,
     "trend_new": "bull",
     "open": 84178.31,
     "close": 84060.48
@@ -1398,9 +1398,9 @@
       }
     ],
     "4h_di_new": 10,
-    "total_new": 28,
-    "di_ema_13_new": 28.34,
-    "di_sma_30_new": 27.33,
+    "total_new": 27,
+    "di_ema_13_new": 27.89,
+    "di_sma_30_new": 27.13,
     "trend_new": "bull",
     "open": 86878.5,
     "close": 84178.31
@@ -1437,8 +1437,8 @@
     ],
     "4h_di_new": 14,
     "total_new": 36,
-    "di_ema_13_new": 28.39,
-    "di_sma_30_new": 27.2,
+    "di_ema_13_new": 28.04,
+    "di_sma_30_new": 27.03,
     "trend_new": "bull",
     "open": 82716.74,
     "close": 86878.5
@@ -1474,9 +1474,9 @@
       }
     ],
     "4h_di_new": 6,
-    "total_new": 25,
-    "di_ema_13_new": 27.13,
-    "di_sma_30_new": 26.67,
+    "total_new": 24,
+    "di_ema_13_new": 26.72,
+    "di_sma_30_new": 26.5,
     "trend_new": "bull",
     "open": 84025.12,
     "close": 82716.74
@@ -1512,9 +1512,9 @@
       }
     ],
     "4h_di_new": 11,
-    "total_new": 32,
-    "di_ema_13_new": 27.48,
-    "di_sma_30_new": 26.7,
+    "total_new": 31,
+    "di_ema_13_new": 27.17,
+    "di_sma_30_new": 26.57,
     "trend_new": "bull",
     "open": 82572.37,
     "close": 84025.12
@@ -1551,8 +1551,8 @@
     ],
     "4h_di_new": 6,
     "total_new": 24,
-    "di_ema_13_new": 26.73,
-    "di_sma_30_new": 26.83,
+    "di_ema_13_new": 26.53,
+    "di_sma_30_new": 26.73,
     "trend_new": "bear",
     "open": 84355.92,
     "close": 82572.37
@@ -1589,9 +1589,9 @@
     ],
     "4h_di_new": 14,
     "total_new": 33,
-    "di_ema_13_new": 27.18,
-    "di_sma_30_new": 27.17,
-    "trend_new": "bull",
+    "di_ema_13_new": 26.95,
+    "di_sma_30_new": 27.07,
+    "trend_new": "bear",
     "open": 83995.47,
     "close": 84355.92
   },
@@ -1627,8 +1627,8 @@
     ],
     "4h_di_new": 13,
     "total_new": 31,
-    "di_ema_13_new": 26.21,
-    "di_sma_30_new": 27.0,
+    "di_ema_13_new": 25.94,
+    "di_sma_30_new": 26.9,
     "trend_new": "bear",
     "open": 81081.43,
     "close": 83995.47
@@ -1665,8 +1665,8 @@
     ],
     "4h_di_new": 6,
     "total_new": 23,
-    "di_ema_13_new": 25.42,
-    "di_sma_30_new": 27.03,
+    "di_ema_13_new": 25.1,
+    "di_sma_30_new": 26.93,
     "trend_new": "bear",
     "open": 83665.14,
     "close": 81081.43
@@ -1702,9 +1702,9 @@
       }
     ],
     "4h_di_new": 11,
-    "total_new": 29,
-    "di_ema_13_new": 25.82,
-    "di_sma_30_new": 26.93,
+    "total_new": 28,
+    "di_ema_13_new": 25.45,
+    "di_sma_30_new": 26.83,
     "trend_new": "bear",
     "open": 82919.47,
     "close": 83665.14
@@ -1740,9 +1740,9 @@
       }
     ],
     "4h_di_new": 9,
-    "total_new": 26,
-    "di_ema_13_new": 25.29,
-    "di_sma_30_new": 26.97,
+    "total_new": 25,
+    "di_ema_13_new": 25.02,
+    "di_sma_30_new": 26.9,
     "trend_new": "bear",
     "open": 78561.62,
     "close": 82919.47
@@ -1778,9 +1778,9 @@
       }
     ],
     "4h_di_new": 3,
-    "total_new": 17,
-    "di_ema_13_new": 25.17,
-    "di_sma_30_new": 26.97,
+    "total_new": 16,
+    "di_ema_13_new": 25.03,
+    "di_sma_30_new": 26.93,
     "trend_new": "bear",
     "open": 80719.05,
     "close": 78561.62
@@ -4781,7 +4781,7 @@
     ],
     "4h_di_new": 9,
     "total_new": 33,
-    "di_ema_13_new": 37.79,
+    "di_ema_13_new": 37.8,
     "di_sma_30_new": 38.97,
     "trend_new": "bear",
     "open": 97769.49,
@@ -4934,7 +4934,7 @@
     "4h_di_new": 10,
     "total_new": 41,
     "di_ema_13_new": 41.71,
-    "di_sma_30_new": 40.47,
+    "di_sma_30_new": 40.5,
     "trend_new": "bull",
     "open": 106089.2,
     "close": 106140.14
@@ -4971,8 +4971,8 @@
     ],
     "4h_di_new": 14,
     "total_new": 46,
-    "di_ema_13_new": 41.82,
-    "di_sma_30_new": 40.2,
+    "di_ema_13_new": 41.83,
+    "di_sma_30_new": 40.23,
     "trend_new": "bull",
     "open": 104424.54,
     "close": 106089.2
@@ -5010,7 +5010,7 @@
     "4h_di_new": 16,
     "total_new": 46,
     "di_ema_13_new": 41.13,
-    "di_sma_30_new": 39.77,
+    "di_sma_30_new": 39.8,
     "trend_new": "bull",
     "open": 101402.95,
     "close": 104424.54
@@ -5048,7 +5048,7 @@
     "4h_di_new": 14,
     "total_new": 44,
     "di_ema_13_new": 40.32,
-    "di_sma_30_new": 39.33,
+    "di_sma_30_new": 39.37,
     "trend_new": "bull",
     "open": 101429.78,
     "close": 101402.95
@@ -5085,8 +5085,8 @@
     ],
     "4h_di_new": 13,
     "total_new": 43,
-    "di_ema_13_new": 39.7,
-    "di_sma_30_new": 38.9,
+    "di_ema_13_new": 39.71,
+    "di_sma_30_new": 38.93,
     "trend_new": "bull",
     "open": 100041.98,
     "close": 101429.78
@@ -5123,8 +5123,8 @@
     ],
     "4h_di_new": 13,
     "total_new": 42,
-    "di_ema_13_new": 39.15,
-    "di_sma_30_new": 38.57,
+    "di_ema_13_new": 39.16,
+    "di_sma_30_new": 38.6,
     "trend_new": "bull",
     "open": 101203.07,
     "close": 100041.98
@@ -5162,7 +5162,7 @@
     "4h_di_new": 14,
     "total_new": 43,
     "di_ema_13_new": 38.68,
-    "di_sma_30_new": 38.27,
+    "di_sma_30_new": 38.3,
     "trend_new": "bull",
     "open": 96657.88,
     "close": 101203.07
@@ -5200,8 +5200,8 @@
     "4h_di_new": 5,
     "total_new": 32,
     "di_ema_13_new": 37.96,
-    "di_sma_30_new": 37.93,
-    "trend_new": "bull",
+    "di_sma_30_new": 37.97,
+    "trend_new": "bear",
     "open": 97338.34,
     "close": 96657.88
   },
@@ -5237,8 +5237,8 @@
     ],
     "4h_di_new": 6,
     "total_new": 34,
-    "di_ema_13_new": 38.95,
-    "di_sma_30_new": 37.97,
+    "di_ema_13_new": 38.96,
+    "di_sma_30_new": 38.0,
     "trend_new": "bull",
     "open": 101189.81,
     "close": 97338.34
@@ -5276,7 +5276,7 @@
     "4h_di_new": 11,
     "total_new": 42,
     "di_ema_13_new": 39.78,
-    "di_sma_30_new": 37.97,
+    "di_sma_30_new": 38.0,
     "trend_new": "bull",
     "open": 99926.38,
     "close": 101189.81
@@ -5314,7 +5314,7 @@
     "4h_di_new": 11,
     "total_new": 41,
     "di_ema_13_new": 39.41,
-    "di_sma_30_new": 37.7,
+    "di_sma_30_new": 37.73,
     "trend_new": "bull",
     "open": 99897.97,
     "close": 99926.38
@@ -5351,8 +5351,8 @@
     ],
     "4h_di_new": 11,
     "total_new": 41,
-    "di_ema_13_new": 39.14,
-    "di_sma_30_new": 37.47,
+    "di_ema_13_new": 39.15,
+    "di_sma_30_new": 37.5,
     "trend_new": "bull",
     "open": 97053.82,
     "close": 99897.97
@@ -5389,8 +5389,8 @@
     ],
     "4h_di_new": 9,
     "total_new": 37,
-    "di_ema_13_new": 38.83,
-    "di_sma_30_new": 37.23,
+    "di_ema_13_new": 38.84,
+    "di_sma_30_new": 37.27,
     "trend_new": "bull",
     "open": 98751.87,
     "close": 97053.82
@@ -5427,8 +5427,8 @@
     ],
     "4h_di_new": 14,
     "total_new": 44,
-    "di_ema_13_new": 39.14,
-    "di_sma_30_new": 36.93,
+    "di_ema_13_new": 39.15,
+    "di_sma_30_new": 36.97,
     "trend_new": "bull",
     "open": 95928.37,
     "close": 98751.87
@@ -5465,8 +5465,8 @@
     ],
     "4h_di_new": 10,
     "total_new": 39,
-    "di_ema_13_new": 38.33,
-    "di_sma_30_new": 36.4,
+    "di_ema_13_new": 38.34,
+    "di_sma_30_new": 36.43,
     "trend_new": "bull",
     "open": 95859.75,
     "close": 95928.37
@@ -5503,8 +5503,8 @@
     ],
     "4h_di_new": 6,
     "total_new": 35,
-    "di_ema_13_new": 38.21,
-    "di_sma_30_new": 36.03,
+    "di_ema_13_new": 38.23,
+    "di_sma_30_new": 36.07,
     "trend_new": "bull",
     "open": 97276.47,
     "close": 95859.75
@@ -5541,8 +5541,8 @@
     ],
     "4h_di_new": 12,
     "total_new": 42,
-    "di_ema_13_new": 38.75,
-    "di_sma_30_new": 35.83,
+    "di_ema_13_new": 38.77,
+    "di_sma_30_new": 35.87,
     "trend_new": "bull",
     "open": 96473.51,
     "close": 97276.47
@@ -5579,8 +5579,8 @@
     ],
     "4h_di_new": 10,
     "total_new": 39,
-    "di_ema_13_new": 38.21,
-    "di_sma_30_new": 35.37,
+    "di_ema_13_new": 38.23,
+    "di_sma_30_new": 35.4,
     "trend_new": "bull",
     "open": 97510.92,
     "close": 96473.51
@@ -5617,8 +5617,8 @@
     ],
     "4h_di_new": 12,
     "total_new": 42,
-    "di_ema_13_new": 38.08,
-    "di_sma_30_new": 35.03,
+    "di_ema_13_new": 38.1,
+    "di_sma_30_new": 35.07,
     "trend_new": "bull",
     "open": 95670.41,
     "close": 97510.92
@@ -5655,8 +5655,8 @@
     ],
     "4h_di_new": 9,
     "total_new": 38,
-    "di_ema_13_new": 37.42,
-    "di_sma_30_new": 34.63,
+    "di_ema_13_new": 37.45,
+    "di_sma_30_new": 34.67,
     "trend_new": "bull",
     "open": 95957.51,
     "close": 95670.41
@@ -5693,8 +5693,8 @@
     ],
     "4h_di_new": 10,
     "total_new": 39,
-    "di_ema_13_new": 37.33,
-    "di_sma_30_new": 34.37,
+    "di_ema_13_new": 37.36,
+    "di_sma_30_new": 34.4,
     "trend_new": "bull",
     "open": 91903.89,
     "close": 95957.51
@@ -5731,8 +5731,8 @@
     ],
     "4h_di_new": 3,
     "total_new": 32,
-    "di_ema_13_new": 37.05,
-    "di_sma_30_new": 34.03,
+    "di_ema_13_new": 37.09,
+    "di_sma_30_new": 34.07,
     "trend_new": "bull",
     "open": 93019.38,
     "close": 91903.89
@@ -5769,8 +5769,8 @@
     ],
     "4h_di_new": 2,
     "total_new": 31,
-    "di_ema_13_new": 37.89,
-    "di_sma_30_new": 33.97,
+    "di_ema_13_new": 37.94,
+    "di_sma_30_new": 34.0,
     "trend_new": "bull",
     "open": 98018.2,
     "close": 93019.38
@@ -5807,8 +5807,8 @@
     ],
     "4h_di_new": 8,
     "total_new": 40,
-    "di_ema_13_new": 39.04,
-    "di_sma_30_new": 33.9,
+    "di_ema_13_new": 39.09,
+    "di_sma_30_new": 33.93,
     "trend_new": "bull",
     "open": 97765.04,
     "close": 98018.2
@@ -5845,8 +5845,8 @@
     ],
     "4h_di_new": 8,
     "total_new": 40,
-    "di_ema_13_new": 38.88,
-    "di_sma_30_new": 33.5,
+    "di_ema_13_new": 38.94,
+    "di_sma_30_new": 33.53,
     "trend_new": "bull",
     "open": 99010.89,
     "close": 97765.04
@@ -5883,8 +5883,8 @@
     ],
     "4h_di_new": 10,
     "total_new": 43,
-    "di_ema_13_new": 38.69,
-    "di_sma_30_new": 33.27,
+    "di_ema_13_new": 38.77,
+    "di_sma_30_new": 33.3,
     "trend_new": "bull",
     "open": 98436.25,
     "close": 99010.89
@@ -5921,8 +5921,8 @@
     ],
     "4h_di_new": 12,
     "total_new": 45,
-    "di_ema_13_new": 37.97,
-    "di_sma_30_new": 32.83,
+    "di_ema_13_new": 38.06,
+    "di_sma_30_new": 32.87,
     "trend_new": "bull",
     "open": 94379.92,
     "close": 98436.25
@@ -5959,8 +5959,8 @@
     ],
     "4h_di_new": 12,
     "total_new": 45,
-    "di_ema_13_new": 36.8,
-    "di_sma_30_new": 32.37,
+    "di_ema_13_new": 36.9,
+    "di_sma_30_new": 32.4,
     "trend_new": "bull",
     "open": 92418.48,
     "close": 94379.92
@@ -5997,8 +5997,8 @@
     ],
     "4h_di_new": 13,
     "total_new": 46,
-    "di_ema_13_new": 35.43,
-    "di_sma_30_new": 31.9,
+    "di_ema_13_new": 35.55,
+    "di_sma_30_new": 31.93,
     "trend_new": "bull",
     "open": 90514.83,
     "close": 92418.48
@@ -6034,9 +6034,9 @@
       }
     ],
     "4h_di_new": 9,
-    "total_new": 42,
-    "di_ema_13_new": 33.67,
-    "di_sma_30_new": 31.47,
+    "total_new": 43,
+    "di_ema_13_new": 33.81,
+    "di_sma_30_new": 31.5,
     "trend_new": "bull",
     "open": 89877.16,
     "close": 90514.83
@@ -30011,8 +30011,8 @@
     ],
     "4h_di_new": 15,
     "total_new": 36,
-    "di_ema_13_new": 31.91,
-    "di_sma_30_new": 26.27,
+    "di_ema_13_new": 31.64,
+    "di_sma_30_new": 25.83,
     "trend_new": "bull",
     "open": 94711.24,
     "close": 94663.66

@@ -32,9 +32,9 @@ from server import process_symbol
 def load_tracked_symbols():
     """Загружает список монет для отслеживания из конфигурационного файла"""
     try:
-        # Для тестирования берем только 3 монеты
-        test_symbols = ["BTC", "ETH", "XRP"]
-        logger.info(f"Загружен тестовый список из {len(test_symbols)} монет")
+        # Для тестирования берем только SOL для проверки
+        test_symbols = ["SOL"]
+        logger.info(f"Загружен тестовый список из {len(test_symbols)} монет для проверки: {test_symbols}")
         return test_symbols
     except Exception as e:
         logger.error(f"Ошибка при загрузке списка монет: {str(e)}")
