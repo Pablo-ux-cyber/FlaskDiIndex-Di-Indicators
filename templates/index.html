@@ -162,8 +162,6 @@
                 <th>Количество бычьих сигналов</th>
                 <th>Всего монет с данными</th>
                 <th>Процент бычьих сигналов</th>
-                <th>13 EMA (%)</th>
-                <th>20 SMA (%)</th>
                 <th>10 SMA (%)</th>
               </tr>
             </thead>
@@ -1018,7 +1016,7 @@
 
     function downloadMarketSentimentExcel() {
       const rows = [
-        ['Дата', 'Количество бычьих сигналов', 'Всего монет с данными', 'Процент бычьих сигналов', '13 EMA (%)', '20 SMA (%)', '10 SMA (%)']
+        ['Дата', 'Количество бычьих сигналов', 'Всего монет с данными', 'Процент бычьих сигналов', '10 SMA (%)']
       ];
 
       const tbody = document.getElementById('sentimentTableBody');
@@ -1031,9 +1029,7 @@
           cells[1].textContent,
           cells[2].textContent,
           cells[3].textContent,
-          cells[4].textContent,
-          cells[5].textContent,
-          cells[6].textContent
+          cells[4].textContent
         ]);
       });
 
@@ -1133,8 +1129,6 @@
           <td>${row.bullCount}</td>
           <td>${row.totalCount}</td>
           <td>${row.percentage}%</td>
-          <td>${row.ma13 !== null ? row.ma13 + '%' : '-'}</td>
-          <td>${row.sma20 !== null ? row.sma20 + '%' : '-'}</td>
           <td>${row.sma10 !== null ? row.sma10 + '%' : '-'}</td>
         </tr>
       `).join('');
