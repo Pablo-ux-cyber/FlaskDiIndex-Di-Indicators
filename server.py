@@ -610,15 +610,6 @@ def process_symbol(symbol, debug=False):
             df_calcs['ema13'] = ta.ema(df_calcs['total'], length=13)
             df_calcs['sma30'] = df_calcs['total'].rolling(window=30, min_periods=1).mean()
 
-            # Debug: проверяем, сколько валидных значений EMA13 у нас есть
-            valid_ema13_count = df_calcs['ema13'].notna().sum()
-            total_records = len(df_calcs)
-            logger.debug(f"EMA13 debug: валидных значений {valid_ema13_count} из {total_records}")
-            
-            # Показываем последние несколько значений EMA13 и SMA30
-            logger.debug(f"Последние 5 EMA13 значений: {df_calcs['ema13'].tail().tolist()}")
-            logger.debug(f"Последние 5 SMA30 значений: {df_calcs['sma30'].tail().tolist()}")
-
             # Create a lookup dictionary
             calcs_dict = df_calcs.to_dict('index')
 
