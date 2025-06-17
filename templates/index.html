@@ -78,6 +78,14 @@
       overflow: hidden;
       user-select: none;
     }
+    .trend-bull {
+      color: #28a745;
+      font-weight: bold;
+    }
+    .trend-bear {
+      color: #dc3545;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -163,6 +171,7 @@
                 <th>Всего монет с данными</th>
                 <th>Процент бычьих сигналов</th>
                 <th>10 SMA (%)</th>
+                <th>Trend</th>
               </tr>
             </thead>
             <tbody id="sentimentTableBody">
@@ -1016,7 +1025,7 @@
 
     function downloadMarketSentimentExcel() {
       const rows = [
-        ['Дата', 'Количество бычьих сигналов', 'Всего монет с данными', 'Процент бычьих сигналов', '10 SMA (%)']
+        ['Дата', 'Количество бычьих сигналов', 'Всего монет с данными', 'Процент бычьих сигналов', '10 SMA (%)', 'Trend']
       ];
 
       const tbody = document.getElementById('sentimentTableBody');
@@ -1029,7 +1038,8 @@
           cells[1].textContent,
           cells[2].textContent,
           cells[3].textContent,
-          cells[4].textContent
+          cells[4].textContent,
+          cells[5].textContent
         ]);
       });
 
@@ -1113,25 +1123,51 @@
         }
       }
 
-      return sortedData.map((item, index) => ({
-        ...item,
-        ma13: ma13[index] === null ? null : ma13[index].toFixed(2),
-        sma20: sma20[index] === null ? null : sma20[index].toFixed(2),
-        sma10: sma10[index] === null ? null : sma10[index].toFixed(2)
-      })).reverse();
+      return sortedData.map((item, index) => {
+        const currentPercentage = parseFloat(item.percentage);
+        const currentSma10 = sma10[index];
+        let trend = null;
+        
+        // Расчет тренда: если процент бычьих сигналов выше 10 SMA, то bull, иначе bear
+        if (currentSma10 !== null && !isNaN(currentPercentage)) {
+          trend = currentPercentage > currentSma10 ? 'bull' : 'bear';
+        }
+        
+        return {
+          ...item,
+          ma13: ma13[index] === null ? null : ma13[index].toFixed(2),
+          sma20: sma20[index] === null ? null : sma20[index].toFixed(2),
+          sma10: sma10[index] === null ? null : sma10[index].toFixed(2),
+          trend: trend
+        };
+      }).reverse();
     }
 
     function updateSentimentTable(sentimentData) {
       const tbody = document.getElementById('sentimentTableBody');
-      tbody.innerHTML = sentimentData.map(row => `
-        <tr>
-          <td>${row.date}</td>
-          <td>${row.bullCount}</td>
-          <td>${row.totalCount}</td>
-          <td>${row.percentage}%</td>
-          <td>${row.sma10 !== null ? row.sma10 + '%' : '-'}</td>
-        </tr>
-      `).join('');
+      tbody.innerHTML = sentimentData.map(row => {
+        let trendDisplay = '-';
+        let trendClass = '';
+        
+        if (row.trend === 'bull') {
+          trendDisplay = 'bull';
+          trendClass = 'trend-bull';
+        } else if (row.trend === 'bear') {
+          trendDisplay = 'bear';
+          trendClass = 'trend-bear';
+        }
+        
+        return `
+          <tr>
+            <td>${row.date}</td>
+            <td>${row.bullCount}</td>
+            <td>${row.totalCount}</td>
+            <td>${row.percentage}%</td>
+            <td>${row.sma10 !== null ? row.sma10 + '%' : '-'}</td>
+            <td class="${trendClass}">${trendDisplay}</td>
+          </tr>
+        `;
+      }).join('');
 
       // Создаем TradingView-подобный график с LightweightCharts
       const chartContainer = document.getElementById('marketSentimentChartContainer');
